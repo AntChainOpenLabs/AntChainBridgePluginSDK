@@ -5,6 +5,15 @@
     <a href="http://makeapullrequest.com">
       <img alt="pull requests welcome badge" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat">
     </a>
+    <a href="https://www.java.com">
+      <img alt="Language" src="https://img.shields.io/badge/Language-Java-blue.svg?style=flat">
+    </a>
+    <a href="https://github.com/AntChainOpenLab/AntChainBridgePluginSDK/graphs/contributors">
+      <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/AntChainOpenLab/AntChainBridgePluginSDK">
+    </a>
+    <a href="https://www.apache.org/licenses/LICENSE-2.0">
+      <img alt="License" src="https://img.shields.io/github/license/AntChainOpenLab/AntChainBridgePluginSDK?style=flat">
+    </a>
   </p>
 </div>
 
@@ -91,3 +100,25 @@
   - **scenarios**：本路径下的`nft_crosschain`中，我们实现了一套跨链桥方案，用于ERC1155资产的跨链。
 
 详细操作请[见](pluginset/ethereum/offchain-plugin/README.md)。
+
+# Community
+
+AntChain Bridge 欢迎您以任何形式参与社区建设。
+
+您可以通过以下方式参与社区讨论
+
+- 钉钉
+
+![scan dingding](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/dingding.png)
+
+- 微信
+
+![scan_wechat](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/wechat.png)
+
+- 邮件
+
+发送邮件到`antchainbridge@service.alipay.com`
+
+# License
+
+详情参考[LICENSE](./LICENSE)。
