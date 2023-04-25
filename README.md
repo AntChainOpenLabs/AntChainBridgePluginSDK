@@ -74,7 +74,7 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在`install_sdk.sh`中看到。
 
-```xml
+```
 <dependency>
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-plugin-lib</artifactId>
@@ -140,7 +140,7 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 详细操作请[见](pluginset/ethereum/offchain-plugin/README.md)。
 
-# Community
+# 社区治理
 
 AntChain Bridge 欢迎您以任何形式参与社区建设。
 
