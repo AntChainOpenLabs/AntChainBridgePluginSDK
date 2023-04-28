@@ -28,11 +28,11 @@ AntChain Bridge将跨链互操作解释为两个层次：通信和可信，即�
 
 AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮助开发者完成插件和合约的开发。同时，AntChain Bridge提供了插件服务（[PluginServer](https://github.com/AntChainOpenLab/AntChainBridgePluginServer)）来运行插件，插件服务是一个独立的服务，具备插件管理和响应中继请求的功能。
 
-在当前的工程实现中，BBC链下部分是以插件的形式实现的。AntChain Bridge实现了一套SDK，通过实现SDK中规定的接口（SPI），经过简单的编译，即可生成插件包。插件服务（PluginServer, PS）可以加载BBC链下插件，详情可以参考插件服务的介绍[文档]()。
+在当前的工程实现中，BBC链下部分是以插件的形式实现的。AntChain Bridge实现了一套SDK，通过实现SDK中规定的接口（SPI），经过简单的编译，即可生成插件包。插件服务（PluginServer, PS）可以加载BBC链下插件，详情可以参考插件服务的介绍[文档](https://github.com/AntChainOpenLab/AntChainBridgePluginServer/blob/main/README.md)。
 
 以下介绍了插件的一个集成架构：
 
-![](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/deploy_arch.png)
+![](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/deploy_arch_230428.jpg)
 
 插件SDK共有四个部分，包括：
 
@@ -149,10 +149,6 @@ AntChain Bridge 欢迎您以任何形式参与社区建设。
 - 钉钉
 
 ![scan dingding](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/dingding.png)
-
-- 微信
-
-![scan_wechat](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/wechat.png)
 
 - 邮件
 
