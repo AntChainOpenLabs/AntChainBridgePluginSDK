@@ -105,7 +105,7 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 [Testchain](pluginset/demo-testchain)是一个用于讲解如何开发BBC插件的demo工程，结合AntChain Bridge的文档，可以更好地理解BBC的开发过程。
 
-详细的开发教程请参考本仓库的[Wiki]()。
+详细的开发教程请参考本仓库的[Wiki](https://github.com/AntChainOpenLab/AntChainBridgePluginSDK/wiki)。
 
 ## 以太坊
 
