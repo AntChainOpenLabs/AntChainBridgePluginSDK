@@ -18,10 +18,7 @@ package com.alipay.antchain.bridge.plugins.manager.pf4j;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.ListUtil;
@@ -183,7 +180,7 @@ public class Pf4jAntChainBridgePluginManager implements IAntChainBridgePluginMan
     }
 
     private void archiveAntChainBridgePluginByProduct(String pf4jId, IAntChainBridgePlugin pf4jAntChainBridgePlugin) {
-        pf4jAntChainBridgePlugin.getProducts().forEach(
+        ObjectUtil.defaultIfNull(pf4jAntChainBridgePlugin.getProducts(), new ArrayList<String>()).forEach(
                 product -> {
                     if (this.antChainBridgePluginStartedMap.containsKey(product)) {
                         throw new AntChainBridgePluginManagerException(
