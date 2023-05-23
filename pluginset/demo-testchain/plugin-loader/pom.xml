@@ -17,7 +17,7 @@
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-plugin-manager</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1.1</version>
         </dependency>
 
         <!-- Logging -->

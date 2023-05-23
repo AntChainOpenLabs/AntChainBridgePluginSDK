@@ -72,7 +72,7 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 这样，SDK的Jar包就被安装在本地了。
 
-可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在`install_sdk.sh`中看到。
+可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在`print.sh`的`SDK_VERSION`中看到。
 
 ```
 <dependency>

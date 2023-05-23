@@ -3,10 +3,10 @@
 target/
 *.jar
 artifacts
-!antchain-bridge-plugin-manager/**/plugin-testchain1-0.1-SNAPSHOT-plugin.jar
-!antchain-bridge-plugin-manager/**/plugin-testchain-0.1-SNAPSHOT-plugin.jar
-!plugin-demo/app/**/plugin-testchain1-0.1-SNAPSHOT-plugin.jar
-!plugin-demo/app/**/plugin-testchain-0.1-SNAPSHOT-plugin.jar
+!antchain-bridge-plugin-manager/**/plugin-testchain1-*-plugin.jar
+!antchain-bridge-plugin-manager/**/plugin-testchain-*-plugin.jar
+!plugin-demo/app/**/plugin-testchain1-*-plugin.jar
+!plugin-demo/app/**/plugin-testchain-*-plugin.jar
 antchain-bridge-sdk.tar.gz
 **/abi
 scripts/antchain-bridge-sdk/

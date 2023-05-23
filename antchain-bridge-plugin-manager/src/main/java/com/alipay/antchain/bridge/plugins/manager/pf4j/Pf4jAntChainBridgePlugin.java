@@ -17,6 +17,7 @@
 package com.alipay.antchain.bridge.plugins.manager.pf4j;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -84,11 +85,18 @@ public class Pf4jAntChainBridgePlugin extends AbstractAntChainBridgePlugin {
     @Override
     @Synchronized
     public void stop() {
+        if (ObjectUtil.equals(this.getState(), AntChainBridgePluginState.STOP)) {
+            throw new AntChainBridgePluginManagerException(
+                    AntChainBridgePluginManagerErrorCodeEnum.PLUGIN_STOP_FAILED,
+                    String.format("plugin for products %s already stopped",
+                            Arrays.toString(this.getBbcServiceFactory().products().toArray()))
+            );
+        }
         if (ObjectUtil.notEqual(this.getState(), AntChainBridgePluginState.START)) {
             throw new AntChainBridgePluginManagerException(
                     AntChainBridgePluginManagerErrorCodeEnum.PLUGIN_STOP_FAILED,
                     String.format("wrong plugin state %s to stop plugin for products %s failed",
-                            this.getState().name(), Arrays.toString(this.getProducts().toArray()))
+                            this.getState().name(), Arrays.toString(this.getBbcServiceFactory().products().toArray()))
             );
         }
         this.pf4jPluginManager.stopPlugin(this.pluginWrapper.getPluginId());
@@ -103,7 +111,7 @@ public class Pf4jAntChainBridgePlugin extends AbstractAntChainBridgePlugin {
             throw new AntChainBridgePluginManagerException(
                     AntChainBridgePluginManagerErrorCodeEnum.PLUGIN_START_FAILED,
                     String.format("wrong state %s to start plugin for products %s failed",
-                            this.getState().name(), Arrays.toString(this.getProducts().toArray()))
+                            this.getState().name(), Arrays.toString(this.getBbcServiceFactory().products().toArray()))
             );
         }
 
