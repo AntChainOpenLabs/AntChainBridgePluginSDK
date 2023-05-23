@@ -18,14 +18,12 @@ package com.alipay.antchain.bridge.plugins.manager.pf4j;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.PathUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
@@ -103,7 +101,7 @@ public class Pf4jAntChainBridgePluginManager implements IAntChainBridgePluginMan
             );
         }
         if (this.antChainBridgePluginStartedMap.values().stream()
-                .anyMatch(plugin -> ((Pf4jAntChainBridgePlugin) plugin).getPluginPath().equals(path))) {
+                .anyMatch(plugin -> PathUtil.equals(((Pf4jAntChainBridgePlugin) plugin).getPluginPath(), path))) {
             throw new AntChainBridgePluginManagerException(
                     AntChainBridgePluginManagerErrorCodeEnum.PLUGIN_INIT_FAILED,
                     String.format("plugin from path %s already start", path)
@@ -111,7 +109,7 @@ public class Pf4jAntChainBridgePluginManager implements IAntChainBridgePluginMan
         }
 
         Optional<Map.Entry<String, IAntChainBridgePlugin>> antChainBridgePluginOptional = this.antChainBridgePluginInitializedMapWithPf4jId.entrySet().stream()
-                .filter(entry -> ((Pf4jAntChainBridgePlugin) entry.getValue()).getPluginPath().equals(path))
+                .filter(entry -> PathUtil.equals(((Pf4jAntChainBridgePlugin) entry.getValue()).getPluginPath(), path))
                 .findFirst();
 
         IAntChainBridgePlugin antChainBridgePlugin;
@@ -147,7 +145,7 @@ public class Pf4jAntChainBridgePluginManager implements IAntChainBridgePluginMan
         }
 
         Optional<Map.Entry<String, IAntChainBridgePlugin>> antChainBridgePluginOptional = this.antChainBridgePluginInitializedMapWithPf4jId.entrySet().stream()
-                .filter(entry -> ((Pf4jAntChainBridgePlugin) entry.getValue()).getPluginPath().equals(path))
+                .filter(entry -> PathUtil.equals(((Pf4jAntChainBridgePlugin) entry.getValue()).getPluginPath(), path))
                 .findFirst();
         if (!antChainBridgePluginOptional.isPresent()) {
             throw new AntChainBridgePluginManagerException(
@@ -182,7 +180,7 @@ public class Pf4jAntChainBridgePluginManager implements IAntChainBridgePluginMan
     }
 
     private void archiveAntChainBridgePluginByProduct(String pf4jId, IAntChainBridgePlugin pf4jAntChainBridgePlugin) {
-        pf4jAntChainBridgePlugin.getProducts().forEach(
+        ObjectUtil.defaultIfNull(pf4jAntChainBridgePlugin.getProducts(), new ArrayList<String>()).forEach(
                 product -> {
                     if (this.antChainBridgePluginStartedMap.containsKey(product)) {
                         throw new AntChainBridgePluginManagerException(
