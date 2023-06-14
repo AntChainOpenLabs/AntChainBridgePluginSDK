@@ -62,19 +62,36 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 # 安装
 
-**后续会提供maven源，当前仅支持本地安装*
+## 本地安装
 
-在项目根目录下面的`scripts`路径下，运行脚本完成SDK的安装：
+解压上一步产生的压缩包`antchain-bridge-sdk.tar.gz`，或者在release[页面](https://github.com/AntChainOpenLab/AntChainBridgePluginSDK/releases)找到适合的版本并下载到本地，解压之后，在根目录下，运行脚本完成SDK的安装：
 
 ```
 ./install_sdk.sh
 ```
 
-这样，SDK的Jar包就被安装在本地了。
-
-可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在`print.sh`的`SDK_VERSION`中看到。
+提示信息如下，代表安装完成：
 
 ```
+    ___            __   ______ __            _           ____         _      __
+   /   |   ____   / /_ / ____// /_   ____ _ (_)____     / __ ) _____ (_)____/ /____ _ ___
+  / /| |  / __ \ / __// /    / __ \ / __ `// // __ \   / __  |/ ___// // __  // __ `// _ \
+ / ___ | / / / // /_ / /___ / / / // /_/ // // / / /  / /_/ // /   / // /_/ // /_/ //  __/
+/_/  |_|/_/ /_/ \__/ \____//_/ /_/ \__,_//_//_/ /_/  /_____//_/   /_/ \__,_/ \__, / \___/
+                                                                            /____/        
+
+[ INFO ]_[ 2023-06-14 14:23:47.168 ] : successful to install antchain-bridge-commons-0.1.1.jar
+[ INFO ]_[ 2023-06-14 14:23:49.168 ] : successful to install antchain-bridge-spi-0.1.1.jar
+[ INFO ]_[ 2023-06-14 14:23:50.168 ] : successful to install antchain-bridge-plugin-lib-0.1.1.jar
+[ INFO ]_[ 2023-06-14 14:23:52.168 ] : successful to install antchain-bridge-plugin-manager-0.1.1.jar
+[ INFO ]_[ 2023-06-14 14:23:52.168 ] : success
+```
+
+这样，SDK的Jar包就被安装在本地了。
+
+然后，可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在`print.sh`的`SDK_VERSION`中看到。
+
+```xml
 <dependency>
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-plugin-lib</artifactId>
@@ -97,7 +114,25 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 </dependency>
 ```
 
+## 通过GitHub Package安装
 
+参考[这里](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-to-github-packages)配置您的maven，在`setting.xml`中配置上您的GitHub账号和Token。
+
+在您的项目`pom.xml`中，配置上我们的repository：
+
+```xml
+<repositories>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/AntChainOpenLab/*</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
+```
+
+这样您就可以导入上面的dependency来使用SDK。
 
 # 快速开始
 
