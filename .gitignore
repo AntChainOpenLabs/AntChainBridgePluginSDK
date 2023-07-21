@@ -12,3 +12,6 @@ antchain-bridge-sdk.tar.gz
 scripts/antchain-bridge-sdk/
 scripts/contracts/
 scripts/*.tar.gz
+.vscode
+pluginset/eos/**.wasm
+pluginset/eos/**.abi

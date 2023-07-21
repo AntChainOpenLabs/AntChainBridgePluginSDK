@@ -3,17 +3,22 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.eth</groupId>
-    <artifactId>simple-ethereum-bbc</artifactId>
+    <groupId>com.alipay.antchain.bridge</groupId>
+    <artifactId>eos-bbc</artifactId>
     <version>0.1-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <eosiojava.version>1.0.0</eosiojava.version>
     </properties>
 
     <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
         <repository>
             <id>github</id>
             <url>https://maven.pkg.github.com/AntChainOpenLab/*</url>
@@ -27,24 +32,38 @@
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-plugin-lib</artifactId>
-            <version>0.1.1</version>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-spi</artifactId>
-            <version>0.1.1</version>
+            <version>0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.web3j</groupId>
-            <artifactId>core</artifactId>
-            <version>4.9.4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>one.block</groupId>
+            <artifactId>eosiojava</artifactId>
+            <version>${eosiojava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>one.block</groupId>
+            <artifactId>eosiojavasoftkeysignatureprovider</artifactId>
+            <version>${eosiojava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>one.block</groupId>
+            <artifactId>eosio-java-abieos-serialization-provider</artifactId>
+            <version>${eosiojava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>one.block</groupId>
+            <artifactId>eosio-java-rpc-provider</artifactId>
+            <version>${eosiojava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.EOSEssentials</groupId>
+            <artifactId>eos-java-rpc-wrapper</artifactId>
+            <version>master</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -59,10 +78,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.24</version>
-            <scope>compile</scope>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.9.0</version>
         </dependency>
     </dependencies>
 
@@ -97,34 +115,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.web3j</groupId>
-                <artifactId>web3j-maven-plugin</artifactId>
-                <version>4.9.4</version>
-                <configuration>
-                    <packageName>com.alipay.antchain.bridge.plugins.ethereum.abi</packageName>
-                    <sourceDestination>src/main/java</sourceDestination>
-                    <nativeJavaType>true</nativeJavaType>
-                    <outputFormat>java</outputFormat>
-                    <soliditySourceFiles>
-                        <directory>${project.basedir}/../onchain-plugin/solidity/sys</directory>
-                        <includes>
-                            <include>**/*.sol</include>
-                        </includes>
-                    </soliditySourceFiles>
-                    <contract>
-                        <includes>
-                            <include>AuthMsg</include>
-                            <include>SDPMsg</include>
-                            <include>AppContract</include>
-                        </includes>
-                    </contract>
-                    <pathPrefixes>
-                        <pathPrefix>dep=../dependencies</pathPrefix>
-                    </pathPrefixes>
-                </configuration>
             </plugin>
         </plugins>
     </build>
