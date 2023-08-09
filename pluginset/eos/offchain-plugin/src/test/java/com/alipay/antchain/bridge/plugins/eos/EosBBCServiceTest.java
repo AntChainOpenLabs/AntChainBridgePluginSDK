@@ -441,22 +441,22 @@ public class EosBBCServiceTest {
         return mockCtx;
     }
 
+    private String generatePaddingZero(int nBytes) {
+        StringBuilder padding = new StringBuilder();
+        for (int i = 0; i < nBytes; i++) {
+            padding.append("00");
+        }
+        return padding.toString();
+    }
+
     private byte[] getRawMsgFromRelayer(String senderHex, int seq) throws IOException {
         byte[] raw = Utils.convertEosBase32NameToNum(EOS_RECEIVER_CONTRACT_NAME).toByteArray();
-        byte[] rawReceiverNum = new byte[8];
-        System.arraycopy(
-                raw,
-                0,
-                rawReceiverNum,
-                0,
-                raw.length
-        );
 
         ISDPMessage sdpMessage = SDPMessageFactory.createSDPMessage(
                 1,
                 "receiverDomain",
                 HexUtil.decodeHex(
-                        String.format("000000000000000000000000000000000000000000000000%s", HexUtil.encodeHexStr(rawReceiverNum))
+                        String.format(generatePaddingZero(32 - raw.length) + "%s", HexUtil.encodeHexStr(raw))
                 ),
                 seq,
                 "awesome antchain-bridge".getBytes()
