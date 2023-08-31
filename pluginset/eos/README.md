@@ -15,7 +15,7 @@
 
 ## 链上合约
 
-
+参考该[文档](./onchain-plugin/README.md)。
 
 ## 链下插件
 
