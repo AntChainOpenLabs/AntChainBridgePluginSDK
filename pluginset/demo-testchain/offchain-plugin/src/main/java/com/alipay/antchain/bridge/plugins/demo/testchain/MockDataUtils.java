@@ -50,7 +50,8 @@ public class MockDataUtils {
                 DigestUtil.sha256(height.toString()),
                 generateAM().encode(),
                 ledgerData,
-                proof
+                proof,
+                DigestUtil.sha256(height.toString())
         );
     }
 }

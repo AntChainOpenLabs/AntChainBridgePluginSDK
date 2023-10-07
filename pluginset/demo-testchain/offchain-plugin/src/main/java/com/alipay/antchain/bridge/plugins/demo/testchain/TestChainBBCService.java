@@ -169,7 +169,8 @@ public class TestChainBBCService implements IBBCService {
                         // put the ledger data inside, just for SPV or other attestations
                         testChainReceipt.toBytes(),
                         // this time we need no proof data. it's ok to set it with empty bytes
-                        "pretend that we have merkle proof or some stuff".getBytes()
+                        "pretend that we have merkle proof or some stuff".getBytes(),
+                        testChainReceipt.getTxhash().getBytes()
                 )
         ).collect(Collectors.toList());
     }

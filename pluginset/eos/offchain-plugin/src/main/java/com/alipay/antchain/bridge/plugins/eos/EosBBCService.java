@@ -440,7 +440,8 @@ public class EosBBCService implements IBBCService {
                                             // this time we need no verify. it's ok to set it with empty bytes
                                             new byte[]{},
                                             // this time we need no proof data. it's ok to set it with empty bytes
-                                            new byte[]{}
+                                            new byte[]{},
+                                            HexUtil.decodeHex(eosTxActions.getTxId())
                                     )
                             )
                     );
