@@ -32,12 +32,12 @@
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-plugin-lib</artifactId>
-            <version>0.1.1</version>
+            <version>0.1.2</version>
         </dependency>
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-spi</artifactId>
-            <version>0.1.1</version>
+            <version>0.1.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

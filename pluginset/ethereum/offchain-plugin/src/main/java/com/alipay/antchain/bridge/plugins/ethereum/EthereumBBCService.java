@@ -232,7 +232,8 @@ public class EthereumBBCService implements IBBCService {
                                 // todo: put ledger data, for SPV or other attestations
                                 "this time we need no verify. it's ok to set it with empty bytes".getBytes(),
                                 // todo: put proof data
-                                "this time we need no proof data. it's ok to set it with empty bytes".getBytes()
+                                "this time we need no proof data. it's ok to set it with empty bytes".getBytes(),
+                                HexUtil.decodeHex(logObject.getTransactionHash())
                         )
                 ).collect(Collectors.toList()));
             }

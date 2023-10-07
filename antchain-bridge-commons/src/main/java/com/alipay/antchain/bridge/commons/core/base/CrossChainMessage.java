@@ -55,6 +55,8 @@ public class CrossChainMessage {
         private byte[] ledgerData;
 
         private byte[] proof;
+
+        private byte[] txHash;
     }
 
     public static CrossChainMessage createCrossChainMessage(
@@ -64,7 +66,8 @@ public class CrossChainMessage {
             byte[] blockHash,
             byte[] message,
             byte[] ledgerData,
-            byte[] proof
+            byte[] proof,
+            byte[] txHash
     ) {
         CrossChainMessage msg = new CrossChainMessage();
         msg.setType(type);
@@ -75,6 +78,7 @@ public class CrossChainMessage {
         provableLedgerData.setBlockHash(blockHash);
         provableLedgerData.setHeight(height);
         provableLedgerData.setTimestamp(timestamp);
+        provableLedgerData.setTxHash(txHash);
         msg.setProvableData(provableLedgerData);
 
         return msg;
