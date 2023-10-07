@@ -14,7 +14,6 @@
 - Demo合约：这是一个Demo合约，实现了简单的消息接收、发送；
 
 下面的图片介绍了合约之间的关系，主要他们之间的调用权限，在部署时添加这个权限。
-
 <img src="https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/eos-contracts-arch.jpeg" style="zoom:50%;" />
 
 ## 部署AM合约
