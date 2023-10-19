@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package com.alipay.antchain.bridge.commons.core.sdp;
+package com.alipay.antchain.bridge.commons.core.base;
 
-import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
-import com.alipay.antchain.bridge.commons.core.base.CrossChainIdentity;
-import com.alipay.antchain.bridge.commons.core.base.IMessage;
+import lombok.*;
 
-public interface ISDPMessage extends IMessage {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UniformCrosschainPacket {
 
-    CrossChainDomain getTargetDomain();
+    private int version;
 
-    CrossChainIdentity getTargetIdentity();
+    private CrossChainDomain srcDomain;
 
-    int getSequence();
+    private CrossChainMessage srcMessage;
 
-    byte[] getPayload();
+    private ObjectIdentity ptcId;
 
-    int getVersion();
-
-    boolean getAtomic();
+    private byte[] tpProof;
 }

@@ -39,6 +39,11 @@ public enum CommonsErrorCodeEnum {
     UNSUPPORTED_CROSS_CHAIN_MESSAGE_TYPE_ERROR("0001", "unsupported cc msg type"),
 
     /**
+     * The type of {@link com.alipay.antchain.bridge.commons.core.base.ObjectIdentity} is not recognized
+     */
+    UNSUPPORTED_OID_TYPE_ERROR("0002", "unsupported oid type"),
+
+    /**
      * Something wrong about {@code AuthMessage}, like version, etc.
      */
     INCORRECT_AUTH_MESSAGE_ERROR("0101", "wrong am"),

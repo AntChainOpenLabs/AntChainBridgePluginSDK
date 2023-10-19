@@ -49,7 +49,7 @@ import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
  *     interfaces like {@link ISDPReader}.
  * </p>
  */
-public interface IAntChainBridgeDataReader extends ISDPReader {
+public interface IAntChainBridgeDataReader extends ISDPReader, IVerifierReader {
 
     /**
      * Fetch the cross-chain message receipt that contains information about the transaction

@@ -26,10 +26,12 @@ import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVMapping;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 @Getter
 @Setter
-@TLVMapping(fieldName = "domain")
+@FieldNameConstants
+@TLVMapping(fieldName = CrossChainDomain.Fields.domain)
 @NoArgsConstructor
 public class CrossChainDomain {
 
@@ -42,6 +44,10 @@ public class CrossChainDomain {
 
     public byte[] toBytes() {
         return this.domain.getBytes(StandardCharsets.UTF_8);
+    }
+
+    public boolean isDomainSpace() {
+        return StrUtil.startWith(this.domain, ".");
     }
 
     @Override

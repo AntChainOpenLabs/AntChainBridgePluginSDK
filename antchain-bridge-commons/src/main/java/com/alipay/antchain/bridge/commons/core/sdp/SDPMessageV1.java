@@ -127,4 +127,9 @@ public class SDPMessageV1 extends AbstractSDPMessage {
     public void setPayload(byte[] payload) {
         setSdpPayload(new SDPPayloadV1(payload));
     }
+
+    @Override
+    public boolean getAtomic() {
+        return false;
+    }
 }

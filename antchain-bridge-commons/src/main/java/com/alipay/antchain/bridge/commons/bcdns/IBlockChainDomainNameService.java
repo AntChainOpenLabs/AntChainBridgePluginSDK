@@ -14,23 +14,8 @@
  * limitations under the License.
  */
 
-package com.alipay.antchain.bridge.commons.core.sdp;
+package com.alipay.antchain.bridge.commons.bcdns;
 
-import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
-import com.alipay.antchain.bridge.commons.core.base.CrossChainIdentity;
-import com.alipay.antchain.bridge.commons.core.base.IMessage;
+public interface IBlockChainDomainNameService {
 
-public interface ISDPMessage extends IMessage {
-
-    CrossChainDomain getTargetDomain();
-
-    CrossChainIdentity getTargetIdentity();
-
-    int getSequence();
-
-    byte[] getPayload();
-
-    int getVersion();
-
-    boolean getAtomic();
 }

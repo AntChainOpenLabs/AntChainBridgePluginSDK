@@ -14,23 +14,11 @@
  * limitations under the License.
  */
 
-package com.alipay.antchain.bridge.commons.core.sdp;
+package com.alipay.antchain.bridge.commons.core.ptc;
 
-import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
-import com.alipay.antchain.bridge.commons.core.base.CrossChainIdentity;
-import com.alipay.antchain.bridge.commons.core.base.IMessage;
+public enum PTCTypeEnum {
 
-public interface ISDPMessage extends IMessage {
+    SIGNING_MACHINE,
 
-    CrossChainDomain getTargetDomain();
-
-    CrossChainIdentity getTargetIdentity();
-
-    int getSequence();
-
-    byte[] getPayload();
-
-    int getVersion();
-
-    boolean getAtomic();
+    BLOCKCHAIN;
 }
