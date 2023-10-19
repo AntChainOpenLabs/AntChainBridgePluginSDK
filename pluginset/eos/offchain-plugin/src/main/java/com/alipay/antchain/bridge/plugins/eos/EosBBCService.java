@@ -441,7 +441,7 @@ public class EosBBCService implements IBBCService {
                                             new byte[]{},
                                             // this time we need no proof data. it's ok to set it with empty bytes
                                             new byte[]{},
-                                            HexUtil.decodeHex(eosTxActions.getTxId())
+                                            HexUtil.decodeHex(eosTxActions.getTxId().replaceFirst("^0x", ""))
                                     )
                             )
                     );

@@ -233,7 +233,7 @@ public class EthereumBBCService implements IBBCService {
                                 "this time we need no verify. it's ok to set it with empty bytes".getBytes(),
                                 // todo: put proof data
                                 "this time we need no proof data. it's ok to set it with empty bytes".getBytes(),
-                                HexUtil.decodeHex(logObject.getTransactionHash())
+                                HexUtil.decodeHex(logObject.getTransactionHash().replaceFirst("^0x", ""))
                         )
                 ).collect(Collectors.toList()));
             }
