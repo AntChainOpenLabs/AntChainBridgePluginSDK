@@ -38,7 +38,7 @@ package com.alipay.antchain.bridge.plugins.spi.bbc.core.write;
  *     interfaces like {@link IAMWriter}, {@link ISDPWriter}.
  * </p>
  */
-public interface IAntChainBridgeDataWriter extends IAMWriter, ISDPWriter, IVerifierWriter {
+public interface IAntChainBridgeDataWriter extends IAMWriter, ISDPWriter {
 
     /**
      * Set up the AuthMessage contract.

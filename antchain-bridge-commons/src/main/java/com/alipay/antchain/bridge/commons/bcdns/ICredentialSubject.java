@@ -17,4 +17,6 @@
 package com.alipay.antchain.bridge.commons.bcdns;
 
 public interface ICredentialSubject {
+
+    byte[] encode();
 }

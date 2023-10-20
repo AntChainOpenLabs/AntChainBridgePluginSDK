@@ -91,7 +91,20 @@ public enum CommonsErrorCodeEnum {
     /**
      * Unsupported basic TLV type
      */
-    CODEC_TLV_UNSUPPORTED_TYPE("0603", "unsupported tlv type");
+    CODEC_TLV_UNSUPPORTED_TYPE("0603", "unsupported tlv type"),
+
+    /**
+     * Unsupported crosschain CA type
+     * <p>
+     *     Please check {@link com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateTypeEnum}
+     * </p>
+     */
+    BCDNS_UNSUPPORTED_CA_TYPE("0701", "unsupported crosschain CA type"),
+
+    /**
+     * Wrong version of crosschain CA.
+     */
+    BCDNS_WRONG_CA_VERSION("0702", "wrong crosschain CA version");
 
     /**
      * Error code for errors happened in project {@code antchain-bridge-commons}

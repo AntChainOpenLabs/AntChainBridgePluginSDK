@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ByteUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -194,18 +195,18 @@ public class TLVUtils {
     }
 
     private static List<Field> getAnnotatedFields(Class clz) {
-        List<Field> fieldList = new ArrayList<>();
-        Class tempClass = clz;
-        while (tempClass != null && !tempClass.getName().equalsIgnoreCase("java.lang.object")) {
-            fieldList.addAll(Arrays.asList(tempClass.getDeclaredFields()));
-            tempClass = tempClass.getSuperclass();
-        }
-
-        return fieldList.stream()
+        return fillFields(ListUtil.toList(), clz).stream()
                 .filter(field -> ObjectUtil.isNotEmpty(field.getAnnotation(TLVField.class)))
                 .collect(Collectors.toList());
     }
 
+    private static List<Field> fillFields(List<Field> fields, Class clz) {
+        if (ObjectUtil.isNull(clz) || clz.getName().equalsIgnoreCase("java.lang.object")) {
+            return fields;
+        }
+        fields.addAll(ListUtil.of(clz.getDeclaredFields()));
+        return fillFields(fields, clz.getSuperclass());
+    }
     public static <T> T decode(byte[] raw, Class<T> clz) {
         TLVPacket packet = TLVPacket.decode(raw);
         try {

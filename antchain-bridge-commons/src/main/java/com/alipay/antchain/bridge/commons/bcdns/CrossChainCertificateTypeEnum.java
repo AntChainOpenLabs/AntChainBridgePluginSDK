@@ -16,11 +16,33 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
+import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
+import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
+
 public enum CrossChainCertificateTypeEnum {
+
+    BCDNS_TRUST_ROOT_CERTIFICATE,
 
     DOMAIN_NAME_CERTIFICATE,
 
     PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE,
 
     RELAYER_CERTIFICATE;
+
+    public static CrossChainCertificateTypeEnum getTypeByCredentialSubject(ICredentialSubject credentialSubject) {
+        if (credentialSubject instanceof BCDNSTrustRootCredentialSubject) {
+            return BCDNS_TRUST_ROOT_CERTIFICATE;
+        } else if (credentialSubject instanceof DomainNameCredentialSubject) {
+            return DOMAIN_NAME_CERTIFICATE;
+        } else if (credentialSubject instanceof PTCCredentialSubject) {
+            return PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE;
+        } else if (credentialSubject instanceof RelayerCredentialSubject) {
+            return RELAYER_CERTIFICATE;
+        }
+
+        throw new AntChainBridgeCommonsException(
+                CommonsErrorCodeEnum.BCDNS_UNSUPPORTED_CA_TYPE,
+                "failed to parse type from subject class " + credentialSubject.getClass().getName()
+        );
+    }
 }

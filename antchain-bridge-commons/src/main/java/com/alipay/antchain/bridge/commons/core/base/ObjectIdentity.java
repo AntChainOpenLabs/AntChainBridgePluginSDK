@@ -19,11 +19,13 @@ package com.alipay.antchain.bridge.commons.core.base;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class ObjectIdentity {
 
     public static final short TLV_TYPE_OID_TYPE = 0x0000;

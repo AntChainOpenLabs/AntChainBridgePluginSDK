@@ -17,7 +17,6 @@
 package com.alipay.antchain.bridge.commons.bcdns;
 
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
-import com.alipay.antchain.bridge.commons.core.ptc.PTCTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;

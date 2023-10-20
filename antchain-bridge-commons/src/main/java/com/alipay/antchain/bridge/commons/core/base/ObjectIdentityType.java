@@ -21,13 +21,21 @@ import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 
 public enum ObjectIdentityType {
 
-    PUBLIC_KEY,
+    /**
+     * X.509 Subject Public Key Info.
+     * <p>
+     * According to <a href="https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.7">RFC5280</a>,
+     * we use the {@code X.509 Subject Public Key Info} structure to
+     * represent the object identity.
+     * </p>
+     */
+    X509_PUBLIC_KEY_INFO,
 
     BID;
 
     public static ObjectIdentityType parseFromValue(int value) {
-        if (value == PUBLIC_KEY.ordinal()) {
-            return PUBLIC_KEY;
+        if (value == X509_PUBLIC_KEY_INFO.ordinal()) {
+            return X509_PUBLIC_KEY_INFO;
         } else if (value == BID.ordinal()) {
             return BID;
         }
