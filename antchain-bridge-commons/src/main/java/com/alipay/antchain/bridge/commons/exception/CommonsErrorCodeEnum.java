@@ -104,7 +104,17 @@ public enum CommonsErrorCodeEnum {
     /**
      * Wrong version of crosschain CA.
      */
-    BCDNS_WRONG_CA_VERSION("0702", "wrong crosschain CA version");
+    BCDNS_WRONG_CA_VERSION("0702", "wrong crosschain CA version"),
+
+    /**
+     *
+     */
+    BCDNS_OID_X509_PUBLIC_KEY_INFO_ERROR("0703", "wrong X509_PUBLIC_KEY_INFO oid"),
+
+    /**
+     *
+     */
+    BCDNS_OID_UNSUPPORTED_TYPE("0704", "unsupported oid type");
 
     /**
      * Error code for errors happened in project {@code antchain-bridge-commons}

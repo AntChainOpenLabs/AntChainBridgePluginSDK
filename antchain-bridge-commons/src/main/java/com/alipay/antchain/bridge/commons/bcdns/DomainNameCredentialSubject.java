@@ -38,7 +38,7 @@ public class DomainNameCredentialSubject implements ICredentialSubject {
 
     private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_SUBJECT = 0x0004;
 
-    public DomainNameCredentialSubject decode(byte[] rawData) {
+    public static DomainNameCredentialSubject decode(byte[] rawData) {
         return TLVUtils.decode(rawData, DomainNameCredentialSubject.class);
     }
 

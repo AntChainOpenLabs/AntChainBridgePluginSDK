@@ -33,13 +33,15 @@ public class AbstractCrossChainCertificate {
     @AllArgsConstructor
     public static class IssueProof {
 
-        public static final IssueProof EMPTY_PROOF = new IssueProof("", "".getBytes(), "".getBytes());
+        public static final IssueProof EMPTY_PROOF = new IssueProof("", "".getBytes(), "SHA256WithRSA", "".getBytes());
 
         public static final short TLV_TYPE_ISSUE_PROOF_HASH_ALGO = 0x0000;
 
         public static final short TLV_TYPE_ISSUE_PROOF_CERT_HASH = 0x0001;
 
-        public static final short TLV_TYPE_ISSUE_PROOF_RAW_PROOF = 0x0002;
+        public static final short TLV_TYPE_ISSUE_PROOF_SIG_ALGO = 0x0002;
+
+        public static final short TLV_TYPE_ISSUE_PROOF_RAW_PROOF = 0x0003;
 
         @TLVField(tag = TLV_TYPE_ISSUE_PROOF_HASH_ALGO, type = TLVTypeEnum.STRING)
         private String hashAlgo;
@@ -47,7 +49,10 @@ public class AbstractCrossChainCertificate {
         @TLVField(tag = TLV_TYPE_ISSUE_PROOF_CERT_HASH, type = TLVTypeEnum.BYTES, order = 1)
         private byte[] certHash;
 
-        @TLVField(tag = TLV_TYPE_ISSUE_PROOF_RAW_PROOF, type = TLVTypeEnum.BYTES, order = 2)
+        @TLVField(tag = TLV_TYPE_ISSUE_PROOF_SIG_ALGO, type = TLVTypeEnum.STRING, order = 2)
+        private String sigAlgo;
+
+        @TLVField(tag = TLV_TYPE_ISSUE_PROOF_RAW_PROOF, type = TLVTypeEnum.BYTES, order = 3)
         private byte[] rawProof;
     }
 

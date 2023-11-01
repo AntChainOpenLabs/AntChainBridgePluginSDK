@@ -16,9 +16,12 @@
 
 package com.alipay.antchain.bridge.commons.bcdns.utils;
 
+import java.io.ByteArrayInputStream;
+
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.PemUtil;
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
+import com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateFactory;
 import com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateTypeEnum;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
@@ -53,5 +56,9 @@ public class CrossChainCertificateUtil {
                         "unsupported crosschain certificate type"
                 );
         }
+    }
+
+    public AbstractCrossChainCertificate readCrossChainCertificateFromPem(byte[] rawPem) {
+        return CrossChainCertificateFactory.createCrossChainCertificate(PemUtil.readPem(new ByteArrayInputStream(rawPem)));
     }
 }

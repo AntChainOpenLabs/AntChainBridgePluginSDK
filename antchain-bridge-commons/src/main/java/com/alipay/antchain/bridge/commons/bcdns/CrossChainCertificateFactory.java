@@ -19,6 +19,7 @@ package com.alipay.antchain.bridge.commons.bcdns;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
+import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 
 public class CrossChainCertificateFactory {
 
@@ -46,5 +47,9 @@ public class CrossChainCertificateFactory {
                         "wrong version of crosschain CA: " + version
                 );
         }
+    }
+
+    public static AbstractCrossChainCertificate createCrossChainCertificate(byte[] data) {
+        return TLVUtils.decode(data, CrossChainCertificateV1.class);
     }
 }

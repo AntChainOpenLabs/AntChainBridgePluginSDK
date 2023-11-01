@@ -51,5 +51,7 @@ public class BCDNSTest {
         );
         certificate.setProof(AbstractCrossChainCertificate.IssueProof.EMPTY_PROOF);
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(certificate));
+
+
     }
 }
