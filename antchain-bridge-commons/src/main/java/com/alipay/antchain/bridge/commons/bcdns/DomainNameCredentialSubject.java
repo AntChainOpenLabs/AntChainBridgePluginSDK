@@ -21,12 +21,18 @@ import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class DomainNameCredentialSubject implements ICredentialSubject {
+
+    public static final String CURRENT_VERSION = "1.0";
 
     private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_VERSION = 0x0000;
 

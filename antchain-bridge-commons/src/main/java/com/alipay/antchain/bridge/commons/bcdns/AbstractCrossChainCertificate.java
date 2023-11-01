@@ -88,9 +88,15 @@ public class AbstractCrossChainCertificate {
     @TLVField(tag = TLV_TYPE_CERT_ISSUER, type = TLVTypeEnum.BYTES, order = 3)
     private ObjectIdentity issuer;
 
+    /**
+     * It's seconds for timestamp
+     */
     @TLVField(tag = TLV_TYPE_CERT_ISSUANCE_DATE, type = TLVTypeEnum.UINT64, order = 4)
     private long issuanceDate;
 
+    /**
+     * It's seconds for timestamp
+     */
     @TLVField(tag = TLV_TYPE_CERT_EXPIRATION_DATE, type = TLVTypeEnum.UINT64, order = 5)
     private long expirationDate;
 
