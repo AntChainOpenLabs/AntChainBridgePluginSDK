@@ -35,6 +35,12 @@ import lombok.experimental.FieldNameConstants;
 @NoArgsConstructor
 public class CrossChainDomain {
 
+    /**
+     * We use the empty string as the root domain name space.
+     * Nothing means everything.
+     */
+    public static String ROOT_DOMAIN_SPACE = "";
+
     private String domain;
 
     @AntChainBridgeRules({DomainLengthRule.class})
