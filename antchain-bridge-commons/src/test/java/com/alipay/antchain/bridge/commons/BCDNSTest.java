@@ -16,7 +16,8 @@
 
 package com.alipay.antchain.bridge.commons;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.StringWriter;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.Security;
@@ -35,16 +36,22 @@ import com.alipay.antchain.bridge.commons.core.base.ObjectIdentityType;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class BCDNSTest {
 
-    @Test
-    public void testCrossChainCertificate() throws Exception {
+    private static KeyPair keyPair;
+
+    @BeforeClass
+    public static void setUp() throws Exception {
         Security.addProvider(new BouncyCastleProvider());
 
-        KeyPair keyPair = KeyUtil.generateKeyPair("SM2");
-        keyPair.getPublic().getEncoded();
+        keyPair = KeyUtil.generateKeyPair("SM2");
+    }
+
+    @Test
+    public void testCrossChainCertificate() throws Exception {
 
         // construct a bcdns root cert
         AbstractCrossChainCertificate certificate = CrossChainCertificateFactory.createCrossChainCertificate(
@@ -52,7 +59,7 @@ public class BCDNSTest {
                 "test",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                 DateUtil.currentSeconds(),
-                DateUtil.offsetDay(new Date(), 365).second(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
                 new BCDNSTrustRootCredentialSubject(
                         "bif",
                         new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
@@ -88,7 +95,7 @@ public class BCDNSTest {
                 "testdomain",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                 DateUtil.currentSeconds(),
-                DateUtil.offsetDay(new Date(), 365).second(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
                 new DomainNameCredentialSubject(
                         DomainNameCredentialSubject.CURRENT_VERSION,
                         DomainNameTypeEnum.DOMAIN_NAME,
@@ -117,7 +124,7 @@ public class BCDNSTest {
                 ".com",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                 DateUtil.currentSeconds(),
-                DateUtil.offsetDay(new Date(), 365).second(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
                 new DomainNameCredentialSubject(
                         DomainNameCredentialSubject.CURRENT_VERSION,
                         DomainNameTypeEnum.DOMAIN_NAME_SPACE,
@@ -145,7 +152,7 @@ public class BCDNSTest {
                 "antchain-relayer",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                 DateUtil.currentSeconds(),
-                DateUtil.offsetDay(new Date(), 365).second(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
                 new RelayerCredentialSubject(
                         RelayerCredentialSubject.CURRENT_VERSION,
                         "antchain-relayer",
@@ -176,5 +183,96 @@ public class BCDNSTest {
 
         PrivateKey privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
         Assert.assertNotNull(privatePem);
+    }
+
+    @Test
+    public void testMultipleCerts() throws Exception {
+
+        // construct a domain cert
+        AbstractCrossChainCertificate domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                CrossChainCertificateV1.MY_VERSION,
+                "testdomain1",
+                new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
+                DateUtil.currentSeconds(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
+                new DomainNameCredentialSubject(
+                        DomainNameCredentialSubject.CURRENT_VERSION,
+                        DomainNameTypeEnum.DOMAIN_NAME,
+                        new CrossChainDomain("catchain.com"),
+                        new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
+                        new byte[]{}
+                )
+        );
+
+        Signature signer = Signature.getInstance("SM3WITHSM2");
+        signer.initSign(keyPair.getPrivate());
+        signer.update(domainCert.getEncodedToSign());
+        domainCert.setProof(
+                new AbstractCrossChainCertificate.IssueProof(
+                        "SM3",
+                        SM3.create().digest(domainCert.getEncodedToSign()),
+                        "SM3WITHSM2",
+                        signer.sign()
+                )
+        );
+        System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert));
+
+        // construct a domain cert
+        domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                CrossChainCertificateV1.MY_VERSION,
+                "testdomain2",
+                new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
+                DateUtil.currentSeconds(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
+                new DomainNameCredentialSubject(
+                        DomainNameCredentialSubject.CURRENT_VERSION,
+                        DomainNameTypeEnum.DOMAIN_NAME,
+                        new CrossChainDomain("dogchain.com"),
+                        new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
+                        new byte[]{}
+                )
+        );
+
+        signer = Signature.getInstance("SM3WITHSM2");
+        signer.initSign(keyPair.getPrivate());
+        signer.update(domainCert.getEncodedToSign());
+        domainCert.setProof(
+                new AbstractCrossChainCertificate.IssueProof(
+                        "SM3",
+                        SM3.create().digest(domainCert.getEncodedToSign()),
+                        "SM3WITHSM2",
+                        signer.sign()
+                )
+        );
+        System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert));
+
+        // construct a domain cert
+        domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                CrossChainCertificateV1.MY_VERSION,
+                "testdomain3",
+                new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
+                DateUtil.currentSeconds(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
+                new DomainNameCredentialSubject(
+                        DomainNameCredentialSubject.CURRENT_VERSION,
+                        DomainNameTypeEnum.DOMAIN_NAME,
+                        new CrossChainDomain("birdchain.com"),
+                        new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
+                        new byte[]{}
+                )
+        );
+
+        signer = Signature.getInstance("SM3WITHSM2");
+        signer.initSign(keyPair.getPrivate());
+        signer.update(domainCert.getEncodedToSign());
+        domainCert.setProof(
+                new AbstractCrossChainCertificate.IssueProof(
+                        "SM3",
+                        SM3.create().digest(domainCert.getEncodedToSign()),
+                        "SM3WITHSM2",
+                        signer.sign()
+                )
+        );
+        System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert));
     }
 }

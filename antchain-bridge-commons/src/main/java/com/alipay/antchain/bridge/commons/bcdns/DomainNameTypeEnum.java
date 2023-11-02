@@ -21,4 +21,15 @@ public enum DomainNameTypeEnum {
     DOMAIN_NAME,
 
     DOMAIN_NAME_SPACE;
+
+    public static DomainNameTypeEnum valueOf(Byte value) {
+        switch (value) {
+            case 0:
+                return DOMAIN_NAME;
+            case 1:
+                return DOMAIN_NAME_SPACE;
+            default:
+                return null;
+        }
+    }
 }

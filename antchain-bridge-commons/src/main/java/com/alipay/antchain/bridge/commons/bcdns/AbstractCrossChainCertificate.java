@@ -22,15 +22,18 @@ import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class AbstractCrossChainCertificate {
     @Getter
     @Setter
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class IssueProof {
 
         public static final IssueProof EMPTY_PROOF = new IssueProof("", "".getBytes(), "SHA256WithRSA", "".getBytes());

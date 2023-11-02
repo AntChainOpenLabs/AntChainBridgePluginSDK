@@ -21,11 +21,15 @@ import com.alipay.antchain.bridge.commons.core.ptc.PTCTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PTCCredentialSubject implements ICredentialSubject {
 
     public static final short TLV_TYPE_PTC_CREDENTIAL_SUBJECT_VERSION = 0x0000;

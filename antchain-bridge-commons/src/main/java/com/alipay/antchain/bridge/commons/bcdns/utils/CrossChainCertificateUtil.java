@@ -16,13 +16,11 @@
 
 package com.alipay.antchain.bridge.commons.bcdns.utils;
 
-import java.io.ByteArrayInputStream;
-
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.PemUtil;
-import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
-import com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateFactory;
-import com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateTypeEnum;
+import com.alipay.antchain.bridge.commons.bcdns.*;
+import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 
@@ -58,7 +56,33 @@ public class CrossChainCertificateUtil {
         }
     }
 
-    public AbstractCrossChainCertificate readCrossChainCertificateFromPem(byte[] rawPem) {
-        return CrossChainCertificateFactory.createCrossChainCertificate(PemUtil.readPem(new ByteArrayInputStream(rawPem)));
+    public static AbstractCrossChainCertificate readCrossChainCertificateFromPem(byte[] rawPem) {
+        return CrossChainCertificateFactory.createCrossChainCertificateFromPem(rawPem);
+    }
+
+    public static CrossChainDomain getCrossChainDomain(AbstractCrossChainCertificate certificate) {
+        Assert.equals(
+                CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE,
+                certificate.getType()
+        );
+        DomainNameCredentialSubject subject = DomainNameCredentialSubject.decode(certificate.getCredentialSubject());
+        Assert.equals(
+                subject.getDomainNameType(),
+                DomainNameTypeEnum.DOMAIN_NAME
+        );
+        return subject.getDomainName();
+    }
+
+    public static CrossChainDomain getCrossChainDomainSpace(AbstractCrossChainCertificate certificate) {
+        Assert.equals(
+                CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE,
+                certificate.getType()
+        );
+        DomainNameCredentialSubject subject = DomainNameCredentialSubject.decode(certificate.getCredentialSubject());
+        Assert.equals(
+                subject.getDomainNameType(),
+                DomainNameTypeEnum.DOMAIN_NAME_SPACE
+        );
+        return subject.getDomainName();
     }
 }

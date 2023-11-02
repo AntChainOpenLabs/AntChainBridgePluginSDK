@@ -29,6 +29,21 @@ public enum CrossChainCertificateTypeEnum {
 
     RELAYER_CERTIFICATE;
 
+    public static CrossChainCertificateTypeEnum valueOf(Byte value) {
+        switch (value) {
+            case 0:
+                return BCDNS_TRUST_ROOT_CERTIFICATE;
+            case 1:
+                return DOMAIN_NAME_CERTIFICATE;
+            case 2:
+                return PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE;
+            case 3:
+                return RELAYER_CERTIFICATE;
+            default:
+                return null;
+        }
+    }
+
     public static CrossChainCertificateTypeEnum getTypeByCredentialSubject(ICredentialSubject credentialSubject) {
         if (credentialSubject instanceof BCDNSTrustRootCredentialSubject) {
             return BCDNS_TRUST_ROOT_CERTIFICATE;

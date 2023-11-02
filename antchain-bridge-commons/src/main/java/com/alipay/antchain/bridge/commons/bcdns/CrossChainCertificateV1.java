@@ -21,6 +21,7 @@ import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class CrossChainCertificateV1 extends AbstractCrossChainCertificate {
 
     public static final String MY_VERSION = "1";

@@ -44,4 +44,15 @@ public enum ObjectIdentityType {
                 "Invalid value for oid type: " + value
         );
     }
+
+    public static ObjectIdentityType valueOf(Byte value) {
+        switch (value) {
+            case 0:
+                return X509_PUBLIC_KEY_INFO;
+            case 1:
+                return BID;
+            default:
+                return null;
+        }
+    }
 }

@@ -33,6 +33,10 @@ public class X509PubkeyInfoObjectIdentity extends ObjectIdentity {
         super(ObjectIdentityType.X509_PUBLIC_KEY_INFO, rawSubjectPubkeyInfo);
     }
 
+    public X509PubkeyInfoObjectIdentity(ObjectIdentity objectIdentity) {
+        super(objectIdentity.getType(), objectIdentity.getRawId());
+    }
+
     public SubjectPublicKeyInfo getSubjectPublicKeyInfo() {
         if (ObjectUtil.isNull(subjectPublicKeyInfo)) {
             this.subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(this.getRawId());

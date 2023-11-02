@@ -28,7 +28,7 @@ public class ObjectIdentityUtil {
     public static PublicKey getPublicKeyFromSubject(ObjectIdentity oid, byte[] rawSubject) {
         switch (oid.getType()) {
             case X509_PUBLIC_KEY_INFO:
-                return ((X509PubkeyInfoObjectIdentity) oid).getPublicKey();
+                return new X509PubkeyInfoObjectIdentity(oid).getPublicKey();
             case BID:
                 //TODO: write BID stuff here
                 return null;

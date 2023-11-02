@@ -16,6 +16,9 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
+import java.io.ByteArrayInputStream;
+
+import cn.hutool.crypto.PemUtil;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
@@ -51,5 +54,9 @@ public class CrossChainCertificateFactory {
 
     public static AbstractCrossChainCertificate createCrossChainCertificate(byte[] data) {
         return TLVUtils.decode(data, CrossChainCertificateV1.class);
+    }
+
+    public static AbstractCrossChainCertificate createCrossChainCertificateFromPem(byte[] pemData) {
+        return TLVUtils.decode(PemUtil.readPem(new ByteArrayInputStream(pemData)), CrossChainCertificateV1.class);
     }
 }
