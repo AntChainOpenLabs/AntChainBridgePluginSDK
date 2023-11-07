@@ -18,13 +18,11 @@ package com.alipay.antchain.bridge.commons;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.Security;
-import java.security.Signature;
+import java.security.*;
 import java.util.Date;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.KeyUtil;
 import cn.hutool.crypto.PemUtil;
 import cn.hutool.crypto.digest.SM3;
@@ -88,6 +86,7 @@ public class BCDNSTest {
                 )
         );
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(certificate));
+        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(certificate).getBytes(), "cc_certs/trust_root.crt");
 
         // construct a domain cert
         AbstractCrossChainCertificate domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
@@ -99,6 +98,7 @@ public class BCDNSTest {
                 new DomainNameCredentialSubject(
                         DomainNameCredentialSubject.CURRENT_VERSION,
                         DomainNameTypeEnum.DOMAIN_NAME,
+                        new CrossChainDomain(".com"),
                         new CrossChainDomain("antchain.com"),
                         new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                         new byte[]{}
@@ -117,6 +117,7 @@ public class BCDNSTest {
                 )
         );
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert));
+        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert).getBytes(), "cc_certs/antchain.com.crt");
 
         // construct a domain space cert
         AbstractCrossChainCertificate domainSpaceCert = CrossChainCertificateFactory.createCrossChainCertificate(
@@ -128,6 +129,7 @@ public class BCDNSTest {
                 new DomainNameCredentialSubject(
                         DomainNameCredentialSubject.CURRENT_VERSION,
                         DomainNameTypeEnum.DOMAIN_NAME_SPACE,
+                        new CrossChainDomain(CrossChainDomain.ROOT_DOMAIN_SPACE),
                         new CrossChainDomain(".com"),
                         new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                         new byte[]{}
@@ -145,6 +147,7 @@ public class BCDNSTest {
                 )
         );
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainSpaceCert));
+        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainSpaceCert).getBytes(), "cc_certs/x.com.crt");
 
         // construct a relayer cert
         AbstractCrossChainCertificate relayerCert = CrossChainCertificateFactory.createCrossChainCertificate(
@@ -172,6 +175,7 @@ public class BCDNSTest {
                 )
         );
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert));
+        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert).getBytes(), "cc_certs/relayer.crt");
 
         // dump the private key into pem
         StringWriter stringWriter = new StringWriter(256);
@@ -180,6 +184,7 @@ public class BCDNSTest {
         jcaPEMWriter.close();
         String privatePem = stringWriter.toString();
         System.out.println(privatePem);
+        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert).getBytes(), "cc_certs/private_key.pem");
 
         PrivateKey privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
         Assert.assertNotNull(privatePem);
@@ -198,6 +203,7 @@ public class BCDNSTest {
                 new DomainNameCredentialSubject(
                         DomainNameCredentialSubject.CURRENT_VERSION,
                         DomainNameTypeEnum.DOMAIN_NAME,
+                        new CrossChainDomain(".com"),
                         new CrossChainDomain("catchain.com"),
                         new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                         new byte[]{}
@@ -216,6 +222,7 @@ public class BCDNSTest {
                 )
         );
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert));
+        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert).getBytes(), "cc_certs/catchain.com.crt");
 
         // construct a domain cert
         domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
@@ -227,6 +234,7 @@ public class BCDNSTest {
                 new DomainNameCredentialSubject(
                         DomainNameCredentialSubject.CURRENT_VERSION,
                         DomainNameTypeEnum.DOMAIN_NAME,
+                        new CrossChainDomain(".com"),
                         new CrossChainDomain("dogchain.com"),
                         new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                         new byte[]{}
@@ -245,6 +253,7 @@ public class BCDNSTest {
                 )
         );
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert));
+        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert).getBytes(), "cc_certs/dogchain.com.crt");
 
         // construct a domain cert
         domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
@@ -256,6 +265,7 @@ public class BCDNSTest {
                 new DomainNameCredentialSubject(
                         DomainNameCredentialSubject.CURRENT_VERSION,
                         DomainNameTypeEnum.DOMAIN_NAME,
+                        new CrossChainDomain(".com"),
                         new CrossChainDomain("birdchain.com"),
                         new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
                         new byte[]{}
@@ -274,5 +284,6 @@ public class BCDNSTest {
                 )
         );
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert));
+        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(domainCert).getBytes(), "cc_certs/birdchain.com.crt");
     }
 }

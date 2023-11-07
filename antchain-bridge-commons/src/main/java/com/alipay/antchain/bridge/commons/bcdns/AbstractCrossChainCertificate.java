@@ -16,6 +16,7 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
+import cn.hutool.core.codec.Base64;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
@@ -115,5 +116,9 @@ public class AbstractCrossChainCertificate {
 
     public byte[] encode() {
         return TLVUtils.encode(this);
+    }
+
+    public String encodeToBase64() {
+        return Base64.encode(encode());
     }
 }

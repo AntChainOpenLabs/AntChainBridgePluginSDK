@@ -38,11 +38,13 @@ public class DomainNameCredentialSubject implements ICredentialSubject {
 
     private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME_TYPE = 0x0001;
 
-    private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME = 0x0002;
+    private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_PARENT_DOMAIN_SPACE = 0x0002;
 
-    private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_APPLICANT = 0x0003;
+    private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME = 0x0003;
 
-    private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_SUBJECT = 0x0004;
+    private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_APPLICANT = 0x0004;
+
+    private static final short TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_SUBJECT = 0x0005;
 
     public static DomainNameCredentialSubject decode(byte[] rawData) {
         return TLVUtils.decode(rawData, DomainNameCredentialSubject.class);
@@ -51,16 +53,39 @@ public class DomainNameCredentialSubject implements ICredentialSubject {
     @TLVField(tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_VERSION, type = TLVTypeEnum.STRING)
     private String version;
 
-    @TLVField(tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME_TYPE, type = TLVTypeEnum.UINT8, order = 1)
+    @TLVField(
+            tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME_TYPE,
+            type = TLVTypeEnum.UINT8,
+            order = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME_TYPE
+    )
     private DomainNameTypeEnum domainNameType;
 
-    @TLVField(tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME, type = TLVTypeEnum.STRING, order = 2)
+    @TLVField(
+            tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_PARENT_DOMAIN_SPACE,
+            type = TLVTypeEnum.STRING,
+            order = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_PARENT_DOMAIN_SPACE
+    )
+    private CrossChainDomain parentDomainSpace;
+
+    @TLVField(
+            tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME,
+            type = TLVTypeEnum.STRING,
+            order = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_DOMAIN_NAME
+    )
     private CrossChainDomain domainName;
 
-    @TLVField(tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_APPLICANT, type = TLVTypeEnum.BYTES, order = 3)
+    @TLVField(
+            tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_APPLICANT,
+            type = TLVTypeEnum.BYTES,
+            order = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_APPLICANT
+    )
     private ObjectIdentity applicant;
 
-    @TLVField(tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_SUBJECT, type = TLVTypeEnum.BYTES, order = 4)
+    @TLVField(
+            tag = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_SUBJECT,
+            type = TLVTypeEnum.BYTES,
+            order = TLV_TYPE_DOMAIN_NAME_CREDENTIAL_SUBJECT_SUBJECT
+    )
     private byte[] subject;
 
     public byte[] encode() {

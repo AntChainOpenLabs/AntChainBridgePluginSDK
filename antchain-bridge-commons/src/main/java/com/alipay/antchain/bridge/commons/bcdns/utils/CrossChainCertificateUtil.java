@@ -16,6 +16,8 @@
 
 package com.alipay.antchain.bridge.commons.bcdns.utils;
 
+import java.security.PublicKey;
+
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.PemUtil;
@@ -84,5 +86,52 @@ public class CrossChainCertificateUtil {
                 DomainNameTypeEnum.DOMAIN_NAME_SPACE
         );
         return subject.getDomainName();
+    }
+
+    public static CrossChainDomain getParentDomainSpace(AbstractCrossChainCertificate certificate) {
+        Assert.equals(
+                CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE,
+                certificate.getType()
+        );
+        DomainNameCredentialSubject subject = DomainNameCredentialSubject.decode(certificate.getCredentialSubject());
+        Assert.equals(
+                subject.getDomainNameType(),
+                DomainNameTypeEnum.DOMAIN_NAME_SPACE
+        );
+        return subject.getDomainName();
+    }
+
+    public static PublicKey getPublicKeyFromCrossChainCertificate(AbstractCrossChainCertificate certificate) {
+        switch (certificate.getType()) {
+            case BCDNS_TRUST_ROOT_CERTIFICATE:
+                BCDNSTrustRootCredentialSubject trustRootCredentialSubject = BCDNSTrustRootCredentialSubject.decode(certificate.getCredentialSubject());
+                return ObjectIdentityUtil.getPublicKeyFromSubject(
+                        trustRootCredentialSubject.getBcdnsRootOwner(),
+                        trustRootCredentialSubject.getBcdnsRootSubjectInfo()
+                );
+            case DOMAIN_NAME_CERTIFICATE:
+                DomainNameCredentialSubject domainNameCredentialSubject = DomainNameCredentialSubject.decode(certificate.getCredentialSubject());
+                return ObjectIdentityUtil.getPublicKeyFromSubject(
+                        domainNameCredentialSubject.getApplicant(),
+                        domainNameCredentialSubject.getSubject()
+                );
+            case RELAYER_CERTIFICATE:
+                RelayerCredentialSubject relayerCredentialSubject = RelayerCredentialSubject.decode(certificate.getCredentialSubject());
+                return ObjectIdentityUtil.getPublicKeyFromSubject(
+                        relayerCredentialSubject.getApplicant(),
+                        relayerCredentialSubject.getSubjectInfo()
+                );
+            case PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE:
+                PTCCredentialSubject ptcCredentialSubject = PTCCredentialSubject.decode(certificate.getCredentialSubject());
+                return ObjectIdentityUtil.getPublicKeyFromSubject(
+                        ptcCredentialSubject.getApplicant(),
+                        ptcCredentialSubject.getSubjectInfo()
+                );
+            default:
+                throw new AntChainBridgeCommonsException(
+                        CommonsErrorCodeEnum.BCDNS_UNSUPPORTED_CA_TYPE,
+                        "cert type not support" + certificate.getType().name()
+                );
+        }
     }
 }
