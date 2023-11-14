@@ -18,7 +18,10 @@ package com.alipay.antchain.bridge.commons;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
-import java.security.*;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.Security;
+import java.security.Signature;
 import java.util.Date;
 
 import cn.hutool.core.date.DateUtil;
@@ -31,6 +34,11 @@ import com.alipay.antchain.bridge.commons.bcdns.utils.CrossChainCertificateUtil;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentityType;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.Assert;
@@ -180,11 +188,16 @@ public class BCDNSTest {
         // dump the private key into pem
         StringWriter stringWriter = new StringWriter(256);
         JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(stringWriter);
-        jcaPEMWriter.writeObject(keyPair.getPrivate());
+        AlgorithmIdentifier algorithmIdentifier = new AlgorithmIdentifier(PKCSObjectIdentifiers.pkcs_12);
+
+        ASN1Object asn1Object = ASN1ObjectIdentifier.fromByteArray(keyPair.getPrivate().getEncoded());
+        PrivateKeyInfo privateKeyInfo = new PrivateKeyInfo(algorithmIdentifier, asn1Object);
+
+        jcaPEMWriter.writeObject(privateKeyInfo);
         jcaPEMWriter.close();
         String privatePem = stringWriter.toString();
         System.out.println(privatePem);
-        FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert).getBytes(), "cc_certs/private_key.pem");
+        FileUtil.writeBytes(privatePem.getBytes(), "cc_certs/private_key.pem");
 
         PrivateKey privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
         Assert.assertNotNull(privatePem);
