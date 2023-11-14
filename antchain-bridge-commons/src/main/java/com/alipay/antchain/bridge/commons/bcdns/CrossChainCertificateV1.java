@@ -19,6 +19,9 @@ package com.alipay.antchain.bridge.commons.bcdns;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,6 +30,7 @@ public class CrossChainCertificateV1 extends AbstractCrossChainCertificate {
     public static final String MY_VERSION = "1";
 
     public CrossChainCertificateV1(
+            String context,
             String id,
             CrossChainCertificateTypeEnum type,
             ObjectIdentity issuer,
@@ -35,6 +39,7 @@ public class CrossChainCertificateV1 extends AbstractCrossChainCertificate {
             ICredentialSubject credentialSubject
     ) {
         super(
+                context,
                 MY_VERSION,
                 id,
                 type,

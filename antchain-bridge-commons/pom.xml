@@ -60,6 +60,16 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>cn.bid</groupId>
+            <artifactId>bid-sdk</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.bitfactory</groupId>
+            <artifactId>bif-chain-sdk</artifactId>
+            <version>1.0.2</version>
+        </dependency>
     </dependencies>
 
     <build>

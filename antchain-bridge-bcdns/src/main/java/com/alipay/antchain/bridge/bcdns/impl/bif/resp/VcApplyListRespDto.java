@@ -1,21 +1,13 @@
-package com.alipay.antchain.bridge.bcdns.impl.bif.resp;
-
-import java.util.List;
+package org.bcdns.credential.dto.resp;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @author skye
- * @version 1.0
- * @description:
- * @date 2021/6/3 15:00
- */
+import java.util.Date;
+import java.util.List;
 @NoArgsConstructor
 @Data
 public class VcApplyListRespDto {
-
-
     private PageDTO page = new PageDTO();
     private List<IssueListDTO> dataList;
 
@@ -36,21 +28,13 @@ public class VcApplyListRespDto {
     @NoArgsConstructor
     @Data
     public static class IssueListDTO {
-
-
         private String applyNo;
-        private String credentialBid;
-        private String name;
-        private String categoryName;
+        private String credentialId;
         private String status;
-        private String userName;
+        private byte[] userId;
         private Long createTime;
-        private String templateBid;
-        private String auditName;
+        private Integer credentialType;
         private Long auditTime;
-        private Long dealTime;
-        private String userBid;
-        private String version;
         private Integer isDownload;
     }
 }

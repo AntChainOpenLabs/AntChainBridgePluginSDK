@@ -17,6 +17,7 @@
 package com.alipay.antchain.bridge.commons.bcdns;
 
 import cn.hutool.core.codec.Base64;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
@@ -25,6 +26,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -60,58 +63,64 @@ public class AbstractCrossChainCertificate {
         private byte[] rawProof;
     }
 
-    public static final short TLV_TYPE_CERT_VERSION = 0x0000;
+    public static final short TLV_TYPE_CERT_CONTEXT = 0x0000;
 
-    public static final short TLV_TYPE_CERT_ID = 0x0001;
+    public static final short TLV_TYPE_CERT_VERSION = 0x0001;
 
-    public static final short TLV_TYPE_CERT_TYPE = 0x0002;
+    public static final short TLV_TYPE_CERT_ID = 0x0002;
 
-    public static final short TLV_TYPE_CERT_ISSUER = 0x0003;
+    public static final short TLV_TYPE_CERT_TYPE = 0x0003;
 
-    public static final short TLV_TYPE_CERT_ISSUANCE_DATE = 0x0004;
+    public static final short TLV_TYPE_CERT_ISSUER = 0x0004;
 
-    public static final short TLV_TYPE_CERT_EXPIRATION_DATE = 0x0005;
+    public static final short TLV_TYPE_CERT_ISSUANCE_DATE = 0x0005;
 
-    public static final short TLV_TYPE_CERT_CREDENTIAL_SUBJECT = 0x0006;
+    public static final short TLV_TYPE_CERT_EXPIRATION_DATE = 0x0006;
 
-    public static final short TLV_TYPE_CERT_PROOF = 0x0007;
+    public static final short TLV_TYPE_CERT_CREDENTIAL_SUBJECT = 0x0007;
+
+    public static final short TLV_TYPE_CERT_PROOF = 0x0008;
 
     public static AbstractCrossChainCertificate decode(byte[] rawData) {
         return TLVUtils.decode(rawData, AbstractCrossChainCertificate.class);
     }
 
-    @TLVField(tag = TLV_TYPE_CERT_VERSION, type = TLVTypeEnum.STRING)
+    @TLVField(tag = TLV_TYPE_CERT_CONTEXT, type = TLVTypeEnum.STRING)
+    @JSONField(name="@context")
+    private String context;
+
+    @TLVField(tag = TLV_TYPE_CERT_VERSION, type = TLVTypeEnum.STRING, order = 1)
     private String version;
 
-    @TLVField(tag = TLV_TYPE_CERT_ID, type = TLVTypeEnum.STRING, order = 1)
+    @TLVField(tag = TLV_TYPE_CERT_ID, type = TLVTypeEnum.STRING, order = 2)
     private String id;
 
-    @TLVField(tag = TLV_TYPE_CERT_TYPE, type = TLVTypeEnum.UINT8, order = 2)
+    @TLVField(tag = TLV_TYPE_CERT_TYPE, type = TLVTypeEnum.UINT8, order = 3)
     private CrossChainCertificateTypeEnum type;
 
-    @TLVField(tag = TLV_TYPE_CERT_ISSUER, type = TLVTypeEnum.BYTES, order = 3)
+    @TLVField(tag = TLV_TYPE_CERT_ISSUER, type = TLVTypeEnum.BYTES, order = 4)
     private ObjectIdentity issuer;
 
     /**
      * It's seconds for timestamp
      */
-    @TLVField(tag = TLV_TYPE_CERT_ISSUANCE_DATE, type = TLVTypeEnum.UINT64, order = 4)
+    @TLVField(tag = TLV_TYPE_CERT_ISSUANCE_DATE, type = TLVTypeEnum.UINT64, order = 5)
     private long issuanceDate;
 
     /**
      * It's seconds for timestamp
      */
-    @TLVField(tag = TLV_TYPE_CERT_EXPIRATION_DATE, type = TLVTypeEnum.UINT64, order = 5)
+    @TLVField(tag = TLV_TYPE_CERT_EXPIRATION_DATE, type = TLVTypeEnum.UINT64, order = 6)
     private long expirationDate;
 
-    @TLVField(tag = TLV_TYPE_CERT_CREDENTIAL_SUBJECT, type = TLVTypeEnum.BYTES, order = 6)
+    @TLVField(tag = TLV_TYPE_CERT_CREDENTIAL_SUBJECT, type = TLVTypeEnum.BYTES, order = 7)
     private byte[] credentialSubject;
 
-    @TLVField(tag = TLV_TYPE_CERT_PROOF, type = TLVTypeEnum.BYTES, order = 7)
+    @TLVField(tag = TLV_TYPE_CERT_PROOF, type = TLVTypeEnum.BYTES, order = 8)
     private AbstractCrossChainCertificate.IssueProof proof;
 
     public byte[] getEncodedToSign() {
-        return TLVUtils.encode(this, 6);
+        return TLVUtils.encode(this, 7);
     }
 
     public byte[] encode() {

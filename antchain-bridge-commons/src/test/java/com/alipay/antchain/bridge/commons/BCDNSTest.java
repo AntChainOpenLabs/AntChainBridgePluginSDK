@@ -22,7 +22,9 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.security.Signature;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -49,18 +51,22 @@ public class BCDNSTest {
 
     private static KeyPair keyPair;
 
+    private static String context = "";
     @BeforeClass
     public static void setUp() throws Exception {
         Security.addProvider(new BouncyCastleProvider());
 
         keyPair = KeyUtil.generateKeyPair("SM2");
+        context = "https://www.w3.org/2018/credentials/v1";
     }
 
     @Test
     public void testCrossChainCertificate() throws Exception {
 
         // construct a bcdns root cert
+
         AbstractCrossChainCertificate certificate = CrossChainCertificateFactory.createCrossChainCertificate(
+                context,
                 CrossChainCertificateV1.MY_VERSION,
                 "test",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
@@ -98,6 +104,7 @@ public class BCDNSTest {
 
         // construct a domain cert
         AbstractCrossChainCertificate domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                context,
                 CrossChainCertificateV1.MY_VERSION,
                 "testdomain",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
@@ -129,6 +136,7 @@ public class BCDNSTest {
 
         // construct a domain space cert
         AbstractCrossChainCertificate domainSpaceCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                context,
                 CrossChainCertificateV1.MY_VERSION,
                 ".com",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
@@ -159,6 +167,7 @@ public class BCDNSTest {
 
         // construct a relayer cert
         AbstractCrossChainCertificate relayerCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                context,
                 CrossChainCertificateV1.MY_VERSION,
                 "antchain-relayer",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
@@ -208,6 +217,7 @@ public class BCDNSTest {
 
         // construct a domain cert
         AbstractCrossChainCertificate domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                context,
                 CrossChainCertificateV1.MY_VERSION,
                 "testdomain1",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
@@ -239,6 +249,7 @@ public class BCDNSTest {
 
         // construct a domain cert
         domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                context,
                 CrossChainCertificateV1.MY_VERSION,
                 "testdomain2",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
@@ -270,6 +281,7 @@ public class BCDNSTest {
 
         // construct a domain cert
         domainCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                context,
                 CrossChainCertificateV1.MY_VERSION,
                 "testdomain3",
                 new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded()),
