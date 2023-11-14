@@ -25,13 +25,18 @@ public interface IBlockChainDomainNameService {
 
     QueryBCDNSTrustRootCertificateResponse queryBCDNSTrustRootCertificate();
 
-    // TODO: ApplyRelayerCertificateResponse 需要返回一个审核ID，这个和具体BCDNS相关；
     ApplyRelayerCertificateResponse applyRelayerCertificate(ApplyRelayerCertificateRequest request);
+
+    RelayerCertificateApplicationReceipt queryRelayerCertificateApplicationReceipt(QueryRelayerCertificateApplicationReceiptRequest request);
 
     //
     ApplyPTCCertificateResponse applyPTCCertificate(ApplyPTCCertificateRequest request);
 
+    PTCCertificateApplicationReceipt queryPTCCertificateApplicationReceipt(QueryPTCCertificateApplicationReceiptRequest request);
+
     ApplyPTCCertificateResponse applyDomainNameCertificate(ApplyPTCCertificateRequest request);
+
+    DomainNameCertificateApplicationReceipt queryPTCCertificateApplicationReceipt(QueryDomainNameCertificateApplicationReceiptRequest request);
 
     QueryRelayerCertificateResponse queryRelayerCertificate(QueryRelayerCertificateRequest request);
 

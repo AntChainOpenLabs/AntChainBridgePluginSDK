@@ -18,6 +18,8 @@ package com.alipay.antchain.bridge.commons.bcdns;
 
 import cn.hutool.core.codec.Base64;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
+import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
+import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
@@ -120,5 +122,23 @@ public class AbstractCrossChainCertificate {
 
     public String encodeToBase64() {
         return Base64.encode(encode());
+    }
+
+    public ICredentialSubject getCredentialSubjectInstance() {
+        switch (type) {
+            case BCDNS_TRUST_ROOT_CERTIFICATE:
+                return BCDNSTrustRootCredentialSubject.decode(this.credentialSubject);
+            case DOMAIN_NAME_CERTIFICATE:
+                return DomainNameCredentialSubject.decode(this.credentialSubject);
+            case PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE:
+                return PTCCredentialSubject.decode(this.credentialSubject);
+            case RELAYER_CERTIFICATE:
+                return RelayerCredentialSubject.decode(this.credentialSubject);
+            default:
+                throw new AntChainBridgeCommonsException(
+                        CommonsErrorCodeEnum.BCDNS_UNSUPPORTED_CA_TYPE,
+                        "unrecognised cert type: " + type
+                );
+        }
     }
 }

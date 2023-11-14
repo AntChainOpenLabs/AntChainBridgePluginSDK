@@ -16,7 +16,11 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
+import java.security.PublicKey;
+
 public interface ICredentialSubject {
 
     byte[] encode();
+
+    PublicKey getSubjectPublicKey();
 }

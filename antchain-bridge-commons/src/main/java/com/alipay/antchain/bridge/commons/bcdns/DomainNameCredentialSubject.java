@@ -16,6 +16,9 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
+import java.security.PublicKey;
+
+import com.alipay.antchain.bridge.commons.bcdns.utils.ObjectIdentityUtil;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
@@ -88,7 +91,13 @@ public class DomainNameCredentialSubject implements ICredentialSubject {
     )
     private byte[] subject;
 
+    @Override
     public byte[] encode() {
         return TLVUtils.encode(this);
+    }
+
+    @Override
+    public PublicKey getSubjectPublicKey() {
+        return ObjectIdentityUtil.getPublicKeyFromSubject(applicant, subject);
     }
 }

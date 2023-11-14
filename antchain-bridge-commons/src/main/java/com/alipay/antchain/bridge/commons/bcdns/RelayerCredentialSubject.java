@@ -16,6 +16,9 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
+import java.security.PublicKey;
+
+import com.alipay.antchain.bridge.commons.bcdns.utils.ObjectIdentityUtil;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
@@ -59,7 +62,13 @@ public class RelayerCredentialSubject implements ICredentialSubject {
     @TLVField(tag = TLV_TYPE_PTC_CREDENTIAL_SUBJECT_SUBJECT_INFO, type = TLVTypeEnum.BYTES, order = 3)
     private byte[] subjectInfo;
 
+    @Override
     public byte[] encode() {
         return TLVUtils.encode(this);
+    }
+
+    @Override
+    public PublicKey getSubjectPublicKey() {
+        return ObjectIdentityUtil.getPublicKeyFromSubject(applicant, subjectInfo);
     }
 }

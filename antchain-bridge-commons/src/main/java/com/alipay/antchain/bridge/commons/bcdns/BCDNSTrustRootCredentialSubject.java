@@ -16,6 +16,9 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
+import java.security.PublicKey;
+
+import com.alipay.antchain.bridge.commons.bcdns.utils.ObjectIdentityUtil;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
@@ -50,7 +53,13 @@ public class BCDNSTrustRootCredentialSubject implements ICredentialSubject {
     @TLVField(tag = TLV_TYPE_SUBJECT_INFO, type = TLVTypeEnum.BYTES, order = 2)
     private byte[] bcdnsRootSubjectInfo;
 
+    @Override
     public byte[] encode() {
         return TLVUtils.encode(this);
+    }
+
+    @Override
+    public PublicKey getSubjectPublicKey() {
+        return ObjectIdentityUtil.getPublicKeyFromSubject(bcdnsRootOwner, bcdnsRootSubjectInfo);
     }
 }

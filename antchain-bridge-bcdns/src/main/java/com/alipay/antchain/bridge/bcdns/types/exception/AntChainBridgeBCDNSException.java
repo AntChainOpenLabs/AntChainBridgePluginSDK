@@ -16,15 +16,14 @@
 
 package com.alipay.antchain.bridge.bcdns.types.exception;
 
-import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.exception.base.AntChainBridgeBaseException;
 
 public class AntChainBridgeBCDNSException extends AntChainBridgeBaseException {
-    public AntChainBridgeBCDNSException(CommonsErrorCodeEnum codeEnum, String longMsg) {
+    public AntChainBridgeBCDNSException(BCDNSErrorCodeEnum codeEnum, String longMsg) {
         super(codeEnum.getErrorCode(), codeEnum.getShortMsg(), longMsg);
     }
 
-    public AntChainBridgeBCDNSException(CommonsErrorCodeEnum codeEnum, String longMsg, Throwable throwable) {
+    public AntChainBridgeBCDNSException(BCDNSErrorCodeEnum codeEnum, String longMsg, Throwable throwable) {
         super(codeEnum.getErrorCode(), codeEnum.getShortMsg(), longMsg, throwable);
     }
 }

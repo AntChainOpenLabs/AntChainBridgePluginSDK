@@ -40,7 +40,10 @@ public enum CrossChainCertificateTypeEnum {
             case 3:
                 return RELAYER_CERTIFICATE;
             default:
-                return null;
+                throw new AntChainBridgeCommonsException(
+                        CommonsErrorCodeEnum.BCDNS_UNSUPPORTED_CA_TYPE,
+                        "failed to parse type from value: " + value.intValue()
+                );
         }
     }
 

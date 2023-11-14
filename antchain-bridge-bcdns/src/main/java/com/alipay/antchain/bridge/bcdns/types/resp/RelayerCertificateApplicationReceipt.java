@@ -16,11 +16,9 @@
 
 package com.alipay.antchain.bridge.bcdns.types.resp;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
 
-@Getter
-@Setter
-public class ApplyPTCCertificateResponse {
-    private String applyReceipt;
+public class RelayerCertificateApplicationReceipt {
+
+    private AbstractCrossChainCertificate certificate;
 }

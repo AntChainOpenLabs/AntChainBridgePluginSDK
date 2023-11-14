@@ -104,29 +104,13 @@ public class CrossChainCertificateUtil {
     public static PublicKey getPublicKeyFromCrossChainCertificate(AbstractCrossChainCertificate certificate) {
         switch (certificate.getType()) {
             case BCDNS_TRUST_ROOT_CERTIFICATE:
-                BCDNSTrustRootCredentialSubject trustRootCredentialSubject = BCDNSTrustRootCredentialSubject.decode(certificate.getCredentialSubject());
-                return ObjectIdentityUtil.getPublicKeyFromSubject(
-                        trustRootCredentialSubject.getBcdnsRootOwner(),
-                        trustRootCredentialSubject.getBcdnsRootSubjectInfo()
-                );
+                return BCDNSTrustRootCredentialSubject.decode(certificate.getCredentialSubject()).getSubjectPublicKey();
             case DOMAIN_NAME_CERTIFICATE:
-                DomainNameCredentialSubject domainNameCredentialSubject = DomainNameCredentialSubject.decode(certificate.getCredentialSubject());
-                return ObjectIdentityUtil.getPublicKeyFromSubject(
-                        domainNameCredentialSubject.getApplicant(),
-                        domainNameCredentialSubject.getSubject()
-                );
+                return DomainNameCredentialSubject.decode(certificate.getCredentialSubject()).getSubjectPublicKey();
             case RELAYER_CERTIFICATE:
-                RelayerCredentialSubject relayerCredentialSubject = RelayerCredentialSubject.decode(certificate.getCredentialSubject());
-                return ObjectIdentityUtil.getPublicKeyFromSubject(
-                        relayerCredentialSubject.getApplicant(),
-                        relayerCredentialSubject.getSubjectInfo()
-                );
+                return RelayerCredentialSubject.decode(certificate.getCredentialSubject()).getSubjectPublicKey();
             case PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE:
-                PTCCredentialSubject ptcCredentialSubject = PTCCredentialSubject.decode(certificate.getCredentialSubject());
-                return ObjectIdentityUtil.getPublicKeyFromSubject(
-                        ptcCredentialSubject.getApplicant(),
-                        ptcCredentialSubject.getSubjectInfo()
-                );
+                return PTCCredentialSubject.decode(certificate.getCredentialSubject()).getSubjectPublicKey();
             default:
                 throw new AntChainBridgeCommonsException(
                         CommonsErrorCodeEnum.BCDNS_UNSUPPORTED_CA_TYPE,

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.alipay.antchain.bridge.bcdns.types.resp;
+package com.alipay.antchain.bridge.bcdns.types.req;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ApplyPTCCertificateResponse {
+public class QueryRelayerCertificateApplicationReceiptRequest {
     private String applyReceipt;
 }
