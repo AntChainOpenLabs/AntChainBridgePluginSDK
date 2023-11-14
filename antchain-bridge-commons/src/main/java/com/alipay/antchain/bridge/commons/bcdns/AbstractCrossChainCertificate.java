@@ -17,7 +17,6 @@
 package com.alipay.antchain.bridge.commons.bcdns;
 
 import cn.hutool.core.codec.Base64;
-import com.alibaba.fastjson.annotation.JSONField;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
@@ -26,8 +25,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter
