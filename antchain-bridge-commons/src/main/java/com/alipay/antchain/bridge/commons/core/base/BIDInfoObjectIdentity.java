@@ -5,8 +5,10 @@ import cn.bif.common.JsonUtils;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @NoArgsConstructor
 public class BIDInfoObjectIdentity extends ObjectIdentity {
     private BIDDocumentOperation document;
@@ -23,14 +25,6 @@ public class BIDInfoObjectIdentity extends ObjectIdentity {
 
     public BIDInfoObjectIdentity(ObjectIdentity objectIdentity) {
         super(objectIdentity.getType(), objectIdentity.getRawId());
-    }
-
-    public void setDocument(BIDDocumentOperation document) {
-        this.document = document;
-    }
-
-    public BIDDocumentOperation getSubjectBidInfo() {
-        return document;
     }
 
     public String getPublicKey() {

@@ -28,7 +28,6 @@ import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 public class CrossChainCertificateFactory {
 
     public static AbstractCrossChainCertificate createCrossChainCertificate(
-            String context,
             String version,
             String id,
             ObjectIdentity issuer,
@@ -39,7 +38,6 @@ public class CrossChainCertificateFactory {
         switch (version) {
             case CrossChainCertificateV1.MY_VERSION:
                 return new CrossChainCertificateV1(
-                        context,
                         id,
                         CrossChainCertificateTypeEnum.getTypeByCredentialSubject(credentialSubject),
                         issuer,
