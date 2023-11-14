@@ -1,10 +1,9 @@
-package org.bcdns.credential.dto.resp;
+package com.alipay.antchain.bridge.bcdns.impl.bif.resp;
+
+import java.util.List;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
-import java.util.List;
 @NoArgsConstructor
 @Data
 public class VcApplyListRespDto {
