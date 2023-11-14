@@ -22,7 +22,9 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.security.Signature;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -60,6 +62,7 @@ public class BCDNSTest {
     public void testCrossChainCertificate() throws Exception {
 
         // construct a bcdns root cert
+
         AbstractCrossChainCertificate certificate = CrossChainCertificateFactory.createCrossChainCertificate(
                 CrossChainCertificateV1.MY_VERSION,
                 "test",

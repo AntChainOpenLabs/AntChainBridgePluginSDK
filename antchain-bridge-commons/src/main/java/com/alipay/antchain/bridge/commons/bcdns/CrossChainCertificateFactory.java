@@ -17,6 +17,7 @@
 package com.alipay.antchain.bridge.commons.bcdns;
 
 import java.io.ByteArrayInputStream;
+import java.util.List;
 
 import cn.hutool.crypto.PemUtil;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;

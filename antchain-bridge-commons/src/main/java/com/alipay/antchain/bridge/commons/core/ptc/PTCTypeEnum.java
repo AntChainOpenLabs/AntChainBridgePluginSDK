@@ -21,4 +21,15 @@ public enum PTCTypeEnum {
     SIGNING_MACHINE,
 
     BLOCKCHAIN;
+
+    public static PTCTypeEnum valueOf(Byte value) {
+        switch (value) {
+            case 0:
+                return SIGNING_MACHINE;
+            case 1:
+                return BLOCKCHAIN;
+            default:
+                return null;
+        }
+    }
 }

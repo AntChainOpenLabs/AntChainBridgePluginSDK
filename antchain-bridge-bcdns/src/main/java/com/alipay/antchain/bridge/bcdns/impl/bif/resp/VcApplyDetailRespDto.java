@@ -1,4 +1,4 @@
-package com.alipay.antchain.bridge.bcdns.impl.bif.resp;
+package org.bcdns.credential.dto.resp;
 
 
 import lombok.Getter;
@@ -9,19 +9,12 @@ import lombok.ToString;
 @Setter
 @ToString
 public class VcApplyDetailRespDto {
-
-    private String content;
+    private byte[] content;
     private String status;
-    private String applyNo ;
-    private String applyUser ;
-    private Long applyTime ;
-    private String auditBid ;
-    private Long auditTime ;
-    private String auditName ;
-    private String auditRemark ;
-    private String userBid ;
-
-    private Long startTime;
-    private Long endTime;
-    private String userType;
+    private String applyNo;
+    private byte[] applyUser;
+    private Long applyTime;
+    private byte[] auditId;
+    private Long auditTime;
+    private String auditRemark;
 }

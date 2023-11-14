@@ -1,4 +1,4 @@
-package com.alipay.antchain.bridge.bcdns.impl.bif.resp;
+package org.bcdns.credential.dto.resp;
 
 public  class PageBean {
         /**

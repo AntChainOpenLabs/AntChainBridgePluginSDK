@@ -1,11 +1,11 @@
-package com.alipay.antchain.bridge.bcdns.impl.bif.resp;
+package org.bcdns.credential.dto.resp;
 
+import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import lombok.Data;
 
 @Data
 public class QueryStatusRespDto {
-    private String status;
+    private Integer status;
     private String credentialId;
-    private Integer type;
-    private String userBid;
+    private ObjectIdentity userId;
 }

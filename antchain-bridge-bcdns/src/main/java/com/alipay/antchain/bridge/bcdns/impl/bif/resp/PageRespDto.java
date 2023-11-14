@@ -1,8 +1,8 @@
-package com.alipay.antchain.bridge.bcdns.impl.bif.resp;
-
-import java.util.List;
+package org.bcdns.credential.dto.resp;
 
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class PageRespDto<T> {

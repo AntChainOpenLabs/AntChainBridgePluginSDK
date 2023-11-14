@@ -1,4 +1,9 @@
-package com.alipay.antchain.bridge.bcdns.impl.bif.resp;
+package org.bcdns.credential.dto.resp;
+
+
+import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
+import org.bcdns.credential.enums.ExceptionEnum;
+import org.bcdns.credential.exception.APIException;
 
 import java.io.Serializable;
 
@@ -11,21 +16,24 @@ public class Resp implements Serializable {
         this.message = message;
     }
 
-//    public void buildAPIExceptionField(APIException e) {
-//        buildCommonField(e.getErrorCode(), e.getErrorMessage());
-//    }
-//
-//    public void buildSuccessField() {
-//        buildExceptionEnumField(ExceptionEnum.SUCCESS);
-//    }
-//
-//    public void buildSysExceptionField() {
-//        buildExceptionEnumField(ExceptionEnum.SYS_ERROR);
-//    }
-//
-//    public void buildExceptionEnumField(ExceptionEnum e) {
-//        buildCommonField(e.getErrorCode(), e.getMessage());
-//    }
+    public void buildAPIExceptionField(APIException e) {
+        buildCommonField(e.getErrorCode(), e.getErrorMessage());
+    }
+    public void buildAntChainBridgeCommonsExceptionField(AntChainBridgeCommonsException e) {
+        buildCommonField(Integer.parseInt(e.getCode()), e.getMessage());
+    }
+
+    public void buildSuccessField() {
+        buildExceptionEnumField(ExceptionEnum.SUCCESS);
+    }
+
+    public void buildSysExceptionField() {
+        buildExceptionEnumField(ExceptionEnum.SYS_ERROR);
+    }
+
+    public void buildExceptionEnumField(ExceptionEnum e) {
+        buildCommonField(e.getErrorCode(), e.getMessage());
+    }
 
 
     public Integer getErrorCode() {

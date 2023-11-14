@@ -1,14 +1,8 @@
-package com.alipay.antchain.bridge.bcdns.impl.bif.resp;
+package org.bcdns.credential.dto.resp;
 
+import lombok.Data;
 
+@Data
 public class VcApplyRespDto {
     private String applyNo;
-
-    public String getApplyNo() {
-        return applyNo;
-    }
-
-    public void setApplyNo(String applyNo) {
-        this.applyNo = applyNo;
-    }
 }
