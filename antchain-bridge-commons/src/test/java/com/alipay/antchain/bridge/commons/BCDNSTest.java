@@ -19,6 +19,7 @@ package com.alipay.antchain.bridge.commons;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.security.*;
+import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECPoint;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Date;
@@ -27,6 +28,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.KeyUtil;
 import cn.hutool.crypto.PemUtil;
 import cn.hutool.crypto.digest.SM3;
 import com.alipay.antchain.bridge.commons.bcdns.*;
@@ -76,11 +78,27 @@ public class BCDNSTest {
         );
         privateKey = keyFactory.generatePrivate(keySpec);
 
-        BCECPublicKey bcecPublicKey = (BCECPublicKey) KeyPairGenerator.getInstance("SM2").generateKeyPair().getPublic();
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("SM2");
+        keyPairGenerator.initialize(256);
+        BCECPublicKey bcecPublicKey = (BCECPublicKey) keyPairGenerator.generateKeyPair().getPublic();
+        PublicKey sm2Key = KeyUtil.generateKeyPair("SM2").getPublic();
+
+        keyPairGenerator = KeyPairGenerator.getInstance("EC");
+        keyPairGenerator.initialize(256);
+        ECPublicKey ecPublicKey = (ECPublicKey) keyPairGenerator.generateKeyPair().getPublic();
+        ECPoint point = ecPublicKey.getW();
+        byte[] raw = new byte[point.getAffineX().toByteArray().length + point.getAffineY().toByteArray().length + 1];
+
+        System.arraycopy(point.getAffineX().toByteArray(), 0, raw, 1, point.getAffineX().toByteArray().length);
+
+        System.arraycopy(point.getAffineY().toByteArray(), 0, raw, point.getAffineX().toByteArray().length + 1, point.getAffineY().toByteArray().length);
+
+        raw[0] = 4;
+
         System.out.println(bcecPublicKey.toString());
         System.out.println(HexUtil.encodeHex(bcecPublicKey.getEncoded()));
         System.out.println(HexUtil.encodeHex(bcecPublicKey.getQ().getEncoded(false)));
-        ECPoint point = bcecPublicKey.getW();
+//        ECPoint point = bcecPublicKey.getW();
 
 //        PrivateKey privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
         Assert.assertNotNull(privateKey);
@@ -216,7 +234,7 @@ public class BCDNSTest {
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert));
         FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert).getBytes(), "cc_certs/relayer.crt");
 
-        Assert.assertEquals(KEY_ALGO.equals("Ed25519") ? 32 : 61, relayerCert.getCredentialSubjectInstance().getRawSubjectPublicKey().length);
+        Assert.assertEquals(KEY_ALGO.equals("Ed25519") ? 32 : 65, relayerCert.getCredentialSubjectInstance().getRawSubjectPublicKey().length);
         Assert.assertTrue(
                 StrUtil.endWith(
                         HexUtil.encodeHexStr(keyPair.getPublic().getEncoded()),

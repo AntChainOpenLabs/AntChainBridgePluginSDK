@@ -17,6 +17,7 @@
 package com.alipay.antchain.bridge.commons.core.base;
 
 import java.security.PublicKey;
+import java.security.interfaces.ECPublicKey;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -74,6 +75,18 @@ public class X509PubkeyInfoObjectIdentity extends ObjectIdentity {
                 return ((BCECPublicKey) publicKey).getQ().getEncoded(false);
             }
             throw new RuntimeException("your SM2 public key class not support: " + publicKey.getClass().getName());
+        } else if (StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "EC")) {
+            if (publicKey instanceof ECPublicKey) {
+                ECPublicKey ecPublicKey = (ECPublicKey) publicKey;
+                byte[] rawX = ecPublicKey.getW().getAffineX().toByteArray();
+                byte[] rawY = ecPublicKey.getW().getAffineY().toByteArray();
+                byte[] raw = new byte[rawX.length + rawY.length + 1];
+                System.arraycopy(rawX, 0, raw, 1, rawX.length);
+                System.arraycopy(rawY, 0, raw, rawY.length + 1, rawY.length);
+                raw[0] = 4;
+                return raw;
+            }
+            throw new RuntimeException("your EC public key class not support: " + publicKey.getClass().getName());
         }
         throw new RuntimeException(
                 StrUtil.format("your public key algo {} don't support this function for now", publicKey.getAlgorithm())

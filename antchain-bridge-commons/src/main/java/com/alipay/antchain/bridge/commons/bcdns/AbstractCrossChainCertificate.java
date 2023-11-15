@@ -78,10 +78,6 @@ public class AbstractCrossChainCertificate {
 
     public static final short TLV_TYPE_CERT_PROOF = 0x0007;
 
-    public static AbstractCrossChainCertificate decode(byte[] rawData) {
-        return TLVUtils.decode(rawData, AbstractCrossChainCertificate.class);
-    }
-
     @TLVField(tag = TLV_TYPE_CERT_VERSION, type = TLVTypeEnum.STRING)
     private String version;
 
