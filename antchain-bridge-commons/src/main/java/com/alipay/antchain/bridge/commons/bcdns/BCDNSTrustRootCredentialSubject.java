@@ -62,4 +62,9 @@ public class BCDNSTrustRootCredentialSubject implements ICredentialSubject {
     public PublicKey getSubjectPublicKey() {
         return ObjectIdentityUtil.getPublicKeyFromSubject(bcdnsRootOwner, bcdnsRootSubjectInfo);
     }
+
+    @Override
+    public byte[] getRawSubjectPublicKey() {
+        return ObjectIdentityUtil.getRawPublicKeyFromSubject(bcdnsRootOwner, bcdnsRootSubjectInfo);
+    }
 }

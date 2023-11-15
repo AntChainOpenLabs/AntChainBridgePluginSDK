@@ -71,4 +71,9 @@ public class RelayerCredentialSubject implements ICredentialSubject {
     public PublicKey getSubjectPublicKey() {
         return ObjectIdentityUtil.getPublicKeyFromSubject(applicant, subjectInfo);
     }
+
+    @Override
+    public byte[] getRawSubjectPublicKey() {
+        return ObjectIdentityUtil.getRawPublicKeyFromSubject(applicant, subjectInfo);
+    }
 }

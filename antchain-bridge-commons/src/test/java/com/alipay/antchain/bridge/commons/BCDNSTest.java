@@ -18,15 +18,15 @@ package com.alipay.antchain.bridge.commons;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.Security;
-import java.security.Signature;
+import java.security.*;
+import java.security.spec.ECPoint;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Date;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.crypto.KeyUtil;
+import cn.hutool.core.util.HexUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.PemUtil;
 import cn.hutool.crypto.digest.SM3;
 import com.alipay.antchain.bridge.commons.bcdns.*;
@@ -34,11 +34,8 @@ import com.alipay.antchain.bridge.commons.bcdns.utils.CrossChainCertificateUtil;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentityType;
-import org.bouncycastle.asn1.ASN1Object;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.Assert;
@@ -49,11 +46,44 @@ public class BCDNSTest {
 
     private static KeyPair keyPair;
 
+    private static PrivateKey privateKey;
+
+    private static final String KEY_ALGO = "Ed25519";
+
+    private static final String SIG_ALGO = "Ed25519";
+
     @BeforeClass
     public static void setUp() throws Exception {
         Security.addProvider(new BouncyCastleProvider());
 
-        keyPair = KeyUtil.generateKeyPair("SM2");
+        keyPair = KeyPairGenerator.getInstance(KEY_ALGO).generateKeyPair();
+
+        // dump the private key into pem
+        StringWriter stringWriter = new StringWriter(256);
+        JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(stringWriter);
+        jcaPEMWriter.writeObject(keyPair.getPrivate());
+        jcaPEMWriter.close();
+        String privatePem = stringWriter.toString();
+        System.out.println(privatePem);
+        FileUtil.writeBytes(privatePem.getBytes(), "cc_certs/private_key.pem");
+
+        KeyFactory keyFactory = KeyFactory.getInstance(
+                PrivateKeyInfo.getInstance(PemUtil.readPem(new ByteArrayInputStream(privatePem.getBytes())))
+                        .getPrivateKeyAlgorithm().getAlgorithm().getId()
+        );
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(
+                PemUtil.readPem(new ByteArrayInputStream(privatePem.getBytes()))
+        );
+        privateKey = keyFactory.generatePrivate(keySpec);
+
+        BCECPublicKey bcecPublicKey = (BCECPublicKey) KeyPairGenerator.getInstance("SM2").generateKeyPair().getPublic();
+        System.out.println(bcecPublicKey.toString());
+        System.out.println(HexUtil.encodeHex(bcecPublicKey.getEncoded()));
+        System.out.println(HexUtil.encodeHex(bcecPublicKey.getQ().getEncoded(false)));
+        ECPoint point = bcecPublicKey.getW();
+
+//        PrivateKey privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
+        Assert.assertNotNull(privateKey);
     }
 
     @Test
@@ -75,13 +105,13 @@ public class BCDNSTest {
         );
 
         // this is how to sign something with private key
-        Signature signer = Signature.getInstance("SM3WITHSM2");
-        signer.initSign(keyPair.getPrivate());
+        Signature signer = Signature.getInstance(SIG_ALGO);
+        signer.initSign(privateKey);
         signer.update(certificate.getEncodedToSign());
         byte[] signature = signer.sign();
 
         // this is how to verify the signature
-        Signature verifier = Signature.getInstance("SM3WITHSM2");
+        Signature verifier = Signature.getInstance(SIG_ALGO);
         verifier.initVerify(keyPair.getPublic());
         verifier.update(certificate.getEncodedToSign());
         Assert.assertTrue(verifier.verify(signature));
@@ -90,7 +120,7 @@ public class BCDNSTest {
                 new AbstractCrossChainCertificate.IssueProof(
                         "SM3",
                         SM3.create().digest(certificate.getEncodedToSign()),
-                        "SM3WITHSM2",
+                        SIG_ALGO,
                         signature
                 )
         );
@@ -114,14 +144,14 @@ public class BCDNSTest {
                 )
         );
 
-        signer = Signature.getInstance("SM3WITHSM2");
-        signer.initSign(keyPair.getPrivate());
+        signer = Signature.getInstance(SIG_ALGO);
+        signer.initSign(privateKey);
         signer.update(domainCert.getEncodedToSign());
         domainCert.setProof(
                 new AbstractCrossChainCertificate.IssueProof(
                         "SM3",
                         SM3.create().digest(domainCert.getEncodedToSign()),
-                        "SM3WITHSM2",
+                        SIG_ALGO,
                         signer.sign()
                 )
         );
@@ -144,14 +174,14 @@ public class BCDNSTest {
                         new byte[]{}
                 )
         );
-        signer = Signature.getInstance("SM3WITHSM2");
-        signer.initSign(keyPair.getPrivate());
+        signer = Signature.getInstance(SIG_ALGO);
+        signer.initSign(privateKey);
         signer.update(domainSpaceCert.getEncodedToSign());
         domainSpaceCert.setProof(
                 new AbstractCrossChainCertificate.IssueProof(
                         "SM3",
                         SM3.create().digest(domainSpaceCert.getEncodedToSign()),
-                        "SM3WITHSM2",
+                        SIG_ALGO,
                         signer.sign()
                 )
         );
@@ -172,36 +202,27 @@ public class BCDNSTest {
                         new byte[]{}
                 )
         );
-        signer = Signature.getInstance("SM3WITHSM2");
-        signer.initSign(keyPair.getPrivate());
+        signer = Signature.getInstance(SIG_ALGO);
+        signer.initSign(privateKey);
         signer.update(relayerCert.getEncodedToSign());
         relayerCert.setProof(
                 new AbstractCrossChainCertificate.IssueProof(
                         "SM3",
                         SM3.create().digest(relayerCert.getEncodedToSign()),
-                        "SM3WITHSM2",
+                        SIG_ALGO,
                         signer.sign()
                 )
         );
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert));
         FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert).getBytes(), "cc_certs/relayer.crt");
 
-        // dump the private key into pem
-        StringWriter stringWriter = new StringWriter(256);
-        JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(stringWriter);
-        AlgorithmIdentifier algorithmIdentifier = new AlgorithmIdentifier(PKCSObjectIdentifiers.pkcs_12);
-
-        ASN1Object asn1Object = ASN1ObjectIdentifier.fromByteArray(keyPair.getPrivate().getEncoded());
-        PrivateKeyInfo privateKeyInfo = new PrivateKeyInfo(algorithmIdentifier, asn1Object);
-
-        jcaPEMWriter.writeObject(privateKeyInfo);
-        jcaPEMWriter.close();
-        String privatePem = stringWriter.toString();
-        System.out.println(privatePem);
-        FileUtil.writeBytes(privatePem.getBytes(), "cc_certs/private_key.pem");
-
-        PrivateKey privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
-        Assert.assertNotNull(privatePem);
+        Assert.assertEquals(KEY_ALGO.equals("Ed25519") ? 32 : 61, relayerCert.getCredentialSubjectInstance().getRawSubjectPublicKey().length);
+        Assert.assertTrue(
+                StrUtil.endWith(
+                        HexUtil.encodeHexStr(keyPair.getPublic().getEncoded()),
+                        HexUtil.encodeHexStr(relayerCert.getCredentialSubjectInstance().getRawSubjectPublicKey())
+                )
+        );
     }
 
     @Test
@@ -224,14 +245,14 @@ public class BCDNSTest {
                 )
         );
 
-        Signature signer = Signature.getInstance("SM3WITHSM2");
-        signer.initSign(keyPair.getPrivate());
+        Signature signer = Signature.getInstance(SIG_ALGO);
+        signer.initSign(privateKey);
         signer.update(domainCert.getEncodedToSign());
         domainCert.setProof(
                 new AbstractCrossChainCertificate.IssueProof(
                         "SM3",
                         SM3.create().digest(domainCert.getEncodedToSign()),
-                        "SM3WITHSM2",
+                        SIG_ALGO,
                         signer.sign()
                 )
         );
@@ -255,14 +276,14 @@ public class BCDNSTest {
                 )
         );
 
-        signer = Signature.getInstance("SM3WITHSM2");
-        signer.initSign(keyPair.getPrivate());
+        signer = Signature.getInstance(SIG_ALGO);
+        signer.initSign(privateKey);
         signer.update(domainCert.getEncodedToSign());
         domainCert.setProof(
                 new AbstractCrossChainCertificate.IssueProof(
                         "SM3",
                         SM3.create().digest(domainCert.getEncodedToSign()),
-                        "SM3WITHSM2",
+                        SIG_ALGO,
                         signer.sign()
                 )
         );
@@ -286,14 +307,14 @@ public class BCDNSTest {
                 )
         );
 
-        signer = Signature.getInstance("SM3WITHSM2");
-        signer.initSign(keyPair.getPrivate());
+        signer = Signature.getInstance(SIG_ALGO);
+        signer.initSign(privateKey);
         signer.update(domainCert.getEncodedToSign());
         domainCert.setProof(
                 new AbstractCrossChainCertificate.IssueProof(
                         "SM3",
                         SM3.create().digest(domainCert.getEncodedToSign()),
-                        "SM3WITHSM2",
+                        SIG_ALGO,
                         signer.sign()
                 )
         );

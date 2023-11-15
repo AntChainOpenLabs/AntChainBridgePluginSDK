@@ -23,4 +23,6 @@ public interface ICredentialSubject {
     byte[] encode();
 
     PublicKey getSubjectPublicKey();
+
+    byte[] getRawSubjectPublicKey();
 }

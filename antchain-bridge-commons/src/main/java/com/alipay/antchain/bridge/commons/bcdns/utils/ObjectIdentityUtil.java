@@ -39,4 +39,19 @@ public class ObjectIdentityUtil {
                 );
         }
     }
+
+    public static byte[] getRawPublicKeyFromSubject(ObjectIdentity oid, byte[] rawSubject) {
+        switch (oid.getType()) {
+            case X509_PUBLIC_KEY_INFO:
+                return new X509PubkeyInfoObjectIdentity(oid).getRawPublicKey();
+            case BID:
+                //TODO: write BID stuff here
+                return null;
+            default:
+                throw new AntChainBridgeCommonsException(
+                        CommonsErrorCodeEnum.BCDNS_OID_UNSUPPORTED_TYPE,
+                        "unsupported oid type" + oid.getType().name()
+                );
+        }
+    }
 }

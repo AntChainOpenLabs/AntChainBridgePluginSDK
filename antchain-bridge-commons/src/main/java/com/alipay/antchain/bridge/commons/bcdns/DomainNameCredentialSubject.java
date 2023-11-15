@@ -100,4 +100,9 @@ public class DomainNameCredentialSubject implements ICredentialSubject {
     public PublicKey getSubjectPublicKey() {
         return ObjectIdentityUtil.getPublicKeyFromSubject(applicant, subject);
     }
+
+    @Override
+    public byte[] getRawSubjectPublicKey() {
+        return ObjectIdentityUtil.getRawPublicKeyFromSubject(applicant, subject);
+    }
 }
