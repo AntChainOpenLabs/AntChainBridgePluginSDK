@@ -16,11 +16,13 @@
 
 package com.alipay.antchain.bridge.bcdns.types.resp;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class ApplyDomainNameCertificateResponse {
     private String applyReceipt;
 }

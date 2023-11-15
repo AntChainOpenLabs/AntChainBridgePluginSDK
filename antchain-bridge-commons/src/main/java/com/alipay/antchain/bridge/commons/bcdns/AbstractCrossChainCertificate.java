@@ -16,6 +16,8 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
+import java.security.Security;
+
 import cn.hutool.core.codec.Base64;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
@@ -27,12 +29,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class AbstractCrossChainCertificate {
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
     @Getter
     @Setter
     @AllArgsConstructor

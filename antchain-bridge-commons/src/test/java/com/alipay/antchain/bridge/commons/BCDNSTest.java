@@ -38,7 +38,6 @@ import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentityType;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -56,7 +55,8 @@ public class BCDNSTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Security.addProvider(new BouncyCastleProvider());
+        new ObjectIdentity();
+//        Security.addProvider(new BouncyCastleProvider());
 
         keyPair = KeyPairGenerator.getInstance(KEY_ALGO).generateKeyPair();
 

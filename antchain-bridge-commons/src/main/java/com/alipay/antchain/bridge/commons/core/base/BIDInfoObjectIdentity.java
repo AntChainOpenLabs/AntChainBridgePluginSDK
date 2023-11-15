@@ -4,7 +4,6 @@ import cn.ac.caict.bid.model.BIDDocumentOperation;
 import cn.bif.common.JsonUtils;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
-import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

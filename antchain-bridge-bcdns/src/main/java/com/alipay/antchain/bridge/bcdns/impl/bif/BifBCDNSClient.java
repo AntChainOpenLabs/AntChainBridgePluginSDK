@@ -16,11 +16,16 @@
 
 package com.alipay.antchain.bridge.bcdns.impl.bif;
 
+import cn.hutool.core.util.StrUtil;
+import com.alipay.antchain.bridge.bcdns.impl.bif.resp.QueryStatusRespDto;
+import com.alipay.antchain.bridge.bcdns.impl.bif.resp.VcInfoRespDto;
 import com.alipay.antchain.bridge.bcdns.service.IBlockChainDomainNameService;
 import com.alipay.antchain.bridge.bcdns.types.base.DomainRouter;
 import com.alipay.antchain.bridge.bcdns.types.exception.AntChainBridgeBCDNSException;
 import com.alipay.antchain.bridge.bcdns.types.req.*;
 import com.alipay.antchain.bridge.bcdns.types.resp.*;
+import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
+import com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateFactory;
 import lombok.Getter;
 
 @Getter
@@ -42,41 +47,53 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
 
     @Override
     public QueryBCDNSTrustRootCertificateResponse queryBCDNSTrustRootCertificate() {
-        return null;
+        return new QueryBCDNSTrustRootCertificateResponse(
+                CrossChainCertificateFactory.createCrossChainCertificate(
+                        certificationServiceClient.queryRootCert().getBcdnsRootCredential()
+                )
+        );
     }
 
     @Override
-    public ApplyRelayerCertificateResponse applyRelayerCertificate(ApplyRelayerCertificateRequest request) {
+    public ApplyRelayerCertificateResponse applyRelayerCertificate(AbstractCrossChainCertificate certSigningRequest) {
         return new ApplyRelayerCertificateResponse(
                 certificationServiceClient.applyCrossChainCertificate(
-                        request.getCertificate()
+                        certSigningRequest
                 ).getApplyNo()
         );
     }
 
     @Override
-    public RelayerCertificateApplicationReceipt queryRelayerCertificateApplicationReceipt(QueryRelayerCertificateApplicationReceiptRequest request) {
-        return null;
+    public ApplicationResult queryRelayerCertificateApplicationResult(String applyReceipt) {
+        return queryApplicationResult(applyReceipt);
     }
 
     @Override
-    public ApplyPTCCertificateResponse applyPTCCertificate(ApplyPTCCertificateRequest request) {
-        return null;
+    public ApplyPTCCertificateResponse applyPTCCertificate(AbstractCrossChainCertificate certSigningRequest) {
+        return new ApplyPTCCertificateResponse(
+                certificationServiceClient.applyCrossChainCertificate(
+                        certSigningRequest
+                ).getApplyNo()
+        );
     }
 
     @Override
-    public PTCCertificateApplicationReceipt queryPTCCertificateApplicationReceipt(QueryPTCCertificateApplicationReceiptRequest request) {
-        return null;
+    public ApplicationResult queryPTCCertificateApplicationResult(String applyReceipt) {
+        return queryApplicationResult(applyReceipt);
     }
 
     @Override
-    public ApplyPTCCertificateResponse applyDomainNameCertificate(ApplyPTCCertificateRequest request) {
-        return null;
+    public ApplyDomainNameCertificateResponse applyDomainNameCertificate(AbstractCrossChainCertificate certSigningRequest) {
+        return new ApplyDomainNameCertificateResponse(
+                certificationServiceClient.applyCrossChainCertificate(
+                        certSigningRequest
+                ).getApplyNo()
+        );
     }
 
     @Override
-    public DomainNameCertificateApplicationReceipt queryPTCCertificateApplicationReceipt(QueryDomainNameCertificateApplicationReceiptRequest request) {
-        return null;
+    public ApplicationResult queryDomainNameCertificateApplicationResult(String applyReceipt) {
+        return queryApplicationResult(applyReceipt);
     }
 
     @Override
@@ -112,5 +129,28 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
     @Override
     public byte[] queryThirdPartyBlockchainTrustAnchor() {
         return new byte[0];
+    }
+
+    private ApplicationResult queryApplicationResult(String applyReceipt) {
+        QueryStatusRespDto queryStatusRespDto = certificationServiceClient.queryApplicationStatus(applyReceipt);
+        switch (queryStatusRespDto.getStatus()) {
+            case 1:
+                return new ApplicationResult(false, null);
+            case 2:
+                VcInfoRespDto vcInfoRespDto = certificationServiceClient.downloadCrossChainCert(queryStatusRespDto.getCredentialId());
+                return new ApplicationResult(
+                        true,
+                        CrossChainCertificateFactory.createCrossChainCertificate(vcInfoRespDto.getCredential())
+                );
+            case 3:
+                return new ApplicationResult(true, null);
+            default:
+                throw new RuntimeException(
+                        StrUtil.format(
+                                "unexpected status {} for application receipt {}",
+                                queryStatusRespDto.getStatus(), applyReceipt
+                        )
+                );
+        }
     }
 }

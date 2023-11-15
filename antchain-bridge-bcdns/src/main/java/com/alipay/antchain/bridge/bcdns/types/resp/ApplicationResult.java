@@ -17,12 +17,14 @@
 package com.alipay.antchain.bridge.bcdns.types.resp;
 
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class PTCCertificateApplicationReceipt {
+@AllArgsConstructor
+public class ApplicationResult {
 
     private boolean isFinalResult;
 

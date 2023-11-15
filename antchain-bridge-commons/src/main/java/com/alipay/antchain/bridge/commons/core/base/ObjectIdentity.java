@@ -16,6 +16,8 @@
 
 package com.alipay.antchain.bridge.commons.core.base;
 
+import java.security.Security;
+
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
@@ -23,37 +25,22 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ObjectIdentity {
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     public static final short TLV_TYPE_OID_TYPE = 0x0000;
 
     public static final short TLV_TYPE_OID_RAW_ID = 0x0001;
 
     public static ObjectIdentity decode(byte[] raw) {
-
-//        ObjectIdentity oid = new ObjectIdentity();
-//
-//        byte[] rawType = new byte[4];
-//        System.arraycopy(raw, offset, rawType, 2, 2);
-//
-//        oid.setType(ObjectIdentityType.parseFromValue(ByteUtil.bytesToInt(rawType, ByteOrder.BIG_ENDIAN)));
-//
-//        offset += 2;
-//
-//        byte[] rawLength = new byte[4];
-//        System.arraycopy(raw, offset, rawLength, 0, 4);
-//
-//        int length = ByteUtil.bytesToInt(rawLength, ByteOrder.BIG_ENDIAN);
-//
-//        offset += 4;
-//        oid.rawId = new byte[length];
-//        System.arraycopy(raw, offset, oid.rawId, 0, length);
-
         return TLVUtils.decode(raw, ObjectIdentity.class);
     }
 
@@ -64,17 +51,6 @@ public class ObjectIdentity {
     private byte[] rawId;
 
     public byte[] encode() {
-//        int offset = 0;
-//        byte[] raw = new byte[2 + 4 + rawId.length];
-//
-//        byte[] rawType = ByteUtil.intToBytes(type.ordinal(), ByteOrder.BIG_ENDIAN);
-//        raw[offset++] = rawType[0];
-//        raw[offset++] = rawType[1];
-//
-//        System.arraycopy(ByteUtil.intToBytes(rawId.length, ByteOrder.BIG_ENDIAN), 0, raw, offset, 4);
-//
-//        offset += 4;
-//        System.arraycopy(this.rawId, 0, raw, offset, this.rawId.length);
         return TLVUtils.encode(this);
     }
 }

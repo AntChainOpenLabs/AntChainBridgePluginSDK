@@ -26,9 +26,10 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.alipay.antchain.bridge.bcdns.impl.bif.req.QueryStatusReqDto;
 import com.alipay.antchain.bridge.bcdns.impl.bif.req.VcApplyReqDto;
-import com.alipay.antchain.bridge.bcdns.impl.bif.resp.DataResp;
-import com.alipay.antchain.bridge.bcdns.impl.bif.resp.VcApplyRespDto;
+import com.alipay.antchain.bridge.bcdns.impl.bif.req.VcInfoReqDto;
+import com.alipay.antchain.bridge.bcdns.impl.bif.resp.*;
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
 import okhttp3.*;
 
@@ -37,6 +38,10 @@ public class BifCertificationServiceClient {
     public static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
 
     private static final String VC_APPLY_URL = "/vc/apply";
+
+    private static final String VC_STATUS_URL = "/vc/status";
+
+    private static final String VC_DOWNLOAD_URL = "/vc/download";
 
     private final OkHttpClient httpClient;
 
@@ -92,7 +97,7 @@ public class BifCertificationServiceClient {
                 ).execute();
         ) {
             DataResp<VcApplyRespDto> resp = JSON.parseObject(
-                    Objects.requireNonNull(response.body()).string(),
+                    Objects.requireNonNull(response.body(), "empty resp body").string(),
                     new TypeReference<DataResp<VcApplyRespDto>>() {}
             );
             if (resp.getErrorCode() != 0) {
@@ -110,6 +115,114 @@ public class BifCertificationServiceClient {
                     StrUtil.format(
                             "failed to call BIF BCDNS for {} : ",
                             VC_APPLY_URL
+                    ),
+                    e
+            );
+        }
+    }
+
+    public QueryStatusRespDto queryApplicationStatus(String applyReceipt) {
+        QueryStatusReqDto queryStatusRespDto = new QueryStatusReqDto();
+        queryStatusRespDto.setApplyNo(applyReceipt);
+
+        try (
+                Response response = httpClient.newCall(
+                        new Request.Builder()
+                                .url(getRequestUrl(VC_STATUS_URL))
+                                .post(RequestBody.create(JSON.toJSONString(queryStatusRespDto), JSON_MEDIA_TYPE))
+                                .build()
+                ).execute();
+        ) {
+            DataResp<QueryStatusRespDto> resp = JSON.parseObject(
+                    Objects.requireNonNull(response.body(), "empty resp body").string(),
+                    new TypeReference<DataResp<QueryStatusRespDto>>() {}
+            );
+            if (resp.getErrorCode() != 0) {
+                throw new RuntimeException(
+                        StrUtil.format(
+                                "resp with error ( code: {}, msg: {} )",
+                                resp.getErrorCode(),
+                                resp.getMessage()
+                        )
+                );
+            }
+            return Assert.notNull(resp.getData());
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    StrUtil.format(
+                            "failed to call BIF BCDNS for {} : ",
+                            VC_STATUS_URL
+                    ),
+                    e
+            );
+        }
+    }
+
+    public VcInfoRespDto downloadCrossChainCert(String credentialId) {
+        VcInfoReqDto vcInfoReqDto = new VcInfoReqDto();
+        vcInfoReqDto.setCredentialId(credentialId);
+
+        try (
+                Response response = httpClient.newCall(
+                        new Request.Builder()
+                                .url(getRequestUrl(VC_DOWNLOAD_URL))
+                                .post(RequestBody.create(JSON.toJSONString(vcInfoReqDto), JSON_MEDIA_TYPE))
+                                .build()
+                ).execute();
+        ) {
+            DataResp<VcInfoRespDto> resp = JSON.parseObject(
+                    Objects.requireNonNull(response.body(), "empty resp body").string(),
+                    new TypeReference<DataResp<VcInfoRespDto>>() {}
+            );
+            if (resp.getErrorCode() != 0) {
+                throw new RuntimeException(
+                        StrUtil.format(
+                                "resp with error ( code: {}, msg: {} )",
+                                resp.getErrorCode(),
+                                resp.getMessage()
+                        )
+                );
+            }
+            return Assert.notNull(resp.getData());
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    StrUtil.format(
+                            "failed to call BIF BCDNS for {} : ",
+                            VC_DOWNLOAD_URL
+                    ),
+                    e
+            );
+        }
+    }
+
+    public VcRootRespDto queryRootCert() {
+        try (
+                Response response = httpClient.newCall(
+                        new Request.Builder()
+                                .url(getRequestUrl(VC_DOWNLOAD_URL))
+                                .post(RequestBody.create(StrUtil.EMPTY_JSON, JSON_MEDIA_TYPE))
+                                .build()
+                ).execute();
+        ) {
+            DataResp<VcRootRespDto> resp = JSON.parseObject(
+                    Objects.requireNonNull(response.body(), "empty resp body").string(),
+                    new TypeReference<DataResp<VcRootRespDto>>() {}
+            );
+            if (resp.getErrorCode() != 0) {
+                throw new RuntimeException(
+                        StrUtil.format(
+                                "resp with error ( code: {}, msg: {} )",
+                                resp.getErrorCode(),
+                                resp.getMessage()
+                        )
+                );
+            }
+            return Assert.notNull(resp.getData());
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    StrUtil.format(
+                            "failed to call BIF BCDNS for {} : ",
+                            VC_DOWNLOAD_URL
                     ),
                     e
             );

@@ -17,6 +17,7 @@
 package com.alipay.antchain.bridge.commons.bcdns;
 
 import java.security.PublicKey;
+import java.security.Security;
 
 import com.alipay.antchain.bridge.commons.bcdns.utils.ObjectIdentityUtil;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
@@ -28,12 +29,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class PTCCredentialSubject implements ICredentialSubject {
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     public static final short TLV_TYPE_PTC_CREDENTIAL_SUBJECT_VERSION = 0x0000;
 

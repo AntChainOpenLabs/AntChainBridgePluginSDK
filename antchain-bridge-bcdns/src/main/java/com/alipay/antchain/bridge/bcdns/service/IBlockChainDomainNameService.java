@@ -20,23 +20,24 @@ import com.alipay.antchain.bridge.bcdns.types.base.DomainRouter;
 import com.alipay.antchain.bridge.bcdns.types.exception.AntChainBridgeBCDNSException;
 import com.alipay.antchain.bridge.bcdns.types.req.*;
 import com.alipay.antchain.bridge.bcdns.types.resp.*;
+import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
 
 public interface IBlockChainDomainNameService {
 
     QueryBCDNSTrustRootCertificateResponse queryBCDNSTrustRootCertificate();
 
-    ApplyRelayerCertificateResponse applyRelayerCertificate(ApplyRelayerCertificateRequest request);
+    ApplyRelayerCertificateResponse applyRelayerCertificate(AbstractCrossChainCertificate certSigningRequest);
 
-    RelayerCertificateApplicationReceipt queryRelayerCertificateApplicationReceipt(QueryRelayerCertificateApplicationReceiptRequest request);
+    ApplicationResult queryRelayerCertificateApplicationResult(String applyReceipt);
 
     //
-    ApplyPTCCertificateResponse applyPTCCertificate(ApplyPTCCertificateRequest request);
+    ApplyPTCCertificateResponse applyPTCCertificate(AbstractCrossChainCertificate certSigningRequest);
 
-    PTCCertificateApplicationReceipt queryPTCCertificateApplicationReceipt(QueryPTCCertificateApplicationReceiptRequest request);
+    ApplicationResult queryPTCCertificateApplicationResult(String applyReceipt);
 
-    ApplyPTCCertificateResponse applyDomainNameCertificate(ApplyPTCCertificateRequest request);
+    ApplyDomainNameCertificateResponse applyDomainNameCertificate(AbstractCrossChainCertificate certSigningRequest);
 
-    DomainNameCertificateApplicationReceipt queryPTCCertificateApplicationReceipt(QueryDomainNameCertificateApplicationReceiptRequest request);
+    ApplicationResult queryDomainNameCertificateApplicationResult(String applyReceipt);
 
     QueryRelayerCertificateResponse queryRelayerCertificate(QueryRelayerCertificateRequest request);
 
