@@ -19,8 +19,6 @@ package com.alipay.antchain.bridge.commons;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.security.*;
-import java.security.interfaces.ECPublicKey;
-import java.security.spec.ECPoint;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Date;
 
@@ -28,7 +26,6 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.KeyUtil;
 import cn.hutool.crypto.PemUtil;
 import cn.hutool.crypto.digest.SM3;
 import com.alipay.antchain.bridge.commons.bcdns.*;
@@ -37,7 +34,6 @@ import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentityType;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -49,16 +45,18 @@ public class BCDNSTest {
 
     private static PrivateKey privateKey;
 
-    private static final String KEY_ALGO = "Ed25519";
+    private static final String KEY_ALGO = "SM2";// "Ed25519";
 
-    private static final String SIG_ALGO = "Ed25519";
+    private static final String SIG_ALGO = "SM3WITHSM2"; // "Ed25519";
 
     @BeforeClass
     public static void setUp() throws Exception {
         new ObjectIdentity();
 //        Security.addProvider(new BouncyCastleProvider());
 
-        keyPair = KeyPairGenerator.getInstance(KEY_ALGO).generateKeyPair();
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KEY_ALGO);
+        keyPairGenerator.initialize(256);
+        keyPair = keyPairGenerator.generateKeyPair();
 
         // dump the private key into pem
         StringWriter stringWriter = new StringWriter(256);
@@ -69,38 +67,19 @@ public class BCDNSTest {
         System.out.println(privatePem);
         FileUtil.writeBytes(privatePem.getBytes(), "cc_certs/private_key.pem");
 
-        KeyFactory keyFactory = KeyFactory.getInstance(
-                PrivateKeyInfo.getInstance(PemUtil.readPem(new ByteArrayInputStream(privatePem.getBytes())))
-                        .getPrivateKeyAlgorithm().getAlgorithm().getId()
-        );
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(
-                PemUtil.readPem(new ByteArrayInputStream(privatePem.getBytes()))
-        );
-        privateKey = keyFactory.generatePrivate(keySpec);
+        if (StrUtil.equalsIgnoreCase(KEY_ALGO, "SM2")) {
+            privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
+        } else {
+            KeyFactory keyFactory = KeyFactory.getInstance(
+                    PrivateKeyInfo.getInstance(PemUtil.readPem(new ByteArrayInputStream(privatePem.getBytes())))
+                            .getPrivateKeyAlgorithm().getAlgorithm().getId()
+            );
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(
+                    PemUtil.readPem(new ByteArrayInputStream(privatePem.getBytes()))
+            );
+            privateKey = keyFactory.generatePrivate(keySpec);
+        }
 
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("SM2");
-        keyPairGenerator.initialize(256);
-        BCECPublicKey bcecPublicKey = (BCECPublicKey) keyPairGenerator.generateKeyPair().getPublic();
-        PublicKey sm2Key = KeyUtil.generateKeyPair("SM2").getPublic();
-
-        keyPairGenerator = KeyPairGenerator.getInstance("EC");
-        keyPairGenerator.initialize(256);
-        ECPublicKey ecPublicKey = (ECPublicKey) keyPairGenerator.generateKeyPair().getPublic();
-        ECPoint point = ecPublicKey.getW();
-        byte[] raw = new byte[point.getAffineX().toByteArray().length + point.getAffineY().toByteArray().length + 1];
-
-        System.arraycopy(point.getAffineX().toByteArray(), 0, raw, 1, point.getAffineX().toByteArray().length);
-
-        System.arraycopy(point.getAffineY().toByteArray(), 0, raw, point.getAffineX().toByteArray().length + 1, point.getAffineY().toByteArray().length);
-
-        raw[0] = 4;
-
-        System.out.println(bcecPublicKey.toString());
-        System.out.println(HexUtil.encodeHex(bcecPublicKey.getEncoded()));
-        System.out.println(HexUtil.encodeHex(bcecPublicKey.getQ().getEncoded(false)));
-//        ECPoint point = bcecPublicKey.getW();
-
-//        PrivateKey privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
         Assert.assertNotNull(privateKey);
     }
 

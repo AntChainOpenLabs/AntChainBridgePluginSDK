@@ -116,11 +116,15 @@ public enum CommonsErrorCodeEnum {
      */
     BCDNS_OID_BID_INFO_ERROR("0704", "wrong BID_INFO oid"),
 
+    /**
+     *
+     */
+    BCDNS_OID_UNSUPPORTED_TYPE("0705", "unsupported oid type"),
 
     /**
      *
      */
-    BCDNS_OID_UNSUPPORTED_TYPE("0705", "unsupported oid type");
+    BCDNS_BID_PUBLIC_KEY_ALGO_NOT_SUPPORT("0706", "BID pubkey algo not support");
 
     /**
      * Error code for errors happened in project {@code antchain-bridge-commons}

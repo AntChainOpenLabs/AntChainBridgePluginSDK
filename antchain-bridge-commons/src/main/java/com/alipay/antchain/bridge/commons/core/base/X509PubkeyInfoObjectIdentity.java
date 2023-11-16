@@ -21,15 +21,15 @@ import java.security.interfaces.ECPublicKey;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.ECKeyUtil;
 import cn.hutool.crypto.KeyUtil;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
 import sun.security.x509.AlgorithmId;
 
-public class X509PubkeyInfoObjectIdentity extends ObjectIdentity {
+public class X509PubkeyInfoObjectIdentity extends ObjectIdentity implements IObjectIdentityWithPublicKey {
 
     private SubjectPublicKeyInfo subjectPublicKeyInfo;
 
@@ -70,23 +70,11 @@ public class X509PubkeyInfoObjectIdentity extends ObjectIdentity {
                 return ((BCEdDSAPublicKey) publicKey).getPointEncoding();
             }
             throw new RuntimeException("your Ed25519 public key class not support: " + publicKey.getClass().getName());
-        } else if (StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "SM2")) {
-            if (publicKey instanceof BCECPublicKey) {
-                return ((BCECPublicKey) publicKey).getQ().getEncoded(false);
-            }
-            throw new RuntimeException("your SM2 public key class not support: " + publicKey.getClass().getName());
-        } else if (StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "EC")) {
+        } else if (StrUtil.equalsAnyIgnoreCase(publicKey.getAlgorithm(), "SM2", "EC")) {
             if (publicKey instanceof ECPublicKey) {
-                ECPublicKey ecPublicKey = (ECPublicKey) publicKey;
-                byte[] rawX = ecPublicKey.getW().getAffineX().toByteArray();
-                byte[] rawY = ecPublicKey.getW().getAffineY().toByteArray();
-                byte[] raw = new byte[rawX.length + rawY.length + 1];
-                System.arraycopy(rawX, 0, raw, 1, rawX.length);
-                System.arraycopy(rawY, 0, raw, rawY.length + 1, rawY.length);
-                raw[0] = 4;
-                return raw;
+                return ECKeyUtil.toPublicParams(publicKey).getQ().getEncoded(false);
             }
-            throw new RuntimeException("your EC public key class not support: " + publicKey.getClass().getName());
+            throw new RuntimeException("your SM2/EC public key class not support: " + publicKey.getClass().getName());
         }
         throw new RuntimeException(
                 StrUtil.format("your public key algo {} don't support this function for now", publicKey.getAlgorithm())
