@@ -31,8 +31,11 @@ import com.alipay.antchain.bridge.bcdns.impl.bif.req.VcApplyReqDto;
 import com.alipay.antchain.bridge.bcdns.impl.bif.req.VcInfoReqDto;
 import com.alipay.antchain.bridge.bcdns.impl.bif.resp.*;
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
+import com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateTypeEnum;
+import lombok.Getter;
 import okhttp3.*;
 
+@Getter
 public class BifCertificationServiceClient {
 
     public static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
@@ -86,7 +89,10 @@ public class BifCertificationServiceClient {
                 )
         );
         vcApplyReqDto.setSign(
-                clientCredential.signRequest(certSigningRequest.getEncodedToSign())
+                certSigningRequest.getType() == CrossChainCertificateTypeEnum.RELAYER_CERTIFICATE
+                        || certSigningRequest.getType() == CrossChainCertificateTypeEnum.PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE ?
+                        clientCredential.signAuthorizedRequest(certSigningRequest.getEncodedToSign()) :
+                        clientCredential.signRequest(certSigningRequest.getEncodedToSign())
         );
         try (
                 Response response = httpClient.newCall(
@@ -98,7 +104,8 @@ public class BifCertificationServiceClient {
         ) {
             DataResp<VcApplyRespDto> resp = JSON.parseObject(
                     Objects.requireNonNull(response.body(), "empty resp body").string(),
-                    new TypeReference<DataResp<VcApplyRespDto>>() {}
+                    new TypeReference<DataResp<VcApplyRespDto>>() {
+                    }
             );
             if (resp.getErrorCode() != 0) {
                 throw new RuntimeException(
@@ -135,7 +142,8 @@ public class BifCertificationServiceClient {
         ) {
             DataResp<QueryStatusRespDto> resp = JSON.parseObject(
                     Objects.requireNonNull(response.body(), "empty resp body").string(),
-                    new TypeReference<DataResp<QueryStatusRespDto>>() {}
+                    new TypeReference<DataResp<QueryStatusRespDto>>() {
+                    }
             );
             if (resp.getErrorCode() != 0) {
                 throw new RuntimeException(
@@ -172,7 +180,8 @@ public class BifCertificationServiceClient {
         ) {
             DataResp<VcInfoRespDto> resp = JSON.parseObject(
                     Objects.requireNonNull(response.body(), "empty resp body").string(),
-                    new TypeReference<DataResp<VcInfoRespDto>>() {}
+                    new TypeReference<DataResp<VcInfoRespDto>>() {
+                    }
             );
             if (resp.getErrorCode() != 0) {
                 throw new RuntimeException(
@@ -206,7 +215,8 @@ public class BifCertificationServiceClient {
         ) {
             DataResp<VcRootRespDto> resp = JSON.parseObject(
                     Objects.requireNonNull(response.body(), "empty resp body").string(),
-                    new TypeReference<DataResp<VcRootRespDto>>() {}
+                    new TypeReference<DataResp<VcRootRespDto>>() {
+                    }
             );
             if (resp.getErrorCode() != 0) {
                 throw new RuntimeException(

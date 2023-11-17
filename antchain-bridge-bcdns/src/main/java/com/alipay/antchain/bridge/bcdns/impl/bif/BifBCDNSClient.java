@@ -37,11 +37,19 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
             String url,
             String clientCrossChainCertPem,
             String clientPrivateKeyPem,
-            String sigAlgo
+            String sigAlgo,
+            String authorizedKeyPem,
+            String authorizedSigAlgo
     ) {
         certificationServiceClient = new BifCertificationServiceClient(
                 url,
-                new BifBCDNSClientCredential(clientCrossChainCertPem, clientPrivateKeyPem, sigAlgo)
+                new BifBCDNSClientCredential(
+                        clientCrossChainCertPem,
+                        clientPrivateKeyPem,
+                        sigAlgo,
+                        authorizedKeyPem,
+                        authorizedSigAlgo
+                )
         );
     }
 

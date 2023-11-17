@@ -1,5 +1,6 @@
 package com.alipay.antchain.bridge.commons.core.base;
 
+import java.security.KeyFactory;
 import java.security.PublicKey;
 
 import cn.ac.caict.bid.model.BIDDocumentOperation;
@@ -13,10 +14,7 @@ import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsExcepti
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.i2p.crypto.eddsa.EdDSAPublicKey;
-import net.i2p.crypto.eddsa.spec.EdDSANamedCurveTable;
-import net.i2p.crypto.eddsa.spec.EdDSAParameterSpec;
-import net.i2p.crypto.eddsa.spec.EdDSAPublicKeySpec;
+import org.bouncycastle.jcajce.spec.RawEncodedKeySpec;
 
 @Data
 @NoArgsConstructor
@@ -54,9 +52,7 @@ public class BIDInfoObjectIdentity extends ObjectIdentity implements IObjectIden
             byte[] rawPubkey = new byte[rawPubkeyWithSignals.length - 3];
             System.arraycopy(rawPubkeyWithSignals, 3, rawPubkey, 0, rawPubkey.length);
             if (biDpublicKeyOperation.getType() == KeyType.ED25519) {
-                EdDSAParameterSpec spec = EdDSANamedCurveTable.getByName("ed25519-sha-512");
-                EdDSAPublicKeySpec eddsaPubKey = new EdDSAPublicKeySpec(rawPubkey, spec);
-                return new EdDSAPublicKey(eddsaPubKey);
+                return KeyFactory.getInstance("Ed25519").generatePublic(new RawEncodedKeySpec(rawPubkey));
             } else if (biDpublicKeyOperation.getType() == KeyType.SM2) {
                 return BCUtil.decodeECPoint(rawPubkey, "prime256v1");
             }
@@ -64,6 +60,8 @@ public class BIDInfoObjectIdentity extends ObjectIdentity implements IObjectIden
                     CommonsErrorCodeEnum.BCDNS_BID_PUBLIC_KEY_ALGO_NOT_SUPPORT,
                     StrUtil.format("the key type of BID is not expected")
             );
+        } catch (AntChainBridgeCommonsException e) {
+            throw e;
         } catch (Exception e) {
             throw new AntChainBridgeCommonsException(
                     CommonsErrorCodeEnum.BCDNS_OID_BID_INFO_ERROR,

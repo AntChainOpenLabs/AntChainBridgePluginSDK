@@ -20,7 +20,9 @@ import java.io.ByteArrayInputStream;
 import java.security.Security;
 
 import cn.hutool.crypto.PemUtil;
+import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
+import com.alipay.antchain.bridge.commons.core.ptc.PTCTypeEnum;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
@@ -78,5 +80,93 @@ public class CrossChainCertificateFactory {
 
     public static AbstractCrossChainCertificate createCrossChainCertificateFromPem(byte[] pemData) {
         return TLVUtils.decode(PemUtil.readPem(new ByteArrayInputStream(pemData)), CrossChainCertificateV1.class);
+    }
+
+    public static AbstractCrossChainCertificate createRelayerCertificateSigningRequest(
+            String version,
+            String name,
+            ObjectIdentity applicant,
+            byte[] subjectInfo
+    ) {
+        AbstractCrossChainCertificate crossChainCertificate = new CrossChainCertificateV1();
+        crossChainCertificate.setType(CrossChainCertificateTypeEnum.RELAYER_CERTIFICATE);
+        crossChainCertificate.setVersion(CrossChainCertificateV1.MY_VERSION);
+        crossChainCertificate.setCredentialSubject(
+                new RelayerCredentialSubject(
+                        version,
+                        name,
+                        applicant,
+                        subjectInfo
+                ).encode()
+        );
+        return crossChainCertificate;
+    }
+
+    public static AbstractCrossChainCertificate createPTCCertificateSigningRequest(
+            String version,
+            String name,
+            PTCTypeEnum ptcType,
+            ObjectIdentity applicant,
+            byte[] subjectInfo
+    ) {
+        AbstractCrossChainCertificate crossChainCertificate = new CrossChainCertificateV1();
+        crossChainCertificate.setType(CrossChainCertificateTypeEnum.PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE);
+        crossChainCertificate.setVersion(CrossChainCertificateV1.MY_VERSION);
+        crossChainCertificate.setCredentialSubject(
+                new PTCCredentialSubject(
+                        version,
+                        name,
+                        ptcType,
+                        applicant,
+                        subjectInfo
+                ).encode()
+        );
+        return crossChainCertificate;
+    }
+
+    public static AbstractCrossChainCertificate createDomainNameCertificateSigningRequest(
+            String version,
+            CrossChainDomain parentDomainSpace,
+            CrossChainDomain domain,
+            ObjectIdentity applicant,
+            byte[] subjectInfo
+    ) {
+        AbstractCrossChainCertificate crossChainCertificate = new CrossChainCertificateV1();
+        crossChainCertificate.setType(CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE);
+        crossChainCertificate.setVersion(CrossChainCertificateV1.MY_VERSION);
+        crossChainCertificate.setCredentialSubject(
+                new DomainNameCredentialSubject(
+                        version,
+                        DomainNameTypeEnum.DOMAIN_NAME,
+                        parentDomainSpace,
+                        domain,
+                        applicant,
+                        subjectInfo
+                ).encode()
+        );
+        return crossChainCertificate;
+    }
+
+    public static AbstractCrossChainCertificate createDomainSpaceCertificateSigningRequest(
+            String version,
+            CrossChainDomain parentDomainSpace,
+            CrossChainDomain domainSpace,
+            ObjectIdentity applicant,
+            byte[] subjectInfo
+    ) {
+        AbstractCrossChainCertificate crossChainCertificate = new CrossChainCertificateV1();
+        crossChainCertificate.setType(CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE);
+        crossChainCertificate.setVersion(CrossChainCertificateV1.MY_VERSION);
+        crossChainCertificate.setCredentialSubject(
+                new DomainNameCredentialSubject(
+                        version,
+                        DomainNameTypeEnum.DOMAIN_NAME_SPACE,
+                        parentDomainSpace,
+                        domainSpace,
+                        applicant,
+                        subjectInfo
+                ).encode()
+        );
+        return crossChainCertificate;
     }
 }

@@ -18,6 +18,8 @@ package com.alipay.antchain.bridge.commons.bcdns;
 
 import java.security.PublicKey;
 
+import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
+
 public interface ICredentialSubject {
 
     byte[] encode();
@@ -25,4 +27,8 @@ public interface ICredentialSubject {
     PublicKey getSubjectPublicKey();
 
     byte[] getRawSubjectPublicKey();
+
+    ObjectIdentity getApplicant();
+
+    byte[] getSubject();
 }
