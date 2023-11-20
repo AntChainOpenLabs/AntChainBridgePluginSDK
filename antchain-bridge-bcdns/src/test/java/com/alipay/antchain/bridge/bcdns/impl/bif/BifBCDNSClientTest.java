@@ -21,6 +21,8 @@ import java.nio.charset.Charset;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifCertificationServiceConfig;
+import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifChainConfig;
 import com.alipay.antchain.bridge.bcdns.types.resp.ApplicationResult;
 import com.alipay.antchain.bridge.bcdns.types.resp.ApplyDomainNameCertificateResponse;
 import com.alipay.antchain.bridge.bcdns.types.resp.QueryBCDNSTrustRootCertificateResponse;
@@ -57,12 +59,24 @@ public class BifBCDNSClientTest {
     @BeforeClass
     public static void setup() {
         bifBCDNSClient = new BifBCDNSClient(
-                "http://47.103.129.185:8080",
-                FileUtil.readString(getCertsPath() + "relayer.crt", Charset.defaultCharset()),
-                FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
-                SIG_ALGO,
-                FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
-                SIG_ALGO
+                new BifCertificationServiceConfig(
+                        "http://47.103.129.185:8080",
+                        FileUtil.readString(getCertsPath() + "relayer.crt", Charset.defaultCharset()),
+                        FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
+                        SIG_ALGO,
+                        FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
+                        SIG_ALGO
+                ),
+                new BifChainConfig(
+                        "",
+                        null,
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        ""
+                )
         );
 
         ANTCHAIN_CSR = CrossChainCertificateFactory.createDomainNameCertificateSigningRequest(

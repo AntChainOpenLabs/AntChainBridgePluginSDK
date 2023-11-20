@@ -14,16 +14,38 @@
  * limitations under the License.
  */
 
-package com.alipay.antchain.bridge.bcdns.types.resp;
+package com.alipay.antchain.bridge.bcdns.impl.bif.conf;
 
-import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Getter
-@Setter
 @AllArgsConstructor
-public class QueryRelayerCertificateResponse {
-    private AbstractCrossChainCertificate certificate;
+@NoArgsConstructor
+public class BifChainConfig {
+
+    @NonNull
+    private String bifChainRpcUrl;
+
+    private Integer bifChainRpcPort;
+
+    @NonNull
+    private String bifPrivateKey;
+
+    @NonNull
+    private String bifAddress;
+
+    @NonNull
+    private String domainGovernContract;
+
+    @NonNull
+    private String relayerGovernContract;
+
+    @NonNull
+    private String ptcGovernContract;
+
+    @NonNull
+    private String certificatesGovernContract;
 }

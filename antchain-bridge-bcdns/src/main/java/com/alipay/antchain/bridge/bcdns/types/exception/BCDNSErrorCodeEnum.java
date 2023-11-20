@@ -33,7 +33,11 @@ import lombok.Getter;
  */
 @Getter
 public enum BCDNSErrorCodeEnum {
-    BCDNS_SIGN_REQUEST_FAILED("8001", "client failed to sign");
+    BCDNS_SIGN_REQUEST_FAILED("8001", "client failed to sign"),
+
+    BCDNS_CLIENT_INIT_FAILED("8002", "client init failed"),
+
+    BCDNS_QUERY_RELAYER_INFO_FAILED("8003", "query relayer info failed");
 
     /**
      * Error code for errors happened in project {@code antchain-bridge-commons}

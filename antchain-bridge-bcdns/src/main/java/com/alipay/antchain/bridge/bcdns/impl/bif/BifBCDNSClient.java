@@ -16,12 +16,24 @@
 
 package com.alipay.antchain.bridge.bcdns.impl.bif;
 
+import java.util.concurrent.atomic.AtomicLong;
+
+import cn.bif.api.BIFSDK;
+import cn.bif.model.request.BIFAccountGetNonceRequest;
+import cn.bif.model.request.BIFContractCallRequest;
+import cn.bif.model.response.BIFAccountGetNonceResponse;
+import cn.bif.model.response.BIFContractCallResponse;
+import cn.hutool.core.util.HexUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifCertificationServiceConfig;
+import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifChainConfig;
 import com.alipay.antchain.bridge.bcdns.impl.bif.resp.QueryStatusRespDto;
 import com.alipay.antchain.bridge.bcdns.impl.bif.resp.VcInfoRespDto;
 import com.alipay.antchain.bridge.bcdns.service.IBlockChainDomainNameService;
 import com.alipay.antchain.bridge.bcdns.types.base.DomainRouter;
 import com.alipay.antchain.bridge.bcdns.types.exception.AntChainBridgeBCDNSException;
+import com.alipay.antchain.bridge.bcdns.types.exception.BCDNSErrorCodeEnum;
 import com.alipay.antchain.bridge.bcdns.types.req.*;
 import com.alipay.antchain.bridge.bcdns.types.resp.*;
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
@@ -33,24 +45,31 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
 
     private final BifCertificationServiceClient certificationServiceClient;
 
+    private final BIFSDK bifsdk;
+
+    private final AtomicLong bifNonce;
+
+    private final BifChainConfig bifChainConfig;
+
     public BifBCDNSClient(
-            String url,
-            String clientCrossChainCertPem,
-            String clientPrivateKeyPem,
-            String sigAlgo,
-            String authorizedKeyPem,
-            String authorizedSigAlgo
+            BifCertificationServiceConfig bifCertificationServiceConfig,
+            BifChainConfig bifChainConfig
     ) {
         certificationServiceClient = new BifCertificationServiceClient(
-                url,
+                bifCertificationServiceConfig.getUrl(),
                 new BifBCDNSClientCredential(
-                        clientCrossChainCertPem,
-                        clientPrivateKeyPem,
-                        sigAlgo,
-                        authorizedKeyPem,
-                        authorizedSigAlgo
+                        bifCertificationServiceConfig.getClientCrossChainCertPem(),
+                        bifCertificationServiceConfig.getClientPrivateKeyPem(),
+                        bifCertificationServiceConfig.getSigAlgo(),
+                        bifCertificationServiceConfig.getAuthorizedKeyPem(),
+                        bifCertificationServiceConfig.getAuthorizedSigAlgo()
                 )
         );
+        this.bifChainConfig = bifChainConfig;
+        bifsdk = ObjectUtil.isNull(bifChainConfig.getBifChainRpcPort()) ?
+                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl()) :
+                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl(), bifChainConfig.getBifChainRpcPort());
+        bifNonce = new AtomicLong(queryBifAccNonce());
     }
 
     @Override
@@ -106,7 +125,38 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
 
     @Override
     public QueryRelayerCertificateResponse queryRelayerCertificate(QueryRelayerCertificateRequest request) {
-        return null;
+        try {
+            BIFContractCallRequest bifContractCallRequest = new BIFContractCallRequest();
+            bifContractCallRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
+            // TODO what's the input
+            bifContractCallRequest.setInput("");
+            BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
+            if (0 != response.getErrorCode()) {
+                throw new AntChainBridgeBCDNSException(
+                        BCDNSErrorCodeEnum.BCDNS_QUERY_RELAYER_INFO_FAILED,
+                        StrUtil.format(
+                                "failed to query relayer info from BIF chain ( err_code: {}, err_msg: {} )",
+                                response.getErrorCode(), response.getErrorDesc()
+                        )
+                );
+            }
+            return new QueryRelayerCertificateResponse(
+                    CrossChainCertificateFactory.createCrossChainCertificate(
+                            (byte[]) response.getResult().getQueryRets().get(0)
+                    )
+            );
+        } catch (AntChainBridgeBCDNSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AntChainBridgeBCDNSException(
+                    BCDNSErrorCodeEnum.BCDNS_QUERY_RELAYER_INFO_FAILED,
+                    StrUtil.format(
+                            "failed to query relayer {} : {} info from BIF chain",
+                            request.getName(), HexUtil.encodeHexStr(request.getApplicant().encode())
+                    ),
+                    e
+            );
+        }
     }
 
     @Override
@@ -160,5 +210,21 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                         )
                 );
         }
+    }
+
+    private long queryBifAccNonce() {
+        BIFAccountGetNonceRequest request = new BIFAccountGetNonceRequest();
+        request.setAddress(bifChainConfig.getBifAddress());
+        BIFAccountGetNonceResponse response = bifsdk.getBIFAccountService().getNonce(request);
+        if (0 != response.getErrorCode()) {
+            throw new AntChainBridgeBCDNSException(
+                    BCDNSErrorCodeEnum.BCDNS_CLIENT_INIT_FAILED,
+                    StrUtil.format(
+                            "failed to query nonce for bif account ( err_code: {}, err_msg: {}, acc: {} )",
+                            response.getErrorCode(), response.getErrorDesc(), bifChainConfig.getBifAddress()
+                    )
+            );
+        }
+        return response.getResult().getNonce();
     }
 }
