@@ -37,7 +37,9 @@ public enum BCDNSErrorCodeEnum {
 
     BCDNS_CLIENT_INIT_FAILED("8002", "client init failed"),
 
-    BCDNS_QUERY_RELAYER_INFO_FAILED("8003", "query relayer info failed");
+    BCDNS_QUERY_RELAYER_INFO_FAILED("8003", "query relayer info failed"),
+
+    BCDNS_TYPE_UNKNOWN("8004", "bcdns type unknown");
 
     /**
      * Error code for errors happened in project {@code antchain-bridge-commons}

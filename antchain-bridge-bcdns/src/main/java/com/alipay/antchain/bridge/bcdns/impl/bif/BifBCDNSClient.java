@@ -26,6 +26,8 @@ import cn.bif.model.response.BIFContractCallResponse;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifBCNDSConfig;
 import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifCertificationServiceConfig;
 import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifChainConfig;
 import com.alipay.antchain.bridge.bcdns.impl.bif.resp.QueryStatusRespDto;
@@ -42,6 +44,14 @@ import lombok.Getter;
 
 @Getter
 public class BifBCDNSClient implements IBlockChainDomainNameService {
+
+    public static BifBCDNSClient generateFrom(byte[] rawConf) {
+        BifBCNDSConfig config = JSON.parseObject(rawConf, BifBCNDSConfig.class);
+        return new BifBCDNSClient(
+                config.getCertificationServiceConfig(),
+                config.getChainConfig()
+        );
+    }
 
     private final BifCertificationServiceClient certificationServiceClient;
 

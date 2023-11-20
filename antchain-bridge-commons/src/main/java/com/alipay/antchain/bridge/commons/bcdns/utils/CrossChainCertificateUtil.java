@@ -98,7 +98,7 @@ public class CrossChainCertificateUtil {
                 subject.getDomainNameType(),
                 DomainNameTypeEnum.DOMAIN_NAME_SPACE
         );
-        return subject.getDomainName();
+        return subject.getParentDomainSpace();
     }
 
     public static PublicKey getPublicKeyFromCrossChainCertificate(AbstractCrossChainCertificate certificate) {
