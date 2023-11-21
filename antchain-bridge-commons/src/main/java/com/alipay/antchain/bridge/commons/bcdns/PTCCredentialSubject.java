@@ -35,7 +35,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PTCCredentialSubject implements ICredentialSubject {
+public class PTCCredentialSubject extends AbstractCredentialSubjectWithSingleKey {
     static {
         Security.addProvider(new BouncyCastleProvider());
     }

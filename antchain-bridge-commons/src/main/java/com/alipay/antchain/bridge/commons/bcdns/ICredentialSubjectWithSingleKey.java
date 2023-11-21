@@ -16,15 +16,11 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
-import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
+import java.security.PublicKey;
 
-public interface ICredentialSubject {
+public interface ICredentialSubjectWithSingleKey extends ICredentialSubject {
 
-    byte[] encode();
+    PublicKey getSubjectPublicKey();
 
-    ObjectIdentity getApplicant();
-
-    byte[] getSubject();
-
-    boolean verifyIssueProof(byte[] encoded, AbstractCrossChainCertificate.IssueProof issueProof);
+    byte[] getRawSubjectPublicKey();
 }

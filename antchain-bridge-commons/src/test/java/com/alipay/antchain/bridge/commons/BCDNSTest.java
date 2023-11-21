@@ -54,7 +54,7 @@ public class BCDNSTest {
     private static final String KEY_ALGO = "SM2";// "Ed25519" or "SM2";
 
     private static final String SIG_ALGO = "SM3WITHSM2"; // "Ed25519" or "SM3WITHSM2";
-    
+
     private static final ObjectIdentityType oidType = ObjectIdentityType.BID;
 
     @BeforeClass
@@ -221,11 +221,11 @@ public class BCDNSTest {
         System.out.println(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert));
         FileUtil.writeBytes(CrossChainCertificateUtil.formatCrossChainCertificateToPem(relayerCert).getBytes(), "cc_certs/relayer.crt");
 
-        Assert.assertEquals(KEY_ALGO.equals("Ed25519") ? 32 : 65, relayerCert.getCredentialSubjectInstance().getRawSubjectPublicKey().length);
+        Assert.assertEquals(KEY_ALGO.equals("Ed25519") ? 32 : 65, ((ICredentialSubjectWithSingleKey) relayerCert.getCredentialSubjectInstance()).getRawSubjectPublicKey().length);
         Assert.assertTrue(
                 StrUtil.endWith(
                         HexUtil.encodeHexStr(keyPair.getPublic().getEncoded()),
-                        HexUtil.encodeHexStr(relayerCert.getCredentialSubjectInstance().getRawSubjectPublicKey())
+                        HexUtil.encodeHexStr(((ICredentialSubjectWithSingleKey) relayerCert.getCredentialSubjectInstance()).getRawSubjectPublicKey())
                 )
         );
     }
@@ -330,7 +330,7 @@ public class BCDNSTest {
     private ObjectIdentity generateOID() {
         return oidType == ObjectIdentityType.BID ? getBidOID() : getX509OID();
     }
-    
+
     private ObjectIdentity getX509OID() {
         return new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded());
     }
@@ -367,7 +367,7 @@ public class BCDNSTest {
         BIDDocumentOperation bidDocumentOperation = new BIDDocumentOperation();
         bidDocumentOperation.setPublicKey(biDpublicKeyOperation);
         BIDInfoObjectIdentity bidInfoObjectIdentity = new BIDInfoObjectIdentity(bidDocumentOperation);
-        
+
         return new BIDInfoObjectIdentity(bidInfoObjectIdentity);
     }
 }

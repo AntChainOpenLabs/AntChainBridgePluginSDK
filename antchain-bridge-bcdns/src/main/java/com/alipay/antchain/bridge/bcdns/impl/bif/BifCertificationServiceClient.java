@@ -32,6 +32,7 @@ import com.alipay.antchain.bridge.bcdns.impl.bif.req.VcInfoReqDto;
 import com.alipay.antchain.bridge.bcdns.impl.bif.resp.*;
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
 import com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateTypeEnum;
+import com.alipay.antchain.bridge.commons.bcdns.utils.CrossChainCertificateUtil;
 import lombok.Getter;
 import okhttp3.*;
 
@@ -85,7 +86,7 @@ public class BifCertificationServiceClient {
         vcApplyReqDto.setCredentialType(certSigningRequest.getType().ordinal());
         vcApplyReqDto.setPublicKey(
                 Base64.encode(
-                        certSigningRequest.getCredentialSubjectInstance().getSubjectPublicKey().getEncoded()
+                        CrossChainCertificateUtil.getPublicKeyFromCrossChainCertificate(certSigningRequest).getEncoded()
                 )
         );
         vcApplyReqDto.setSign(
