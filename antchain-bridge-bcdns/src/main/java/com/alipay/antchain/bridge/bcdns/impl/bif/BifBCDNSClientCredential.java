@@ -19,9 +19,15 @@ package com.alipay.antchain.bridge.bcdns.impl.bif;
 import java.io.ByteArrayInputStream;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
+import java.security.interfaces.ECPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 
+import cn.hutool.core.util.HexUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.ECKeyUtil;
+import cn.hutool.crypto.KeyUtil;
 import cn.hutool.crypto.PemUtil;
 import com.alipay.antchain.bridge.bcdns.types.exception.AntChainBridgeBCDNSException;
 import com.alipay.antchain.bridge.bcdns.types.exception.BCDNSErrorCodeEnum;
@@ -31,6 +37,9 @@ import com.alipay.antchain.bridge.commons.bcdns.utils.CrossChainCertificateUtil;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.jcajce.provider.asymmetric.edec.BCEdDSAPublicKey;
+import sun.security.x509.AlgorithmId;
 
 @Getter
 public class BifBCDNSClientCredential {
@@ -43,6 +52,8 @@ public class BifBCDNSClientCredential {
 
     private PrivateKey authorizedKey;
 
+    private PublicKey authorizedPublicKey;
+
     private String sigAlgo;
 
     private String authorizedSigAlgo;
@@ -52,6 +63,7 @@ public class BifBCDNSClientCredential {
             String privateKeyPem,
             String sigAlgo,
             String authorizedKeyPem,
+            String authorizedPublicKeyPem,
             String authorizedSigAlgo
     ) {
         this.clientCert = CrossChainCertificateUtil.readCrossChainCertificateFromPem(
@@ -60,6 +72,7 @@ public class BifBCDNSClientCredential {
         this.clientCredentialSubject = clientCert.getCredentialSubjectInstance();
         this.clientKey = readPrivateKeyFromPem(privateKeyPem);
         this.authorizedKey = readPrivateKeyFromPem(authorizedKeyPem);
+        this.authorizedPublicKey = readPublicKeyFromPem(authorizedPublicKeyPem);
         this.sigAlgo = sigAlgo;
         this.authorizedSigAlgo = authorizedSigAlgo;
     }
@@ -94,6 +107,41 @@ public class BifBCDNSClientCredential {
         }
     }
 
+    public String getBifFormatAuthorizedPublicKey() {
+        return getBifFormatPublicKey(authorizedPublicKey);
+    }
+
+    public String getBifFormatClientPublicKey() {
+        return getBifFormatPublicKey(CrossChainCertificateUtil.getPublicKeyFromCrossChainCertificate(clientCert));
+    }
+
+    private String getBifFormatPublicKey(PublicKey publicKey) {
+        byte[] rawPublicKey;
+        if (StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519")) {
+            if (publicKey instanceof BCEdDSAPublicKey) {
+                rawPublicKey = ((BCEdDSAPublicKey) publicKey).getPointEncoding();
+            } else {
+                throw new RuntimeException("your Ed25519 public key class not support: " + publicKey.getClass().getName());
+            }
+        } else if (StrUtil.equalsAnyIgnoreCase(publicKey.getAlgorithm(), "SM2", "EC")) {
+            if (publicKey instanceof ECPublicKey) {
+                rawPublicKey = ECKeyUtil.toPublicParams(publicKey).getQ().getEncoded(false);
+            } else {
+                throw new RuntimeException("your SM2/EC public key class not support: " + publicKey.getClass().getName());
+            }
+        } else {
+            throw new RuntimeException(publicKey.getAlgorithm() + " not support");
+        }
+
+        byte[] rawPublicKeyWithSignals = new byte[rawPublicKey.length + 3];
+        System.arraycopy(rawPublicKey, 0, rawPublicKeyWithSignals, 3, rawPublicKey.length);
+        rawPublicKeyWithSignals[0] = -80;
+        rawPublicKeyWithSignals[1] = StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519") ? (byte) 101 : (byte) 122;
+        rawPublicKeyWithSignals[2] = 102;
+
+        return HexUtil.encodeHexStr(rawPublicKeyWithSignals);
+    }
+
     @SneakyThrows
     private PrivateKey readPrivateKeyFromPem(String privateKeyPem) {
         try {
@@ -109,5 +157,14 @@ public class BifBCDNSClientCredential {
                     )
             );
         }
+    }
+
+    @SneakyThrows
+    private PublicKey readPublicKeyFromPem(String publicKeyPem) {
+        SubjectPublicKeyInfo keyInfo = SubjectPublicKeyInfo.getInstance(PemUtil.readPem(new ByteArrayInputStream(publicKeyPem.getBytes())));
+        return KeyUtil.generatePublicKey(
+                AlgorithmId.get(keyInfo.getAlgorithm().getAlgorithm().getId()).getName(),
+                keyInfo.getEncoded()
+        );
     }
 }

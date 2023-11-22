@@ -118,4 +118,22 @@ public class CrossChainCertificateUtil {
                 );
         }
     }
+
+    public static byte[] getRawPublicKeyFromCrossChainCertificate(AbstractCrossChainCertificate certificate) {
+        switch (certificate.getType()) {
+            case BCDNS_TRUST_ROOT_CERTIFICATE:
+                return BCDNSTrustRootCredentialSubject.decode(certificate.getCredentialSubject()).getRawSubjectPublicKey();
+            case DOMAIN_NAME_CERTIFICATE:
+                return DomainNameCredentialSubject.decode(certificate.getCredentialSubject()).getRawSubjectPublicKey();
+            case RELAYER_CERTIFICATE:
+                return RelayerCredentialSubject.decode(certificate.getCredentialSubject()).getRawSubjectPublicKey();
+            case PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE:
+                return PTCCredentialSubject.decode(certificate.getCredentialSubject()).getRawSubjectPublicKey();
+            default:
+                throw new AntChainBridgeCommonsException(
+                        CommonsErrorCodeEnum.BCDNS_UNSUPPORTED_CA_TYPE,
+                        "cert type not support" + certificate.getType().name()
+                );
+        }
+    }
 }

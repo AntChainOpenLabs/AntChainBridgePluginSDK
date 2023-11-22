@@ -44,9 +44,9 @@ public class BifBCDNSClientTest {
 
     private static BifBCDNSClient bifBCDNSClient;
 
-    private static final String KEY_TYPE = "Ed25519";
+    private static final String KEY_TYPE = "SM2";
 
-    private static final String SIG_ALGO = "Ed25519";
+    private static final String SIG_ALGO = "SM3WITHSM2";
 
     private static final ObjectIdentityType OID_TYPE = ObjectIdentityType.BID;
 
@@ -65,6 +65,7 @@ public class BifBCDNSClientTest {
                         FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
                         SIG_ALGO,
                         FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
+                        FileUtil.readString(getCertsPath() + "public_key.pem", Charset.defaultCharset()),
                         SIG_ALGO
                 ),
                 new BifChainConfig(
@@ -91,7 +92,7 @@ public class BifBCDNSClientTest {
     }
 
     private static String getCertsPath() {
-        return StrUtil.format("{}/{}/", OID_TYPE.name(), KEY_TYPE).toLowerCase();
+        return StrUtil.format("cccerts/{}/{}/", OID_TYPE.name(), KEY_TYPE).toLowerCase();
     }
 
     @Test

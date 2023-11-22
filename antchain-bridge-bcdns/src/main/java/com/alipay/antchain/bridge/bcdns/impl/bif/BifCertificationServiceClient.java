@@ -21,7 +21,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import cn.hutool.core.codec.Base64;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -32,7 +31,6 @@ import com.alipay.antchain.bridge.bcdns.impl.bif.req.VcInfoReqDto;
 import com.alipay.antchain.bridge.bcdns.impl.bif.resp.*;
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
 import com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateTypeEnum;
-import com.alipay.antchain.bridge.commons.bcdns.utils.CrossChainCertificateUtil;
 import lombok.Getter;
 import okhttp3.*;
 
@@ -85,9 +83,10 @@ public class BifCertificationServiceClient {
         vcApplyReqDto.setContent(certSigningRequest.getEncodedToSign());
         vcApplyReqDto.setCredentialType(certSigningRequest.getType().ordinal());
         vcApplyReqDto.setPublicKey(
-                Base64.encode(
-                        CrossChainCertificateUtil.getPublicKeyFromCrossChainCertificate(certSigningRequest).getEncoded()
-                )
+                certSigningRequest.getType() == CrossChainCertificateTypeEnum.RELAYER_CERTIFICATE
+                        || certSigningRequest.getType() == CrossChainCertificateTypeEnum.PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE ?
+                        clientCredential.getBifFormatAuthorizedPublicKey() :
+                        clientCredential.getBifFormatClientPublicKey()
         );
         vcApplyReqDto.setSign(
                 certSigningRequest.getType() == CrossChainCertificateTypeEnum.RELAYER_CERTIFICATE

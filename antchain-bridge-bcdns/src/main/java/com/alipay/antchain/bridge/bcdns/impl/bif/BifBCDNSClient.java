@@ -72,6 +72,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                         bifCertificationServiceConfig.getClientPrivateKeyPem(),
                         bifCertificationServiceConfig.getSigAlgo(),
                         bifCertificationServiceConfig.getAuthorizedKeyPem(),
+                        bifCertificationServiceConfig.getAuthorizedPublicKeyPem(),
                         bifCertificationServiceConfig.getAuthorizedSigAlgo()
                 )
         );

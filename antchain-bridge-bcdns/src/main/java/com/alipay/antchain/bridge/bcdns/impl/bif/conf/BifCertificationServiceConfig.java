@@ -35,5 +35,7 @@ public class BifCertificationServiceConfig {
 
     private String authorizedKeyPem;
 
+    private String authorizedPublicKeyPem;
+
     private String authorizedSigAlgo;
 }

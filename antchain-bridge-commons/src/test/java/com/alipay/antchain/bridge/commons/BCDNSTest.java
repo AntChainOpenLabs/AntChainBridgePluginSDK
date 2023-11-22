@@ -25,6 +25,7 @@ import java.util.Date;
 
 import cn.ac.caict.bid.model.BIDDocumentOperation;
 import cn.ac.caict.bid.model.BIDpublicKeyOperation;
+import cn.bif.module.encryption.model.KeyType;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.HexUtil;
@@ -60,7 +61,6 @@ public class BCDNSTest {
     @BeforeClass
     public static void setUp() throws Exception {
         new ObjectIdentity();
-//        Security.addProvider(new BouncyCastleProvider());
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KEY_ALGO);
         keyPairGenerator.initialize(256);
@@ -74,6 +74,15 @@ public class BCDNSTest {
         String privatePem = stringWriter.toString();
         System.out.println(privatePem);
         FileUtil.writeBytes(privatePem.getBytes(), "cc_certs/private_key.pem");
+
+        // dump the private key into pem
+        stringWriter = new StringWriter(256);
+        jcaPEMWriter = new JcaPEMWriter(stringWriter);
+        jcaPEMWriter.writeObject(keyPair.getPublic());
+        jcaPEMWriter.close();
+        String pubkeyPem = stringWriter.toString();
+        System.out.println(pubkeyPem);
+        FileUtil.writeBytes(pubkeyPem.getBytes(), "cc_certs/public_key.pem");
 
         if (StrUtil.equalsIgnoreCase(KEY_ALGO, "SM2")) {
             privateKey = PemUtil.readPemPrivateKey(new ByteArrayInputStream(privatePem.getBytes()));
@@ -358,12 +367,13 @@ public class BCDNSTest {
         byte[] rawPublicKeyWithSignals = new byte[rawPublicKey.length + 3];
         System.arraycopy(rawPublicKey, 0, rawPublicKeyWithSignals, 3, rawPublicKey.length);
         rawPublicKeyWithSignals[0] = -80;
-        rawPublicKeyWithSignals[1] = StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519") ? (byte) 101 : (byte) 122;
+        rawPublicKeyWithSignals[1] = StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519") ? KeyType.ED25519_VALUE : KeyType.SM2_VALUE;
         rawPublicKeyWithSignals[2] = 102;
 
         BIDpublicKeyOperation[] biDpublicKeyOperation = new BIDpublicKeyOperation[1];
         biDpublicKeyOperation[0] = new BIDpublicKeyOperation();
         biDpublicKeyOperation[0].setPublicKeyHex(HexUtil.encodeHexStr(rawPublicKeyWithSignals));
+        biDpublicKeyOperation[0].setType(StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519") ? KeyType.ED25519 : KeyType.SM2);
         BIDDocumentOperation bidDocumentOperation = new BIDDocumentOperation();
         bidDocumentOperation.setPublicKey(biDpublicKeyOperation);
         BIDInfoObjectIdentity bidInfoObjectIdentity = new BIDInfoObjectIdentity(bidDocumentOperation);
