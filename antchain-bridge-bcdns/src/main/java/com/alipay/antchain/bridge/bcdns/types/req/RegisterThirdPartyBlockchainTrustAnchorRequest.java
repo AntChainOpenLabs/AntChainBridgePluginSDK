@@ -19,14 +19,15 @@ package com.alipay.antchain.bridge.bcdns.types.req;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
-import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Setter
-public class RegisterThirdPartyBlockchainTrustAnchorRequest extends AuthorizedRequest {
+@Getter
+public class RegisterThirdPartyBlockchainTrustAnchorRequest {
 
     private static final short TLV_TYPE_PTC_ID = 0x0000;
 
@@ -45,9 +46,4 @@ public class RegisterThirdPartyBlockchainTrustAnchorRequest extends AuthorizedRe
      */
     @TLVField(tag = TLV_TYPE_TPBTA, type = TLVTypeEnum.BYTES, order = TLV_TYPE_TPBTA)
     private byte[] tpbta;
-
-    @Override
-    byte[] getEncodedToSign() {
-        return TLVUtils.encode(this, AuthorizedRequest.TLV_TYPE_AUTHORIZED_REQUEST_SENDER_CERT);
-    }
 }

@@ -17,7 +17,13 @@
 package com.alipay.antchain.bridge.bcdns.types.req;
 
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
+import lombok.*;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
 public class QueryPTCCertificateRequest {
 
     private String name;

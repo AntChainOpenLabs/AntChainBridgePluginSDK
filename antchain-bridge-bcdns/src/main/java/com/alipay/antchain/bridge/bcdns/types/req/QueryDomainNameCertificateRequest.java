@@ -17,7 +17,15 @@
 package com.alipay.antchain.bridge.bcdns.types.req;
 
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
 public class QueryDomainNameCertificateRequest {
 
     private CrossChainDomain domain;

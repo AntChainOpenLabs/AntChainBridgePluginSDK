@@ -17,11 +17,12 @@
 package com.alipay.antchain.bridge.bcdns.types.req;
 
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
-@Setter
 public class QueryDomainRouterRequest {
 
     private CrossChainDomain destDomain;

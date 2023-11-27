@@ -17,11 +17,13 @@
 package com.alipay.antchain.bridge.bcdns.types.req;
 
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Setter
+@Getter
 public class ApplyRelayerCertificateRequest {
 
     private AbstractCrossChainCertificate certificate;

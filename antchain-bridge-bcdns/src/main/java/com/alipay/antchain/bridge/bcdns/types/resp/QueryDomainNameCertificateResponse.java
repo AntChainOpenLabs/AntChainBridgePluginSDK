@@ -23,5 +23,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class QueryDomainNameCertificateResponse {
+    
+    private boolean exist;
+
     private AbstractCrossChainCertificate certificate;
 }

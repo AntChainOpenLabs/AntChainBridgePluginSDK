@@ -19,14 +19,15 @@ package com.alipay.antchain.bridge.bcdns.types.req;
 import com.alipay.antchain.bridge.bcdns.types.base.DomainRouter;
 import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
-import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Setter
-public class RegisterDomainRouterRequest extends AuthorizedRequest {
+@Getter
+public class RegisterDomainRouterRequest {
 
     private static final short TLV_TYPE_DOMAIN_ROUTER = 0x0000;
 
@@ -37,9 +38,4 @@ public class RegisterDomainRouterRequest extends AuthorizedRequest {
 
     @TLVField(tag = TLV_TYPE_DOMAIN_CERT, type = TLVTypeEnum.BYTES)
     private AbstractCrossChainCertificate domainCert;
-
-    @Override
-    byte[] getEncodedToSign() {
-        return TLVUtils.encode(this, AuthorizedRequest.TLV_TYPE_AUTHORIZED_REQUEST_SENDER_CERT);
-    }
 }

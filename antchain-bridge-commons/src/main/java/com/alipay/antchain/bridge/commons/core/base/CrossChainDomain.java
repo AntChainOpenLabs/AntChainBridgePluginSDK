@@ -41,6 +41,10 @@ public class CrossChainDomain {
      */
     public static String ROOT_DOMAIN_SPACE = "";
 
+    public static boolean isDerivedFrom(String sub, String parent) {
+        return StrUtil.endWith(sub, parent);
+    }
+
     private String domain;
 
     @AntChainBridgeRules({DomainLengthRule.class})

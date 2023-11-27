@@ -136,4 +136,42 @@ public class CrossChainCertificateUtil {
                 );
         }
     }
+
+    public static boolean isDomainSpaceCert(AbstractCrossChainCertificate certificate) {
+        if (certificate.getType() != CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE) {
+            return false;
+        }
+
+        ICredentialSubject credentialSubject = certificate.getCredentialSubjectInstance();
+        if (!(credentialSubject instanceof DomainNameCredentialSubject)) {
+            return false;
+        }
+
+        return ((DomainNameCredentialSubject) credentialSubject).getDomainNameType() == DomainNameTypeEnum.DOMAIN_NAME_SPACE;
+    }
+
+    public static boolean isDomainCert(AbstractCrossChainCertificate certificate) {
+        if (certificate.getType() != CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE) {
+            return false;
+        }
+
+        ICredentialSubject credentialSubject = certificate.getCredentialSubjectInstance();
+        if (!(credentialSubject instanceof DomainNameCredentialSubject)) {
+            return false;
+        }
+
+        return ((DomainNameCredentialSubject) credentialSubject).getDomainNameType() == DomainNameTypeEnum.DOMAIN_NAME_SPACE;
+    }
+
+    public static boolean isBCDNSTrustRoot(AbstractCrossChainCertificate certificate) {
+        return certificate.getType() == CrossChainCertificateTypeEnum.BCDNS_TRUST_ROOT_CERTIFICATE;
+    }
+
+    public static boolean isRelayerCert(AbstractCrossChainCertificate certificate) {
+        return certificate.getType() == CrossChainCertificateTypeEnum.RELAYER_CERTIFICATE;
+    }
+
+    public static boolean isPtcCert(AbstractCrossChainCertificate certificate) {
+        return certificate.getType() == CrossChainCertificateTypeEnum.PROOF_TRANSFORMATION_COMPONENT_CERTIFICATE;
+    }
 }

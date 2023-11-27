@@ -25,5 +25,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class QueryRelayerCertificateResponse {
+
+    private boolean exist;
+
     private AbstractCrossChainCertificate certificate;
 }
