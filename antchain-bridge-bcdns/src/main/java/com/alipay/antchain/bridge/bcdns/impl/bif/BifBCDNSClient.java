@@ -24,7 +24,6 @@ import cn.bif.model.request.BIFContractCallRequest;
 import cn.bif.model.response.BIFAccountGetNonceResponse;
 import cn.bif.model.response.BIFContractCallResponse;
 import cn.hutool.core.util.HexUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifBCNDSConfig;
@@ -55,9 +54,9 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
 
     private final BifCertificationServiceClient certificationServiceClient;
 
-    private final BIFSDK bifsdk;
+    private BIFSDK bifsdk;
 
-    private final AtomicLong bifNonce;
+    private AtomicLong bifNonce;
 
     private final BifChainConfig bifChainConfig;
 
@@ -77,10 +76,10 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                 )
         );
         this.bifChainConfig = bifChainConfig;
-        bifsdk = ObjectUtil.isNull(bifChainConfig.getBifChainRpcPort()) ?
-                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl()) :
-                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl(), bifChainConfig.getBifChainRpcPort());
-        bifNonce = new AtomicLong(queryBifAccNonce());
+//        bifsdk = ObjectUtil.isNull(bifChainConfig.getBifChainRpcPort()) ?
+//                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl()) :
+//                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl(), bifChainConfig.getBifChainRpcPort());
+//        bifNonce = new AtomicLong(queryBifAccNonce());
     }
 
     @Override

@@ -25,6 +25,7 @@ import java.util.Date;
 
 import cn.ac.caict.bid.model.BIDDocumentOperation;
 import cn.ac.caict.bid.model.BIDpublicKeyOperation;
+import cn.bif.common.JsonUtils;
 import cn.bif.module.encryption.model.KeyType;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -34,6 +35,7 @@ import cn.hutool.crypto.ECKeyUtil;
 import cn.hutool.crypto.PemUtil;
 import cn.hutool.crypto.digest.SM3;
 import com.alipay.antchain.bridge.commons.bcdns.*;
+import com.alipay.antchain.bridge.commons.bcdns.utils.BIDHelper;
 import com.alipay.antchain.bridge.commons.bcdns.utils.CrossChainCertificateUtil;
 import com.alipay.antchain.bridge.commons.core.base.BIDInfoObjectIdentity;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
@@ -114,7 +116,7 @@ public class BCDNSTest {
                 new BCDNSTrustRootCredentialSubject(
                         "bif",
                         generateOID(),
-                        new byte[]{}
+                        generateSubjectInfo()
                 )
         );
 
@@ -154,7 +156,7 @@ public class BCDNSTest {
                         new CrossChainDomain(".com"),
                         new CrossChainDomain("antchain.com"),
                         generateOID(),
-                        new byte[]{}
+                        generateSubjectInfo()
                 )
         );
 
@@ -185,7 +187,7 @@ public class BCDNSTest {
                         new CrossChainDomain(CrossChainDomain.ROOT_DOMAIN_SPACE),
                         new CrossChainDomain(".com"),
                         generateOID(),
-                        new byte[]{}
+                        generateSubjectInfo()
                 )
         );
         signer = Signature.getInstance(SIG_ALGO);
@@ -213,7 +215,7 @@ public class BCDNSTest {
                         RelayerCredentialSubject.CURRENT_VERSION,
                         "antchain-relayer",
                         generateOID(),
-                        new byte[]{}
+                        generateSubjectInfo()
                 )
         );
         signer = Signature.getInstance(SIG_ALGO);
@@ -255,7 +257,7 @@ public class BCDNSTest {
                         new CrossChainDomain(".com"),
                         new CrossChainDomain("catchain.com"),
                         generateOID(),
-                        new byte[]{}
+                        generateSubjectInfo()
                 )
         );
 
@@ -286,7 +288,7 @@ public class BCDNSTest {
                         new CrossChainDomain(".com"),
                         new CrossChainDomain("dogchain.com"),
                         generateOID(),
-                        new byte[]{}
+                        generateSubjectInfo()
                 )
         );
 
@@ -317,7 +319,7 @@ public class BCDNSTest {
                         new CrossChainDomain(".com"),
                         new CrossChainDomain("birdchain.com"),
                         generateOID(),
-                        new byte[]{}
+                        generateSubjectInfo()
                 )
         );
 
@@ -340,12 +342,15 @@ public class BCDNSTest {
         return oidType == ObjectIdentityType.BID ? getBidOID() : getX509OID();
     }
 
+    private byte[] generateSubjectInfo() {
+        return oidType == ObjectIdentityType.BID ? JsonUtils.toJSONString(getBid()).getBytes() : new byte[]{};
+    }
+
     private ObjectIdentity getX509OID() {
         return new ObjectIdentity(ObjectIdentityType.X509_PUBLIC_KEY_INFO, keyPair.getPublic().getEncoded());
     }
 
-    private ObjectIdentity getBidOID() {
-
+    private BIDDocumentOperation getBid() {
         PublicKey publicKey = keyPair.getPublic();
         byte[] rawPublicKey;
         if (StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519")) {
@@ -376,8 +381,34 @@ public class BCDNSTest {
         biDpublicKeyOperation[0].setType(StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519") ? KeyType.ED25519 : KeyType.SM2);
         BIDDocumentOperation bidDocumentOperation = new BIDDocumentOperation();
         bidDocumentOperation.setPublicKey(biDpublicKeyOperation);
-        BIDInfoObjectIdentity bidInfoObjectIdentity = new BIDInfoObjectIdentity(bidDocumentOperation);
 
-        return new BIDInfoObjectIdentity(bidInfoObjectIdentity);
+        return bidDocumentOperation;
+    }
+
+    private byte[] getRawPublicKey() {
+        PublicKey publicKey = keyPair.getPublic();
+        byte[] rawPublicKey;
+        if (StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519")) {
+            if (publicKey instanceof BCEdDSAPublicKey) {
+                rawPublicKey = ((BCEdDSAPublicKey) publicKey).getPointEncoding();
+            } else {
+                throw new RuntimeException("your Ed25519 public key class not support: " + publicKey.getClass().getName());
+            }
+        } else if (StrUtil.equalsAnyIgnoreCase(publicKey.getAlgorithm(), "SM2", "EC")) {
+            if (publicKey instanceof ECPublicKey) {
+                rawPublicKey = ECKeyUtil.toPublicParams(publicKey).getQ().getEncoded(false);
+            } else {
+                throw new RuntimeException("your SM2/EC public key class not support: " + publicKey.getClass().getName());
+            }
+        } else {
+            throw new RuntimeException(publicKey.getAlgorithm() + " not support");
+        }
+
+        return rawPublicKey;
+    }
+
+    private BIDInfoObjectIdentity getBidOID() {
+        byte[] rawPublicKey = getRawPublicKey();
+        return new BIDInfoObjectIdentity(BIDHelper.encAddress(getBid().getPublicKey()[0].getType(), rawPublicKey));
     }
 }

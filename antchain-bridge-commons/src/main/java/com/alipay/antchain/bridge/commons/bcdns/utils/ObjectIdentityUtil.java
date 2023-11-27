@@ -18,7 +18,6 @@ package com.alipay.antchain.bridge.commons.bcdns.utils;
 
 import java.security.PublicKey;
 
-import com.alipay.antchain.bridge.commons.core.base.BIDInfoObjectIdentity;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.core.base.X509PubkeyInfoObjectIdentity;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
@@ -31,7 +30,10 @@ public class ObjectIdentityUtil {
             case X509_PUBLIC_KEY_INFO:
                 return new X509PubkeyInfoObjectIdentity(oid).getPublicKey();
             case BID:
-                return new BIDInfoObjectIdentity(oid).getPublicKey();
+                // TODO: Q : BID OID 应该放入did， BID Document 应该放到subject；获取公钥不应该给到OID接口
+                return BIDHelper.getPublicKeyFromBIDDocument(
+                        BIDHelper.getBIDDocumentFromRawSubject(rawSubject)
+                );
             default:
                 throw new AntChainBridgeCommonsException(
                         CommonsErrorCodeEnum.BCDNS_OID_UNSUPPORTED_TYPE,
@@ -45,7 +47,9 @@ public class ObjectIdentityUtil {
             case X509_PUBLIC_KEY_INFO:
                 return new X509PubkeyInfoObjectIdentity(oid).getRawPublicKey();
             case BID:
-                return new BIDInfoObjectIdentity(oid).getRawPublicKey();
+                return BIDHelper.getRawPublicKeyFromBIDDocument(
+                        BIDHelper.getBIDDocumentFromRawSubject(rawSubject)
+                );
             default:
                 throw new AntChainBridgeCommonsException(
                         CommonsErrorCodeEnum.BCDNS_OID_UNSUPPORTED_TYPE,

@@ -21,6 +21,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import cn.bif.module.encryption.key.PublicKeyManager;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -41,9 +42,11 @@ public class BifCertificationServiceClient {
 
     private static final String VC_APPLY_URL = "/vc/apply";
 
-    private static final String VC_STATUS_URL = "/vc/status";
+    private static final String VC_STATUS_URL = "/vc/apply/status";
 
     private static final String VC_DOWNLOAD_URL = "/vc/download";
+
+    private static final String VC_ROOT = "/vc/root";
 
     private final OkHttpClient httpClient;
 
@@ -102,6 +105,14 @@ public class BifCertificationServiceClient {
                                 .build()
                 ).execute();
         ) {
+            if (!response.isSuccessful()) {
+                throw new RuntimeException(
+                        StrUtil.format(
+                                "http request failed: {} - {}",
+                                response.code(), response.message()
+                        )
+                );
+            }
             DataResp<VcApplyRespDto> resp = JSON.parseObject(
                     Objects.requireNonNull(response.body(), "empty resp body").string(),
                     new TypeReference<DataResp<VcApplyRespDto>>() {
@@ -140,6 +151,14 @@ public class BifCertificationServiceClient {
                                 .build()
                 ).execute();
         ) {
+            if (!response.isSuccessful()) {
+                throw new RuntimeException(
+                        StrUtil.format(
+                                "http request failed: {} - {}",
+                                response.code(), response.message()
+                        )
+                );
+            }
             DataResp<QueryStatusRespDto> resp = JSON.parseObject(
                     Objects.requireNonNull(response.body(), "empty resp body").string(),
                     new TypeReference<DataResp<QueryStatusRespDto>>() {
@@ -178,6 +197,14 @@ public class BifCertificationServiceClient {
                                 .build()
                 ).execute();
         ) {
+            if (!response.isSuccessful()) {
+                throw new RuntimeException(
+                        StrUtil.format(
+                                "http request failed: {} - {}",
+                                response.code(), response.message()
+                        )
+                );
+            }
             DataResp<VcInfoRespDto> resp = JSON.parseObject(
                     Objects.requireNonNull(response.body(), "empty resp body").string(),
                     new TypeReference<DataResp<VcInfoRespDto>>() {
@@ -208,11 +235,19 @@ public class BifCertificationServiceClient {
         try (
                 Response response = httpClient.newCall(
                         new Request.Builder()
-                                .url(getRequestUrl(VC_DOWNLOAD_URL))
+                                .url(getRequestUrl(VC_ROOT))
                                 .post(RequestBody.create(StrUtil.EMPTY_JSON, JSON_MEDIA_TYPE))
                                 .build()
                 ).execute();
         ) {
+            if (!response.isSuccessful()) {
+                throw new RuntimeException(
+                        StrUtil.format(
+                                "http request failed: {} - {}",
+                                response.code(), response.message()
+                        )
+                );
+            }
             DataResp<VcRootRespDto> resp = JSON.parseObject(
                     Objects.requireNonNull(response.body(), "empty resp body").string(),
                     new TypeReference<DataResp<VcRootRespDto>>() {
@@ -232,7 +267,7 @@ public class BifCertificationServiceClient {
             throw new RuntimeException(
                     StrUtil.format(
                             "failed to call BIF BCDNS for {} : ",
-                            VC_DOWNLOAD_URL
+                            VC_ROOT
                     ),
                     e
             );
@@ -259,6 +294,11 @@ public class BifCertificationServiceClient {
     }
 
     private String getRequestUrl(String req) {
-        return StrUtil.endWith(serviceUrl, "/") ? StrUtil.replaceLast(serviceUrl, "/", "") : serviceUrl;
+        return StrUtil.concat(
+                true,
+                StrUtil.endWith(serviceUrl, "/") ? StrUtil.replaceLast(serviceUrl, "/", "") : serviceUrl,
+                "/external",
+                req
+        );
     }
 }

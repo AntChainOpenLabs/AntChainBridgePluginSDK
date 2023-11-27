@@ -18,6 +18,8 @@ package com.alipay.antchain.bridge.bcdns.impl.bif;
 
 import java.nio.charset.Charset;
 
+import cn.ac.caict.bid.model.BIDDocumentOperation;
+import cn.bif.common.JsonUtils;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -44,9 +46,9 @@ public class BifBCDNSClientTest {
 
     private static BifBCDNSClient bifBCDNSClient;
 
-    private static final String KEY_TYPE = "SM2";
+    private static final String KEY_TYPE = "Ed25519";
 
-    private static final String SIG_ALGO = "SM3WITHSM2";
+    private static final String SIG_ALGO = "Ed25519";
 
     private static final ObjectIdentityType OID_TYPE = ObjectIdentityType.BID;
 
@@ -60,7 +62,7 @@ public class BifBCDNSClientTest {
     public static void setup() {
         bifBCDNSClient = new BifBCDNSClient(
                 new BifCertificationServiceConfig(
-                        "http://47.103.129.185:8080",
+                        "http://0.0.0.0:8112",
                         FileUtil.readString(getCertsPath() + "relayer.crt", Charset.defaultCharset()),
                         FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
                         SIG_ALGO,
@@ -92,7 +94,11 @@ public class BifBCDNSClientTest {
     }
 
     private static String getCertsPath() {
-        return StrUtil.format("cccerts/{}/{}/", OID_TYPE.name(), KEY_TYPE).toLowerCase();
+        return StrUtil.format(
+                "cccerts/{}/{}/",
+                OID_TYPE == ObjectIdentityType.X509_PUBLIC_KEY_INFO ? "x509" : OID_TYPE.name(),
+                KEY_TYPE
+        ).toLowerCase();
     }
 
     @Test
@@ -118,7 +124,7 @@ public class BifBCDNSClientTest {
 
         Assert.assertNotNull(result.getCertificate());
         Assert.assertEquals(
-                CrossChainCertificateTypeEnum.RELAYER_CERTIFICATE,
+                CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE,
                 result.getCertificate().getType()
         );
         Assert.assertNotNull(result.getCertificate().getIssuer());
@@ -135,6 +141,15 @@ public class BifBCDNSClientTest {
                 CrossChainCertificateTypeEnum.BCDNS_TRUST_ROOT_CERTIFICATE,
                 response.getBcdnsTrustRootCertificate().getType()
         );
-    }
+        BIDDocumentOperation bidDocumentOperation = JsonUtils.toJavaObject(
+                new String(
+                        response.getBcdnsTrustRootCertificate().getCredentialSubjectInstance().getSubject()
+                ),
+                BIDDocumentOperation.class
+        );
 
+        Assert.assertNotNull(bidDocumentOperation);
+        Assert.assertNotNull(bidDocumentOperation.getPublicKey());
+        Assert.assertEquals(1, bidDocumentOperation.getPublicKey().length);
+    }
 }

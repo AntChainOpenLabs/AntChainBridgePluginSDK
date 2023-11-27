@@ -23,18 +23,18 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ByteUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
+import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVMapping;
 
+@SuppressWarnings("all")
 public class TLVUtils {
 
     public static byte[] encode(Object obj) {
@@ -79,6 +79,9 @@ public class TLVUtils {
         try {
             for (Field field : orderFields(fieldList, maxOrder, requiredOrderList)) {
                 field.setAccessible(true);
+                if (ObjectUtil.isNull(field.get(obj))) {
+                    continue;
+                }
                 TLVField tlvField = field.getAnnotation(TLVField.class);
                 if (
                         field.getType().isPrimitive()
@@ -86,7 +89,7 @@ public class TLVUtils {
                                 || String.class.isAssignableFrom(field.getType())
                                 || "java.util.List<byte[]>".equalsIgnoreCase(field.getGenericType().getTypeName())
                 ) {
-                    items.add(getItem(tlvField.type(), tlvField.tag(), Objects.requireNonNull(field.get(obj))));
+                    items.add(getItem(tlvField.type(), tlvField.tag(), field.get(obj)));
                 } else if (field.getType().isEnum()) {
                     Method getValueM = field.getType().getMethod("ordinal");
                     if (ObjectUtil.isEmpty(getValueM)) {
@@ -207,6 +210,7 @@ public class TLVUtils {
         fields.addAll(ListUtil.of(clz.getDeclaredFields()));
         return fillFields(fields, clz.getSuperclass());
     }
+
     public static <T> T decode(byte[] raw, Class<T> clz) {
         TLVPacket packet = TLVPacket.decode(raw);
         try {

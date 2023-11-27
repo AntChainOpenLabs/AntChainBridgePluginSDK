@@ -63,6 +63,7 @@ public class BCDNSTrustRootCredentialSubject extends AbstractCredentialSubjectWi
         return TLVUtils.encode(this);
     }
 
+    // TODO: Q: 超级节点给 issuer签发的证书；
     @Override
     public PublicKey getSubjectPublicKey() {
         return ObjectIdentityUtil.getPublicKeyFromSubject(bcdnsRootOwner, bcdnsRootSubjectInfo);

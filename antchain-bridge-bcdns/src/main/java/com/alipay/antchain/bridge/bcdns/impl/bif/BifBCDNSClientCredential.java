@@ -24,6 +24,7 @@ import java.security.Signature;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 
+import cn.bif.module.encryption.model.KeyType;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.ECKeyUtil;
@@ -136,7 +137,7 @@ public class BifBCDNSClientCredential {
         byte[] rawPublicKeyWithSignals = new byte[rawPublicKey.length + 3];
         System.arraycopy(rawPublicKey, 0, rawPublicKeyWithSignals, 3, rawPublicKey.length);
         rawPublicKeyWithSignals[0] = -80;
-        rawPublicKeyWithSignals[1] = StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519") ? (byte) 101 : (byte) 122;
+        rawPublicKeyWithSignals[1] = StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519") ? KeyType.ED25519_VALUE : KeyType.SM2_VALUE;
         rawPublicKeyWithSignals[2] = 102;
 
         return HexUtil.encodeHexStr(rawPublicKeyWithSignals);
