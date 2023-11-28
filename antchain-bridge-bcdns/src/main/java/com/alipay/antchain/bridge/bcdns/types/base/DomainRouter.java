@@ -19,12 +19,16 @@ package com.alipay.antchain.bridge.bcdns.types.base;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class DomainRouter {
 
     private static final short TLV_TYPE_DOMAIN_ROUTER_DEST_DOMAIN = 0x0000;

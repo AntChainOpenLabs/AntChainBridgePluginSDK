@@ -88,7 +88,8 @@ public class TLVUtils {
                                 || field.getType().isArray()
                                 || String.class.isAssignableFrom(field.getType())
                                 || "java.util.List<byte[]>".equalsIgnoreCase(field.getGenericType().getTypeName())
-                ) {
+                                || "java.util.List<java.lang.String>".equalsIgnoreCase(field.getGenericType().getTypeName())
+                        ) {
                     items.add(getItem(tlvField.type(), tlvField.tag(), field.get(obj)));
                 } else if (field.getType().isEnum()) {
                     Method getValueM = field.getType().getMethod("ordinal");
@@ -235,6 +236,7 @@ public class TLVUtils {
                                     || field.getType().isArray()
                                     || String.class.isAssignableFrom(field.getType())
                                     || "java.util.List<byte[]>".equalsIgnoreCase(field.getGenericType().getTypeName())
+                                    || "java.util.List<java.lang.String>".equalsIgnoreCase(field.getGenericType().getTypeName())
                     ) {
                         field.set(obj, val);
                     } else if (field.getType().isEnum()) {
@@ -312,6 +314,8 @@ public class TLVUtils {
                 return item.getValue();
             case BYTES_ARRAY:
                 return item.getBytesArray();
+            case STRING_ARRAY:
+                return item.getStringArray();
             default:
                 throw new AntChainBridgeCommonsException(
                         CommonsErrorCodeEnum.CODEC_TLV_DECODE_ERROR,
@@ -347,6 +351,9 @@ public class TLVUtils {
                 break;
             case BYTES_ARRAY:
                 item = TLVItem.fromBytesArray(tag, (List<byte[]>) value);
+                break;
+            case STRING_ARRAY:
+                item = TLVItem.fromStringArray(tag, (List<String>) value);
                 break;
             default:
                 throw new AntChainBridgeCommonsException(

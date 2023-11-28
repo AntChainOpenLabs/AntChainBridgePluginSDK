@@ -23,8 +23,14 @@ import cn.bif.common.JsonUtils;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alipay.antchain.bridge.bcdns.impl.BlockChainDomainNameServiceFactory;
+import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifBCNDSConfig;
 import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifCertificationServiceConfig;
 import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifChainConfig;
+import com.alipay.antchain.bridge.bcdns.service.BCDNSTypeEnum;
+import com.alipay.antchain.bridge.bcdns.service.IBlockChainDomainNameService;
 import com.alipay.antchain.bridge.bcdns.types.resp.ApplicationResult;
 import com.alipay.antchain.bridge.bcdns.types.resp.ApplyDomainNameCertificateResponse;
 import com.alipay.antchain.bridge.bcdns.types.resp.QueryBCDNSTrustRootCertificateResponse;
@@ -44,7 +50,7 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BifBCDNSClientTest {
 
-    private static BifBCDNSClient bifBCDNSClient;
+    private static IBlockChainDomainNameService bifBCDNSClient;
 
     private static final String KEY_TYPE = "Ed25519";
 
@@ -60,35 +66,41 @@ public class BifBCDNSClientTest {
 
     @BeforeClass
     public static void setup() {
-        bifBCDNSClient = new BifBCDNSClient(
-                new BifCertificationServiceConfig(
-                        "http://0.0.0.0:8112",
-                        FileUtil.readString(getCertsPath() + "relayer.crt", Charset.defaultCharset()),
-                        FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
-                        SIG_ALGO,
-                        FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
-                        FileUtil.readString(getCertsPath() + "public_key.pem", Charset.defaultCharset()),
-                        SIG_ALGO
-                ),
-                new BifChainConfig(
-                        "",
-                        null,
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        ""
-                )
+
+        String rawBifConfig = JSON.toJSONString(
+                new BifBCNDSConfig(
+                        new BifCertificationServiceConfig(
+                                "http://0.0.0.0:8112",
+                                FileUtil.readString(getCertsPath() + "relayer.crt", Charset.defaultCharset()),
+                                FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
+                                SIG_ALGO,
+                                FileUtil.readString(getCertsPath() + "private_key.pem", Charset.defaultCharset()),
+                                FileUtil.readString(getCertsPath() + "public_key.pem", Charset.defaultCharset()),
+                                SIG_ALGO
+                        ),
+                        new BifChainConfig(
+                                "",
+                                null,
+                                "",
+                                "",
+                                "",
+                                "",
+                                "",
+                                ""
+                        )
+                ), SerializerFeature.PrettyFormat
         );
+        System.out.println(rawBifConfig);
+
+        bifBCDNSClient = BlockChainDomainNameServiceFactory.create(BCDNSTypeEnum.BIF, rawBifConfig.getBytes());
 
         ANTCHAIN_CSR = CrossChainCertificateFactory.createDomainNameCertificateSigningRequest(
                 DomainNameCredentialSubject.CURRENT_VERSION,
                 new CrossChainDomain(CrossChainDomain.ROOT_DOMAIN_SPACE),
                 new CrossChainDomain(ANTCHAIN_DOMAIN),
-                bifBCDNSClient.getCertificationServiceClient().getClientCredential().getClientCert()
+                ((BifBCDNSClient) bifBCDNSClient).getCertificationServiceClient().getClientCredential().getClientCert()
                         .getCredentialSubjectInstance().getApplicant(),
-                bifBCDNSClient.getCertificationServiceClient().getClientCredential().getClientCert()
+                ((BifBCDNSClient) bifBCDNSClient).getCertificationServiceClient().getClientCredential().getClientCert()
                         .getCredentialSubjectInstance().getSubject()
         );
     }

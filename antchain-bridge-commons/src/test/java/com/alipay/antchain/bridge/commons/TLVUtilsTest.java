@@ -28,6 +28,8 @@ import com.alipay.antchain.bridge.commons.exception.base.AntChainBridgeBaseExcep
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -43,6 +45,10 @@ public class TLVUtilsTest {
     private static TestBytesArray testBytesArray;
 
     private static String rawTestBytesArray;
+
+    private static TestStringArray testStringArray;
+
+    private static String rawTestStringArray;
 
     private static TestRecursiveOuter recursiveOuter;
 
@@ -79,6 +85,13 @@ public class TLVUtilsTest {
         );
 
         rawTestBytesArray = "00001400000001000e0000000300000001010103000000020202";
+
+        testStringArray = new TestStringArray();
+        testStringArray.setValue(
+                ListUtil.toList("test1", "test2")
+        );
+
+        rawTestStringArray = "000018000000010012000000050000007465737431050000007465737432";
 
         TestRecursiveInner recursiveInner = new TestRecursiveInner();
         recursiveInner.setBytes(HexUtil.decodeHex("010101"));
@@ -132,6 +145,15 @@ public class TLVUtilsTest {
 
         TestBytesArray testBytesArrayDecoded = TLVUtils.decode(HexUtil.decodeHex(rawTestBytesArray), TestBytesArray.class);
         Assert.assertArrayEquals(testBytesArray.getValue().toArray(), testBytesArrayDecoded.getValue().toArray());
+    }
+
+    @Test
+    public void testStringArray() {
+        byte[] rawBA = TLVUtils.encode(testStringArray);
+        Assert.assertEquals(rawTestStringArray, HexUtil.encodeHexStr(rawBA));
+
+        TestStringArray testStringArrayDecoded = TLVUtils.decode(HexUtil.decodeHex(rawTestStringArray), TestStringArray.class);
+        Assert.assertArrayEquals(testStringArray.getValue().toArray(), testStringArrayDecoded.getValue().toArray());
     }
 
     @Test
@@ -198,6 +220,14 @@ public class TLVUtilsTest {
         public void setValue(List<byte[]> value) {
             this.value = value;
         }
+    }
+
+    @Getter
+    @Setter
+    public static class TestStringArray {
+
+        @TLVField(tag = 1, type = TLVTypeEnum.STRING_ARRAY, order = 0)
+        List<String> value;
     }
 
     public static class TestRecursiveOuter {

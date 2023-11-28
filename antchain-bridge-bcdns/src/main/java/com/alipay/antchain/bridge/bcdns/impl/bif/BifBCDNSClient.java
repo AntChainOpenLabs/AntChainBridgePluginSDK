@@ -151,6 +151,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                 );
             }
             return new QueryRelayerCertificateResponse(
+                    true,
                     CrossChainCertificateFactory.createCrossChainCertificate(
                             (byte[]) response.getResult().getQueryRets().get(0)
                     )

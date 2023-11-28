@@ -16,28 +16,28 @@
 
 package com.alipay.antchain.bridge.bcdns.types.base;
 
-import com.alipay.antchain.bridge.commons.bcdns.RelayerCredentialSubject;
+import java.util.List;
+
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Relayer {
 
     private static final short TLV_TYPE_RELAYER_RELAYER_ID = 0x0000;
 
     private static final short TLV_TYPE_RELAYER_NET_ADDRESS = 0x0001;
 
-    private static final short TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT = 0x0002;
-
     @TLVField(tag = TLV_TYPE_RELAYER_RELAYER_ID, type = TLVTypeEnum.STRING)
-    private String relayerId;
+    private String relayerCertId;
 
-    @TLVField(tag = TLV_TYPE_RELAYER_NET_ADDRESS, type = TLVTypeEnum.STRING, order = TLV_TYPE_RELAYER_NET_ADDRESS)
-    private String netAddress;
-
-    @TLVField(tag = TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT, type = TLVTypeEnum.BYTES, order = TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT)
-    private RelayerCredentialSubject credentialSubject;
+    @TLVField(tag = TLV_TYPE_RELAYER_NET_ADDRESS, type = TLVTypeEnum.STRING_ARRAY, order = TLV_TYPE_RELAYER_NET_ADDRESS)
+    private List<String> netAddressList;
 }
