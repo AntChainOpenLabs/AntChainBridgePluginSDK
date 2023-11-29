@@ -25,7 +25,7 @@ import lombok.*;
 @Builder
 public class UniformCrosschainPacket {
 
-    private int version;
+    private int version = 1;
 
     private CrossChainDomain srcDomain;
 

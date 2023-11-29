@@ -54,9 +54,9 @@ public class BCDNSTest {
 
     private static PrivateKey privateKey;
 
-    private static final String KEY_ALGO = "SM2";// "Ed25519" or "SM2";
+    private static final String KEY_ALGO = "Ed25519";// "Ed25519" or "SM2";
 
-    private static final String SIG_ALGO = "SM3WITHSM2"; // "Ed25519" or "SM3WITHSM2";
+    private static final String SIG_ALGO = "Ed25519"; // "Ed25519" or "SM3WITHSM2";
 
     private static final ObjectIdentityType oidType = ObjectIdentityType.BID;
 
@@ -388,6 +388,8 @@ public class BCDNSTest {
     private byte[] getRawPublicKey() {
         PublicKey publicKey = keyPair.getPublic();
         byte[] rawPublicKey;
+        KeyType keyType = BIDHelper.getKeyTypeFromPublicKey(publicKey);
+        System.out.println("key type is " + keyType);
         if (StrUtil.equalsIgnoreCase(publicKey.getAlgorithm(), "Ed25519")) {
             if (publicKey instanceof BCEdDSAPublicKey) {
                 rawPublicKey = ((BCEdDSAPublicKey) publicKey).getPointEncoding();

@@ -87,4 +87,14 @@ public class BIDHelper {
         System.arraycopy(rawPubkeyWithSignals, 3, rawPubkey, 0, rawPubkey.length);
         return rawPubkey;
     }
+
+    public static KeyType getKeyTypeFromPublicKey(PublicKey publicKey) {
+        if (StrUtil.equalsAnyIgnoreCase(publicKey.getAlgorithm(), "Ed25519", "1.3.6.1.4.1.11591.15.1")) {
+            return KeyType.ED25519;
+        }
+        if (StrUtil.equalsAnyIgnoreCase(publicKey.getAlgorithm(), "SM2", "EC", "1.0.14888.3.14")) {
+            return KeyType.SM2;
+        }
+        return null;
+    }
 }
