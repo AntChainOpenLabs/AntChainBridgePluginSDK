@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.alipay.antchain.bridge.bcdns.types.resp;
+package com.alipay.antchain.bridge.bcdns.types.req;
 
-import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
+import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class QueryDomainNameCertificateResponse {
-    
-    private boolean exist;
-
-    private AbstractCrossChainCertificate certificate;
+@Getter
+public class QueryThirdPartyBlockchainTrustAnchorRequest {
+    private CrossChainDomain domain;
 }

@@ -51,5 +51,5 @@ public interface IBlockChainDomainNameService {
 
     DomainRouter queryDomainRouter(QueryDomainRouterRequest request);
 
-    byte[] queryThirdPartyBlockchainTrustAnchor();
+    byte[] queryThirdPartyBlockchainTrustAnchor(QueryThirdPartyBlockchainTrustAnchorRequest request);
 }

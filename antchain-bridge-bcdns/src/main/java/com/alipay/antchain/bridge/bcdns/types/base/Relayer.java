@@ -18,6 +18,7 @@ package com.alipay.antchain.bridge.bcdns.types.base;
 
 import java.util.List;
 
+import com.alipay.antchain.bridge.commons.bcdns.AbstractCrossChainCertificate;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import lombok.AllArgsConstructor;
@@ -33,10 +34,15 @@ public class Relayer {
 
     private static final short TLV_TYPE_RELAYER_RELAYER_ID = 0x0000;
 
-    private static final short TLV_TYPE_RELAYER_NET_ADDRESS = 0x0001;
+    private static final short TLV_TYPE_RELAYER_RELAYER_CERT = 0x0001;
+
+    private static final short TLV_TYPE_RELAYER_NET_ADDRESS = 0x0002;
 
     @TLVField(tag = TLV_TYPE_RELAYER_RELAYER_ID, type = TLVTypeEnum.STRING)
     private String relayerCertId;
+
+    @TLVField(tag = TLV_TYPE_RELAYER_RELAYER_CERT, type = TLVTypeEnum.BYTES, order = TLV_TYPE_RELAYER_RELAYER_CERT)
+    private AbstractCrossChainCertificate relayerCert;
 
     @TLVField(tag = TLV_TYPE_RELAYER_NET_ADDRESS, type = TLVTypeEnum.STRING_ARRAY, order = TLV_TYPE_RELAYER_NET_ADDRESS)
     private List<String> netAddressList;

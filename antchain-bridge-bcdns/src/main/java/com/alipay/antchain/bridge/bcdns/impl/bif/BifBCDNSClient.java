@@ -16,14 +16,18 @@
 
 package com.alipay.antchain.bridge.bcdns.impl.bif;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.List;
 
 import cn.bif.api.BIFSDK;
 import cn.bif.model.request.BIFAccountGetNonceRequest;
 import cn.bif.model.request.BIFContractCallRequest;
+import cn.bif.model.request.BIFContractInvokeRequest;
 import cn.bif.model.response.BIFAccountGetNonceResponse;
 import cn.bif.model.response.BIFContractCallResponse;
+import cn.bif.model.response.BIFContractInvokeResponse;
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.HexUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alipay.antchain.bridge.bcdns.impl.bif.conf.BifBCNDSConfig;
@@ -33,6 +37,7 @@ import com.alipay.antchain.bridge.bcdns.impl.bif.resp.QueryStatusRespDto;
 import com.alipay.antchain.bridge.bcdns.impl.bif.resp.VcInfoRespDto;
 import com.alipay.antchain.bridge.bcdns.service.IBlockChainDomainNameService;
 import com.alipay.antchain.bridge.bcdns.types.base.DomainRouter;
+import com.alipay.antchain.bridge.bcdns.types.base.Relayer;
 import com.alipay.antchain.bridge.bcdns.types.exception.AntChainBridgeBCDNSException;
 import com.alipay.antchain.bridge.bcdns.types.exception.BCDNSErrorCodeEnum;
 import com.alipay.antchain.bridge.bcdns.types.req.*;
@@ -44,6 +49,24 @@ import lombok.Getter;
 @Getter
 public class BifBCDNSClient implements IBlockChainDomainNameService {
 
+    private static final String RELAY_CALL_GET_RELAY_BY_DOMAIN_NAME_TEMPLATE
+            = "{\"function\":\"getRelayByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes,bytes)\"}";
+
+    private static final String DOMAIN_CALL_GET_CERT_BY_NAME_TEMPLATE
+            = "{\"function\":\"getCertByName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
+
+    private static final String PTC_CALL_GET_CERT_BY_ID_TEMPLATE
+            = "{\"function\":\"getCertById(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
+
+    private static final String RELAY_CALL_BINDING_DOMAIN_NAME_WITH_RELAY_TEMPLATE
+            = "{\"function\":\"bindingDomainNameWithRelay(string,string,bytes)\",\"args\":\"['{}','{}','{}']\"}";
+
+    private static final String RELAY_CALL_BINDING_DOMAIN_NAME_WITH_TPBTA_TEMPLATE
+            = "{\"function\":\"bindingDomainNameWithTPBTA(string,bytes)\",\"args\":\"['{}','{}']\"}";
+
+    private static final String RELAY_CALL_GET_TPBTA_BY_DOMAIN_NAME_TEMPLATE
+            = "{\"function\":\"getTPBTAByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
+
     public static BifBCDNSClient generateFrom(byte[] rawConf) {
         BifBCNDSConfig config = JSON.parseObject(rawConf, BifBCNDSConfig.class);
         return new BifBCDNSClient(
@@ -54,9 +77,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
 
     private final BifCertificationServiceClient certificationServiceClient;
 
-    private BIFSDK bifsdk;
-
-    private AtomicLong bifNonce;
+    private final BIFSDK bifsdk;
 
     private final BifChainConfig bifChainConfig;
 
@@ -76,10 +97,9 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                 )
         );
         this.bifChainConfig = bifChainConfig;
-//        bifsdk = ObjectUtil.isNull(bifChainConfig.getBifChainRpcPort()) ?
-//                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl()) :
-//                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl(), bifChainConfig.getBifChainRpcPort());
-//        bifNonce = new AtomicLong(queryBifAccNonce());
+        bifsdk = ObjectUtil.isNull(bifChainConfig.getBifChainRpcPort()) ?
+                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl()) :
+                BIFSDK.getInstance(bifChainConfig.getBifChainRpcUrl(), bifChainConfig.getBifChainRpcPort());
     }
 
     @Override
@@ -138,7 +158,6 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
         try {
             BIFContractCallRequest bifContractCallRequest = new BIFContractCallRequest();
             bifContractCallRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
-            // TODO what's the input
             bifContractCallRequest.setInput("");
             BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
             if (0 != response.getErrorCode()) {
@@ -172,32 +191,249 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
 
     @Override
     public QueryPTCCertificateResponse queryPTCCertificate(QueryPTCCertificateRequest request) {
-        return null;
+        try {
+            BIFContractCallRequest bifContractCallRequest = new BIFContractCallRequest();
+            bifContractCallRequest.setContractAddress(bifChainConfig.getPtcGovernContract());
+            bifContractCallRequest.setInput(
+                    StrUtil.format(
+                            PTC_CALL_GET_CERT_BY_ID_TEMPLATE,
+                            request.getPtcCertId()
+                    )
+            );
+            BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
+            if (0 != response.getErrorCode()) {
+                throw new AntChainBridgeBCDNSException(
+                        BCDNSErrorCodeEnum.BCDNS_QUERY_PTC_CERT_FAILED,
+                        StrUtil.format(
+                                "failed to call getCertByName to BIF chain ( err_code: {}, err_msg: {} )",
+                                response.getErrorCode(), response.getErrorDesc()
+                        )
+                );
+            }
+
+            boolean exist = ObjectUtil.isNotNull(response.getResult().getQueryRets().get(0));
+            return new QueryPTCCertificateResponse(
+                    exist,
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(
+                            (byte[]) response.getResult().getQueryRets().get(0)
+                    ) : null
+            );
+        } catch (AntChainBridgeBCDNSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AntChainBridgeBCDNSException(
+                    BCDNSErrorCodeEnum.BCDNS_QUERY_PTC_CERT_FAILED,
+                    StrUtil.format(
+                            "failed to query PTC certificate for (cert_id: {}, name: {}) from BIF chain",
+                            request.getPtcCertId(), request.getName()
+                    ),
+                    e
+            );
+        }
     }
 
     @Override
     public QueryDomainNameCertificateResponse queryDomainNameCertificate(QueryDomainNameCertificateRequest request) {
-        return null;
+        try {
+            BIFContractCallRequest bifContractCallRequest = new BIFContractCallRequest();
+            bifContractCallRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
+            bifContractCallRequest.setInput(
+                    StrUtil.format(
+                            DOMAIN_CALL_GET_CERT_BY_NAME_TEMPLATE,
+                            request.getDomain().getDomain()
+                    )
+            );
+            BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
+            if (0 != response.getErrorCode()) {
+                throw new AntChainBridgeBCDNSException(
+                        BCDNSErrorCodeEnum.BCDNS_QUERY_DOMAIN_CERT_FAILED,
+                        StrUtil.format(
+                                "failed to call getCertByName to BIF chain ( err_code: {}, err_msg: {} )",
+                                response.getErrorCode(), response.getErrorDesc()
+                        )
+                );
+            }
+            boolean exist = ObjectUtil.isNotNull(response.getResult().getQueryRets().get(0));
+            return new QueryDomainNameCertificateResponse(
+                    exist,
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(
+                            HexUtil.decodeHex((String) response.getResult().getQueryRets().get(0))
+                    ) : null
+            );
+        } catch (AntChainBridgeBCDNSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AntChainBridgeBCDNSException(
+                    BCDNSErrorCodeEnum.BCDNS_QUERY_DOMAIN_CERT_FAILED,
+                    StrUtil.format(
+                            "failed to query domain certificate for domain {} from BIF chain",
+                            request.getDomain()
+                    ),
+                    e
+            );
+        }
     }
 
     @Override
     public void registerDomainRouter(RegisterDomainRouterRequest request) throws AntChainBridgeBCDNSException {
+        try {
+            BIFContractInvokeRequest bifContractInvokeRequest = new BIFContractInvokeRequest();
+            bifContractInvokeRequest.setSenderAddress(bifChainConfig.getBifAddress());
+            bifContractInvokeRequest.setPrivateKey(bifChainConfig.getBifPrivateKey());
+            bifContractInvokeRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
+            bifContractInvokeRequest.setBIFAmount(0L);
+            bifContractInvokeRequest.setInput(
+                    StrUtil.format(
+                            RELAY_CALL_BINDING_DOMAIN_NAME_WITH_RELAY_TEMPLATE,
+                            request.getRouter().getDestDomain().getDomain(),
+                            request.getRouter().getDestRelayer().getRelayerCertId(),
+                            StrUtil.join("^", request.getRouter().getDestRelayer().getNetAddressList())
+                    )
+            );
 
+            BIFContractInvokeResponse response = bifsdk.getBIFContractService().contractInvoke(bifContractInvokeRequest);
+            if (0 != response.getErrorCode()) {
+                throw new AntChainBridgeBCDNSException(
+                        BCDNSErrorCodeEnum.BCDNS_REGISTER_DOMAIN_ROUTER_FAILED,
+                        StrUtil.format(
+                                "failed to call bindingDomainNameWithRelay to BIF chain ( err_code: {}, err_msg: {} )",
+                                response.getErrorCode(), response.getErrorDesc()
+                        )
+                );
+            }
+        } catch (AntChainBridgeBCDNSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AntChainBridgeBCDNSException(
+                    BCDNSErrorCodeEnum.BCDNS_REGISTER_DOMAIN_ROUTER_FAILED,
+                    StrUtil.format(
+                            "failed to registerDomainRouter (domain: {}, relayer_cert_id: {}, net_addresses: [{}]) to BIF chain",
+                            request.getRouter().getDestDomain().getDomain(),
+                            request.getRouter().getDestRelayer().getRelayerCert(),
+                            StrUtil.join(",", request.getRouter().getDestRelayer().getNetAddressList())
+                    ),
+                    e
+            );
+        }
     }
 
     @Override
     public void registerThirdPartyBlockchainTrustAnchor(RegisterThirdPartyBlockchainTrustAnchorRequest request) throws AntChainBridgeBCDNSException {
+        try {
+            BIFContractInvokeRequest bifContractInvokeRequest = new BIFContractInvokeRequest();
+            bifContractInvokeRequest.setSenderAddress(bifChainConfig.getBifAddress());
+            bifContractInvokeRequest.setPrivateKey(bifChainConfig.getBifPrivateKey());
+            bifContractInvokeRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
+            bifContractInvokeRequest.setBIFAmount(0L);
+            bifContractInvokeRequest.setInput(
+                    StrUtil.format(
+                            RELAY_CALL_BINDING_DOMAIN_NAME_WITH_TPBTA_TEMPLATE,
+                            request.getDomain().getDomain(),
+                            HexUtil.encodeHexStr(request.getTpbta())
+                    )
+            );
 
+            BIFContractInvokeResponse response = bifsdk.getBIFContractService().contractInvoke(bifContractInvokeRequest);
+            if (0 != response.getErrorCode()) {
+                throw new AntChainBridgeBCDNSException(
+                        BCDNSErrorCodeEnum.BCDNS_REGISTER_TPBTA_FAILED,
+                        StrUtil.format(
+                                "failed to call bindingDomainNameWithTPBTA to BIF chain ( err_code: {}, err_msg: {} )",
+                                response.getErrorCode(), response.getErrorDesc()
+                        )
+                );
+            }
+        } catch (AntChainBridgeBCDNSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AntChainBridgeBCDNSException(
+                    BCDNSErrorCodeEnum.BCDNS_REGISTER_TPBTA_FAILED,
+                    StrUtil.format(
+                            "failed to register tpbta {} for domain {} to BIF chain",
+                            Base64.encode(request.getTpbta()),
+                            request.getDomain().getDomain()
+                    ),
+                    e
+            );
+        }
     }
 
     @Override
     public DomainRouter queryDomainRouter(QueryDomainRouterRequest request) {
-        return null;
+        try {
+            BIFContractCallRequest bifContractCallRequest = new BIFContractCallRequest();
+            bifContractCallRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
+            bifContractCallRequest.setInput(
+                    StrUtil.format(
+                            RELAY_CALL_GET_RELAY_BY_DOMAIN_NAME_TEMPLATE,
+                            request.getDestDomain().getDomain()
+                    )
+            );
+            BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
+            if (0 != response.getErrorCode() || ObjectUtil.isNull(response.getResult()) || response.getResult().getQueryRets().size() != 2) {
+                return null;
+            }
+            AbstractCrossChainCertificate relayerCert = CrossChainCertificateFactory.createCrossChainCertificate(
+                    HexUtil.decodeHex((String) response.getResult().getQueryRets().get(0))
+            );
+            List<String> netAddresses = StrUtil.split((String) response.getResult().getQueryRets().get(1), "^");
+            return new DomainRouter(
+                    request.getDestDomain(),
+                    new Relayer(
+                            relayerCert.getId(),
+                            relayerCert,
+                            netAddresses
+                    )
+            );
+        } catch (AntChainBridgeBCDNSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AntChainBridgeBCDNSException(
+                    BCDNSErrorCodeEnum.BCDNS_QUERY_DOMAIN_ROUTER_FAILED,
+                    StrUtil.format(
+                            "failed to query domain router for domain {} from BIF chain",
+                            request.getDestDomain().getDomain()
+                    ),
+                    e
+            );
+        }
     }
 
     @Override
-    public byte[] queryThirdPartyBlockchainTrustAnchor() {
-        return new byte[0];
+    public byte[] queryThirdPartyBlockchainTrustAnchor(QueryThirdPartyBlockchainTrustAnchorRequest request) {
+        try {
+            BIFContractCallRequest bifContractCallRequest = new BIFContractCallRequest();
+            bifContractCallRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
+            bifContractCallRequest.setInput(
+                    StrUtil.format(
+                            RELAY_CALL_GET_TPBTA_BY_DOMAIN_NAME_TEMPLATE,
+                            request.getDomain().getDomain()
+                    )
+            );
+            BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
+            if (0 != response.getErrorCode()) {
+                throw new AntChainBridgeBCDNSException(
+                        BCDNSErrorCodeEnum.BCDNS_QUERY_TPBTA_FAILED,
+                        StrUtil.format(
+                                "failed to call getTPBTAByDomainName to BIF chain ( err_code: {}, err_msg: {} )",
+                                response.getErrorCode(), response.getErrorDesc()
+                        )
+                );
+            }
+            return ObjectUtil.isNull(response.getResult().getQueryRets().get(0)) ? null
+                    : HexUtil.decodeHex((String) response.getResult().getQueryRets().get(0));
+        } catch (AntChainBridgeBCDNSException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AntChainBridgeBCDNSException(
+                    BCDNSErrorCodeEnum.BCDNS_QUERY_TPBTA_FAILED,
+                    StrUtil.format(
+                            "failed to query TPBTA for domain {} from BIF chain",
+                            request.getDomain()
+                    ),
+                    e
+            );
+        }
     }
 
     private ApplicationResult queryApplicationResult(String applyReceipt) {

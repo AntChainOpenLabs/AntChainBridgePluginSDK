@@ -26,6 +26,8 @@ import lombok.*;
 @Getter
 public class QueryPTCCertificateRequest {
 
+    private String ptcCertId;
+
     private String name;
 
     private ObjectIdentity applicant;
