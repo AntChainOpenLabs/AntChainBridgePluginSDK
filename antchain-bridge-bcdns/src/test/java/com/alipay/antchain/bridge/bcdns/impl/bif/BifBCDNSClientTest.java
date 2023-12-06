@@ -78,11 +78,12 @@ public class BifBCDNSClientTest {
                                 FileUtil.readString(getCertsPath() + "public_key.pem", Charset.defaultCharset()),
                                 SIG_ALGO
                         ),
+                        // {"encAddress":"did:bid:efNc8GGh3Yh2GkNJwBwHmKsqWPEayBtM","encPublicKey":"b065666cee70556107436be380dca88a5a5e403fd54a14d59f4eac322d598136264333","encPrivateKey":"priSPKq5XtWDeVp4nCiQZP39xkK9dUaT4mkRxBxTvVjKE7Fib4","rawPrivateKey":"reD3FF6Fr9ADZDAtMz/rYYSeDnW8PqmrD6eHLILsWjs=","rawPublicKey":"bO5wVWEHQ2vjgNyoilpeQD/VShTVn06sMi1ZgTYmQzM="}
                         new BifChainConfig(
                                 "",
                                 null,
-                                "",
-                                "",
+                                "priSPKq5XtWDeVp4nCiQZP39xkK9dUaT4mkRxBxTvVjKE7Fib4",
+                                "did:bid:efNc8GGh3Yh2GkNJwBwHmKsqWPEayBtM",
                                 "",
                                 "",
                                 "",

@@ -26,6 +26,8 @@ import lombok.*;
 @Getter
 public class QueryRelayerCertificateRequest {
 
+    private String relayerCertId;
+
     private String name;
 
     private ObjectIdentity applicant;

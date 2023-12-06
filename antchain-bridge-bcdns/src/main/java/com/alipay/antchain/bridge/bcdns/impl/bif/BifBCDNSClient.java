@@ -49,9 +49,6 @@ import lombok.Getter;
 @Getter
 public class BifBCDNSClient implements IBlockChainDomainNameService {
 
-    private static final String RELAY_CALL_GET_RELAY_BY_DOMAIN_NAME_TEMPLATE
-            = "{\"function\":\"getRelayByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes,bytes)\"}";
-
     private static final String DOMAIN_CALL_GET_CERT_BY_NAME_TEMPLATE
             = "{\"function\":\"getCertByName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
 
@@ -66,6 +63,12 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
 
     private static final String RELAY_CALL_GET_TPBTA_BY_DOMAIN_NAME_TEMPLATE
             = "{\"function\":\"getTPBTAByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
+
+    private static final String RELAY_CALL_GET_CERT_BY_ID_TEMPLATE
+            = "{\"function\":\"getCertById(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
+
+    private static final String RELAY_CALL_GET_RELAY_BY_DOMAIN_NAME_TEMPLATE
+            = "{\"function\":\"getRelayByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes,bytes)\"}";
 
     public static BifBCDNSClient generateFrom(byte[] rawConf) {
         BifBCNDSConfig config = JSON.parseObject(rawConf, BifBCNDSConfig.class);
@@ -158,7 +161,12 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
         try {
             BIFContractCallRequest bifContractCallRequest = new BIFContractCallRequest();
             bifContractCallRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
-            bifContractCallRequest.setInput("");
+            bifContractCallRequest.setInput(
+                    StrUtil.format(
+                            RELAY_CALL_GET_CERT_BY_ID_TEMPLATE,
+                            request.getRelayerCertId()
+                    )
+            );
             BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
             if (0 != response.getErrorCode()) {
                 throw new AntChainBridgeBCDNSException(
@@ -169,11 +177,13 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                         )
                 );
             }
+
+            boolean exist = ObjectUtil.isNotNull(response.getResult().getQueryRets().get(0));
             return new QueryRelayerCertificateResponse(
-                    true,
-                    CrossChainCertificateFactory.createCrossChainCertificate(
-                            (byte[]) response.getResult().getQueryRets().get(0)
-                    )
+                    exist,
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(
+                            HexUtil.decodeHex((String) response.getResult().getQueryRets().get(0))
+                    ) : null
             );
         } catch (AntChainBridgeBCDNSException e) {
             throw e;
@@ -236,7 +246,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
     public QueryDomainNameCertificateResponse queryDomainNameCertificate(QueryDomainNameCertificateRequest request) {
         try {
             BIFContractCallRequest bifContractCallRequest = new BIFContractCallRequest();
-            bifContractCallRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
+            bifContractCallRequest.setContractAddress(bifChainConfig.getDomainGovernContract());
             bifContractCallRequest.setInput(
                     StrUtil.format(
                             DOMAIN_CALL_GET_CERT_BY_NAME_TEMPLATE,
@@ -282,6 +292,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
             bifContractInvokeRequest.setPrivateKey(bifChainConfig.getBifPrivateKey());
             bifContractInvokeRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
             bifContractInvokeRequest.setBIFAmount(0L);
+            bifContractInvokeRequest.setGasPrice(1L);
             bifContractInvokeRequest.setInput(
                     StrUtil.format(
                             RELAY_CALL_BINDING_DOMAIN_NAME_WITH_RELAY_TEMPLATE,
@@ -325,6 +336,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
             bifContractInvokeRequest.setPrivateKey(bifChainConfig.getBifPrivateKey());
             bifContractInvokeRequest.setContractAddress(bifChainConfig.getRelayerGovernContract());
             bifContractInvokeRequest.setBIFAmount(0L);
+            bifContractInvokeRequest.setGasPrice(1L);
             bifContractInvokeRequest.setInput(
                     StrUtil.format(
                             RELAY_CALL_BINDING_DOMAIN_NAME_WITH_TPBTA_TEMPLATE,
