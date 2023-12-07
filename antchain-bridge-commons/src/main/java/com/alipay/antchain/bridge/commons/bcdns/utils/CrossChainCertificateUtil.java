@@ -160,7 +160,7 @@ public class CrossChainCertificateUtil {
             return false;
         }
 
-        return ((DomainNameCredentialSubject) credentialSubject).getDomainNameType() == DomainNameTypeEnum.DOMAIN_NAME_SPACE;
+        return ((DomainNameCredentialSubject) credentialSubject).getDomainNameType() == DomainNameTypeEnum.DOMAIN_NAME;
     }
 
     public static boolean isBCDNSTrustRoot(AbstractCrossChainCertificate certificate) {
