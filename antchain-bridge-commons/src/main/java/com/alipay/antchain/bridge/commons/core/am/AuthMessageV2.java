@@ -21,23 +21,30 @@ import java.nio.ByteOrder;
 import cn.hutool.core.util.ByteUtil;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class AuthMessageV2 extends AbstractAuthMessage {
 
     public static final int MY_VERSION = 2;
 
+    private AuthMessageTrustLevelEnum trustLevel;
+
     @Override
     public void decode(byte[] rawMessage) {
-        if (rawMessage.length < 44) {
+        if (rawMessage.length < 45) {
             throw new AntChainBridgeCommonsException(
                     CommonsErrorCodeEnum.AUTH_MESSAGE_DECODE_ERROR,
-                    String.format("length of message v2 supposes to be 44 bytes at least but get %d . ", rawMessage.length)
+                    String.format("length of message v2 supposes to be 45 bytes at least but get %d . ", rawMessage.length)
             );
         }
 
         int offset = checkVersion(rawMessage);
         offset = extractCrossChainID(rawMessage, offset);
         offset = extractUpperProtocol(rawMessage, offset);
+        offset = extractTrustLevel(rawMessage, offset);
 
         decodeMyPayload(rawMessage, offset);
     }
@@ -61,17 +68,36 @@ public class AuthMessageV2 extends AbstractAuthMessage {
         return offset;
     }
 
+    private int extractTrustLevel(byte[] rawMessage, int offset) {
+        offset -= 1;
+        byte rawTrustLevel = rawMessage[offset];
+        this.setTrustLevel(
+                AuthMessageTrustLevelEnum.parseFromValue(
+                        ByteUtil.byteToUnsignedInt(rawTrustLevel)
+                )
+        );
+
+        return offset;
+    }
+
     @Override
     public byte[] encode() {
-        byte[] rawMessage = new byte[44 + this.getPayload().length];
+        byte[] rawMessage = new byte[45 + this.getPayload().length];
 
         int offset = putVersion(rawMessage, rawMessage.length);
         offset = putCrossChainID(rawMessage, offset);
         offset = putUpperProtocol(rawMessage, offset);
+        offset = putTrustLevel(rawMessage, offset);
 
         encodeMyPayload(rawMessage, offset);
 
         return rawMessage;
+    }
+
+    private int putTrustLevel(byte[] rawMessage, int offset) {
+        offset -= 1;
+        rawMessage[offset] = (byte) this.getTrustLevel().ordinal();
+        return offset;
     }
 
     private int encodeMyPayload(byte[] rawMessage, int offset) {

@@ -50,6 +50,9 @@ public class SDPMessageFactory {
             case SDPMessageV1.MY_VERSION:
                 sdpMessage = new SDPMessageV1();
                 break;
+            case SDPMessageV2.MY_VERSION:
+                sdpMessage = new SDPMessageV2();
+                break;
             default:
                 throw new AntChainBridgeCommonsException(
                         CommonsErrorCodeEnum.INCORRECT_SDP_MESSAGE_ERROR,

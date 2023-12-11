@@ -23,5 +23,6 @@ public enum TLVTypeEnum {
     UINT64,
     STRING,
     BYTES,
-    BYTES_ARRAY;
+    BYTES_ARRAY,
+    STRING_ARRAY;
 }
