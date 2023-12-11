@@ -61,9 +61,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>cn.bid</groupId>
+            <groupId>cn.bitfactory</groupId>
             <artifactId>bid-sdk</artifactId>
-            <version>1.0</version>
+            <version>1.0.2</version>
         </dependency>
         <dependency>
             <groupId>cn.bitfactory</groupId>

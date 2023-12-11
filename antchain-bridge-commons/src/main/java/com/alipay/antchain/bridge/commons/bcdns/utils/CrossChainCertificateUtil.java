@@ -76,6 +76,9 @@ public class CrossChainCertificateUtil {
     }
 
     public static CrossChainDomain getCrossChainDomainSpace(AbstractCrossChainCertificate certificate) {
+        if (isBCDNSTrustRoot(certificate)) {
+            return new CrossChainDomain(CrossChainDomain.ROOT_DOMAIN_SPACE);
+        }
         Assert.equals(
                 CrossChainCertificateTypeEnum.DOMAIN_NAME_CERTIFICATE,
                 certificate.getType()
