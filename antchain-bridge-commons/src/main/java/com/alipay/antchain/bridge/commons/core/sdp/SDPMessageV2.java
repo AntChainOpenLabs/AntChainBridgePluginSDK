@@ -51,7 +51,7 @@ public class SDPMessageV2 extends AbstractSDPMessage {
             );
         }
 
-        int offset = rawMessage.length;
+        int offset = rawMessage.length - 4;
 
         offset = extractTargetDomain(rawMessage, offset);
         offset = extractTargetIdentity(rawMessage, offset);
@@ -114,7 +114,7 @@ public class SDPMessageV2 extends AbstractSDPMessage {
     }
 
     private int extractAtomic(byte[] rawMessage, int offset) {
-        this.setAtomic(ByteUtil.byteToUnsignedInt(rawMessage[--offset]) == 0);
+        this.setAtomic(ByteUtil.byteToUnsignedInt(rawMessage[--offset]) != 0);
         return offset;
     }
 
@@ -158,7 +158,7 @@ public class SDPMessageV2 extends AbstractSDPMessage {
     private int putVersion(byte[] rawMessage, int offset) {
         offset -= 4;
         System.arraycopy(ByteUtil.intToBytes(this.getVersion(), ByteOrder.BIG_ENDIAN), 0, rawMessage, offset, 4);
-
+        rawMessage[offset] = ByteUtil.intToByte(0xFF);
         return offset;
     }
 
@@ -168,7 +168,7 @@ public class SDPMessageV2 extends AbstractSDPMessage {
         System.arraycopy(ByteUtil.intToBytes(rawTargetDomain.length, ByteOrder.BIG_ENDIAN), 0, rawMessage, offset, 4);
 
         offset -= rawTargetDomain.length;
-        System.arraycopy(rawTargetDomain, 0, rawMessage, offset, this.getPayload().length);
+        System.arraycopy(rawTargetDomain, 0, rawMessage, offset, rawTargetDomain.length);
 
         return offset;
     }

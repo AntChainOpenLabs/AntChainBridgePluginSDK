@@ -18,6 +18,7 @@ package com.alipay.antchain.bridge.commons;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.security.*;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -343,6 +344,9 @@ public class BCDNSTest {
     }
 
     private byte[] generateSubjectInfo() {
+        if (oidType == ObjectIdentityType.BID) {
+            FileUtil.writeString(JsonUtils.toJSONString(getBid()), "cc_certs/bid_document.json", Charset.defaultCharset());
+        }
         return oidType == ObjectIdentityType.BID ? JsonUtils.toJSONString(getBid()).getBytes() : new byte[]{};
     }
 
