@@ -58,10 +58,10 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
             = "{\"function\":\"getCertById(string)\",\"args\":\"'{}'\",\"return\":\"returns(string)\"}";
 
     private static final String RELAY_CALL_BINDING_DOMAIN_NAME_WITH_RELAY_TEMPLATE
-            = "{\"function\":\"bindingDomainNameWithRelay(string,string,bytes)\",\"args\":\"['{}','{}','{}']\"}";
+            = "{\"function\":\"bindingDomainNameWithRelay(string,string,bytes)\",\"args\":\"'{}','{}','{}'\"}";
 
     private static final String RELAY_CALL_BINDING_DOMAIN_NAME_WITH_TPBTA_TEMPLATE
-            = "{\"function\":\"bindingDomainNameWithTPBTA(string,bytes)\",\"args\":\"['{}','{}']\"}";
+            = "{\"function\":\"bindingDomainNameWithTPBTA(string,bytes)\",\"args\":\"'{}','{}'\"}";
 
     private static final String RELAY_CALL_GET_TPBTA_BY_DOMAIN_NAME_TEMPLATE
             = "{\"function\":\"getTPBTAByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(string)\"}";
@@ -180,11 +180,11 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                 );
             }
 
-            String res = decodeHexResultFromResponse(response);
+            String res = decodeResultFromResponse(response);
             boolean exist = StrUtil.isNotEmpty(res);
             return new QueryRelayerCertificateResponse(
                     exist,
-                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(HexUtil.decodeHex(res)) : null
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(Base64.decode(res)) : null
             );
         } catch (AntChainBridgeBCDNSException e) {
             throw e;
@@ -222,11 +222,11 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                 );
             }
 
-            String res = decodeHexResultFromResponse(response);
+            String res = decodeResultFromResponse(response);
             boolean exist = StrUtil.isNotEmpty(res);
             return new QueryPTCCertificateResponse(
                     exist,
-                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(HexUtil.decodeHex(res)) : null
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(Base64.decode(res)) : null
             );
         } catch (AntChainBridgeBCDNSException e) {
             throw e;
@@ -264,11 +264,11 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                 );
             }
 
-            String res = decodeHexResultFromResponse(response);
+            String res = decodeResultFromResponse(response);
             boolean exist = StrUtil.isNotEmpty(res);
             return new QueryDomainNameCertificateResponse(
                     exist,
-                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(HexUtil.decodeHex(res)) : null
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(Base64.decode(res)) : null
             );
         } catch (AntChainBridgeBCDNSException e) {
             throw e;
@@ -298,7 +298,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                             RELAY_CALL_BINDING_DOMAIN_NAME_WITH_RELAY_TEMPLATE,
                             request.getRouter().getDestDomain().getDomain(),
                             request.getRouter().getDestRelayer().getRelayerCertId(),
-                            StrUtil.join("^", request.getRouter().getDestRelayer().getNetAddressList())
+                            "0x" + HexUtil.encodeHexStr(StrUtil.join("^", request.getRouter().getDestRelayer().getNetAddressList()).getBytes())
                     )
             );
 
@@ -341,7 +341,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                     StrUtil.format(
                             RELAY_CALL_BINDING_DOMAIN_NAME_WITH_TPBTA_TEMPLATE,
                             request.getDomain().getDomain(),
-                            HexUtil.encodeHexStr(request.getTpbta())
+                            "0x" + HexUtil.encodeHexStr(request.getTpbta())
                     )
             );
 
@@ -386,14 +386,15 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                 throw new RuntimeException(StrUtil.format("call BIF chain failed: ( err_code: {}, err_msg: {} )",
                         response.getErrorCode(), response.getErrorDesc()));
             }
-            List<String> res = decodeHexResultsFromResponse(response);
+            List<String> res = decodeResultsFromResponse(response);
             if (ObjectUtil.isNull(res) || res.size() < 2 || StrUtil.isEmpty(res.get(0))) {
                 return null;
             }
             AbstractCrossChainCertificate relayerCert = CrossChainCertificateFactory.createCrossChainCertificate(
-                    HexUtil.decodeHex(res.get(0))
+                    Base64.decode(res.get(0))
             );
-            List<String> netAddresses = StrUtil.split(res.get(1), "^");
+            List<String> netAddresses = StrUtil.split(res.get(1), "^")
+                    .stream().map(HexUtil::decodeHexStr).collect(Collectors.toList());
             return new DomainRouter(
                     request.getDestDomain(),
                     new Relayer(
@@ -437,7 +438,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                         )
                 );
             }
-            String res = decodeHexResultFromResponse(response);
+            String res = decodeResultFromResponse(response);
             return StrUtil.isEmpty(res) ? null : HexUtil.decodeHex(res);
         } catch (AntChainBridgeBCDNSException e) {
             throw e;
@@ -492,7 +493,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
         return response.getResult().getNonce();
     }
 
-    private String decodeHexResultFromResponse(BIFContractCallResponse response) {
+    private String decodeResultFromResponse(BIFContractCallResponse response) {
         Map<String, Map<String, String>> resMap = (Map<String, Map<String, String>>) (response.getResult().getQueryRets().get(0));
         String res = resMap.get("result").get("data").trim();
         return StrUtil.replaceFirst(
@@ -504,7 +505,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
         );
     }
 
-    private List<String> decodeHexResultsFromResponse(BIFContractCallResponse response) {
+    private List<String> decodeResultsFromResponse(BIFContractCallResponse response) {
         Map<String, Map<String, String>> resMap = (Map<String, Map<String, String>>) (response.getResult().getQueryRets().get(0));
         String res = resMap.get("result").get("data").trim();
 
