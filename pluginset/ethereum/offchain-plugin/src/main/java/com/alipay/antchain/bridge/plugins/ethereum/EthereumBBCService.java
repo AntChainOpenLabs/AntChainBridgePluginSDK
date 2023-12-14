@@ -227,7 +227,7 @@ public class EthereumBBCService implements IBBCService {
                                 CrossChainMessage.CrossChainMessageType.AUTH_MSG,
                                 logObject.getBlockNumber().longValue(),
                                 block.getTimestamp().longValue(),
-                                logObject.getBlockHash().getBytes(),
+                                HexUtil.decodeHex(StrUtil.removePrefix(logObject.getBlockHash().trim(), "0x")),
                                 response.pkg,
                                 // todo: put ledger data, for SPV or other attestations
                                 "this time we need no verify. it's ok to set it with empty bytes".getBytes(),

@@ -496,26 +496,30 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
     private String decodeResultFromResponse(BIFContractCallResponse response) {
         Map<String, Map<String, String>> resMap = (Map<String, Map<String, String>>) (response.getResult().getQueryRets().get(0));
         String res = resMap.get("result").get("data").trim();
-        return StrUtil.replaceFirst(
-                StrUtil.removeSuffix(
-                        StrUtil.removePrefix(res, "["),
-                        "]"
-                ),
-                "0x", ""
-        );
+        res = StrUtil.removeSuffix(
+                StrUtil.removePrefix(res, "[").trim(),
+                "]"
+        ).trim();
+        if (HexUtil.isHexNumber(res)) {
+            res = StrUtil.removePrefix(res.trim(), "0x");
+        }
+        return res;
     }
 
     private List<String> decodeResultsFromResponse(BIFContractCallResponse response) {
         Map<String, Map<String, String>> resMap = (Map<String, Map<String, String>>) (response.getResult().getQueryRets().get(0));
         String res = resMap.get("result").get("data").trim();
-
-        res = StrUtil.replace(
-                StrUtil.removeSuffix(
-                        StrUtil.removePrefix(res, "["),
-                        "]"
-                ),
-                "0x", ""
-        );
-        return StrUtil.split(res, ",").stream().map(StrUtil::trim).collect(Collectors.toList());
+        res = StrUtil.removeSuffix(
+                StrUtil.removePrefix(res, "[").trim(),
+                "]"
+        ).trim();
+        return StrUtil.split(res, ",").stream().map(
+                s -> {
+                    if (HexUtil.isHexNumber(s)) {
+                        s = StrUtil.removePrefix(s.trim(), "0x");
+                    }
+                    return s.trim();
+                }
+        ).collect(Collectors.toList());
     }
 }
