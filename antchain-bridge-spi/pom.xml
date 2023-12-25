@@ -23,7 +23,7 @@
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-commons</artifactId>
-            <version>0.2.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
