@@ -16,11 +16,15 @@
 
 package com.alipay.antchain.bridge.commons.bbc.syscontract;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class AuthMessageContract {
 
     private String contractAddress;

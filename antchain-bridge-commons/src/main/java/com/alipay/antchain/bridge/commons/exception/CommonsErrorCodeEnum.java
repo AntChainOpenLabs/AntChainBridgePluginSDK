@@ -39,6 +39,11 @@ public enum CommonsErrorCodeEnum {
     UNSUPPORTED_CROSS_CHAIN_MESSAGE_TYPE_ERROR("0001", "unsupported cc msg type"),
 
     /**
+     * The type of {@link com.alipay.antchain.bridge.commons.core.base.ObjectIdentity} is not recognized
+     */
+    UNSUPPORTED_OID_TYPE_ERROR("0002", "unsupported oid type"),
+
+    /**
      * Something wrong about {@code AuthMessage}, like version, etc.
      */
     INCORRECT_AUTH_MESSAGE_ERROR("0101", "wrong am"),
@@ -86,7 +91,40 @@ public enum CommonsErrorCodeEnum {
     /**
      * Unsupported basic TLV type
      */
-    CODEC_TLV_UNSUPPORTED_TYPE("0603", "unsupported tlv type");
+    CODEC_TLV_UNSUPPORTED_TYPE("0603", "unsupported tlv type"),
+
+    /**
+     * Unsupported crosschain CA type
+     * <p>
+     *     Please check {@link com.alipay.antchain.bridge.commons.bcdns.CrossChainCertificateTypeEnum}
+     * </p>
+     */
+    BCDNS_UNSUPPORTED_CA_TYPE("0701", "unsupported crosschain CA type"),
+
+    /**
+     * Wrong version of crosschain CA.
+     */
+    BCDNS_WRONG_CA_VERSION("0702", "wrong crosschain CA version"),
+
+    /**
+     *
+     */
+    BCDNS_OID_X509_PUBLIC_KEY_INFO_ERROR("0703", "wrong X509_PUBLIC_KEY_INFO oid"),
+
+    /**
+     *
+     */
+    BCDNS_OID_BID_INFO_ERROR("0704", "wrong BID_INFO oid"),
+
+    /**
+     *
+     */
+    BCDNS_OID_UNSUPPORTED_TYPE("0705", "unsupported oid type"),
+
+    /**
+     *
+     */
+    BCDNS_BID_PUBLIC_KEY_ALGO_NOT_SUPPORT("0706", "BID pubkey algo not support");
 
     /**
      * Error code for errors happened in project {@code antchain-bridge-commons}

@@ -60,6 +60,9 @@ import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
  *
  *     &#64;TLVField(tag = 6, type = TLVTypeEnum.BYTES_ARRAY, order = 6)
  *     private List&#60;byte[]&#62; myBytesArray;
+ *
+ *     &#64;TLVField(tag = 7, type = TLVTypeEnum.STRING_ARRAY, order = 7)
+ *     private List&#60;String&#62; myStringArray;
  * }
  * </pre>
  * <p>

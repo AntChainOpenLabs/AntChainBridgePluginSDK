@@ -41,5 +41,14 @@ fi
 log_info "deploy antchain-bridge-plugin-manager successfully"
 cd - > /dev/null 2>&1
 
+cd ${CURR_DIR}/../antchain-bridge-bcdns
+mvn deploy -s $GITHUB_WORKSPACE/settings.xml
+if [ $? -ne 0 ]; then
+    log_error "failed to deploy antchain-bridge-bcdns"
+    exit 1
+fi
+log_info "deploy antchain-bridge-bcdns successfully"
+cd - > /dev/null 2>&1
+
 log_info "success"
 rm -rf antchain-bridge-sdk

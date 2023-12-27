@@ -6,7 +6,7 @@
 
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-plugin-manager</artifactId>
-    <version>0.1.2</version>
+    <version>0.2.0</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -18,12 +18,12 @@
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-plugin-lib</artifactId>
-            <version>0.1.2</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-spi</artifactId>
-            <version>0.1.2</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
