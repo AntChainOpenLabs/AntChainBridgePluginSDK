@@ -23,7 +23,7 @@
     <packaging>pom</packaging>
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-sdk</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0</version>
 
     <modules>
         <module>antchain-bridge-commons</module>
@@ -39,5 +39,27 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>desc_tar.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                        <id>make-tar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
