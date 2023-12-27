@@ -120,102 +120,96 @@ public class Mychain010BBCService implements IBBCService {
 
         // 1. check context
         if (ObjectUtil.isNull(this.context)) {
-            throw new RuntimeException("empty bbc context");
+            throw new RuntimeException("[Mychain010BBCService] empty bbc context");
         }
 
-        boolean isDeploy = false;
-        if (mychain010Client.isTeeChain()) {
-            // 2. tee链只需要部署teewasm合约
-            LOGGER.info("[Mychain010BBCService] deploy am with tee wasm contract for {}",
-                    mychain010Client.getPrimary());
+        try {
+            if (mychain010Client.isTeeChain()) {
+                // 2. tee链只需要部署teewasm合约
+                LOGGER.info("[Mychain010BBCService] deploy am with tee wasm contract for {}",
+                        mychain010Client.getPrimary());
 
-            if (!context.getAmContractClientTeeWASM().deployContract()) {
-                LOGGER.error("[Mychain010BBCService] deploy am with tee wasm contract for {} failed",
-                        mychain010Client.getPrimary());
-                throw new RuntimeException(StrUtil.format("[Mychain010BBCService] deploy am with tee wasm contract for {} failed",
-                        mychain010Client.getPrimary()));
-            } else {
-                if (context.getAmContractClientTeeWASM().addRelayers(
-                        mychain010Client.getConfig().getMychainAnchorAccount())) {
-                    LOGGER.info("[Mychain010BBCService] deploy am with tee wasm contract for {} success",
-                            mychain010Client.getPrimary());
-                    isDeploy = true;
+                if (!context.getAmContractClientTeeWASM().deployContract()) {
+                    throw new RuntimeException("deploy am with tee wasm contract failed");
                 } else {
-                    LOGGER.error("[Mychain010BBCService] add relayers {} to am tee wasm for {} failed",
-                            mychain010Client.getConfig().getMychainAnchorAccount(),
-                            mychain010Client.getPrimary());
-                    throw new RuntimeException(StrUtil.format("[Mychain010BBCService] add relayers {} to am tee wasm for {} failed",
-                            mychain010Client.getConfig().getMychainAnchorAccount(),
-                            mychain010Client.getPrimary()));
-                }
-            }
-        } else {
-            // 3. 部署evm合约
-            LOGGER.info("[Mychain010BBCService] deploy am with evm contract for {}",
-                    mychain010Client.getPrimary());
-            if (!context.getAmContractClientEVM().deployContract()) {
-                LOGGER.error("[Mychain010BBCService] deploy am with evm contract for {} failed",
-                        mychain010Client.getPrimary());
-                throw new RuntimeException(StrUtil.format("[Mychain010BBCService] deploy am with evm contract for {} failed",
-                        mychain010Client.getPrimary()));
-            } else {
-                if (context.getAmContractClientEVM().addRelayers(
-                        mychain010Client.getConfig().getMychainAnchorAccount())) {
-                    LOGGER.info("[Mychain010BBCService] deploy am with evm contract for {} success",
-                            mychain010Client.getPrimary());
-                    isDeploy = true;
-                } else {
-                    LOGGER.error("[Mychain010BBCService] add relayers {} to am evm for {} failed",
-                            mychain010Client.getConfig().getMychainAnchorAccount(),
-                            mychain010Client.getPrimary());
-                    throw new RuntimeException(StrUtil.format("[Mychain010BBCService] add relayers {} to am evm for {} failed",
-                            mychain010Client.getConfig().getMychainAnchorAccount(),
-                            mychain010Client.getPrimary()));
-                }
-            }
-
-            // 4. 需要支持wasm，部署wasm合约
-            if (mychain010Client.getConfig().isWasmSupported()) {
-                LOGGER.info("[Mychain010BBCService] deploy am with wasm contract for {}",
-                        mychain010Client.getPrimary());
-                if (!context.getAmContractClientWASM().deployContract()) {
-                    LOGGER.error("[Mychain010BBCService] deploy am with wasm contract for {} failed",
-                            mychain010Client.getPrimary());
-                    throw new RuntimeException(StrUtil.format("[Mychain010BBCService] deploy am with wasm contract for {} failed",
-                            mychain010Client.getPrimary()));
-                } else {
-                    if (context.getAmContractClientWASM().addRelayers(mychain010Client.getConfig().getMychainAnchorAccount())) {
-                        LOGGER.info("[Mychain010BBCService] deploy am with wasm contract for {} success",
+                    if (context.getAmContractClientTeeWASM().addRelayers(
+                            mychain010Client.getConfig().getMychainAnchorAccount())) {
+                        LOGGER.info("[Mychain010BBCService] deploy am with tee wasm contract for {} success",
                                 mychain010Client.getPrimary());
-                        isDeploy = true;
                     } else {
-                        LOGGER.error("[Mychain010BBCService] add relayers {} to am wasm for {} failed",
-                                mychain010Client.getConfig().getMychainAnchorAccount(),
-                                mychain010Client.getPrimary());
-                        throw new RuntimeException(StrUtil.format("[Mychain010BBCService] add relayers {} to am wasm for {} failed",
+                        throw new RuntimeException(StrUtil.format("add relayers {} to am tee wasm for {} failed",
                                 mychain010Client.getConfig().getMychainAnchorAccount(),
                                 mychain010Client.getPrimary()));
                     }
                 }
+
+                // 设置context里面的总状态
+                if (StrUtil.isEmpty(context.getAmContractClientTeeWASM().getContractAddress())) {
+                    throw new RuntimeException("empty am tee wasm contract");
+                } else {
+                    context.setAuthMessageContract(new AuthMessageContract(
+                            MychainUtils.contractAddrFormat("", context.getAmContractClientTeeWASM().getContractAddress()),
+                            ContractStatusEnum.CONTRACT_DEPLOYED)
+                    );
+                }
+            } else {
+                // 3. 部署evm合约
+                LOGGER.info("[Mychain010BBCService] deploy am with evm contract for {}",
+                        mychain010Client.getPrimary());
+                if (!context.getAmContractClientEVM().deployContract()) {
+                    throw new RuntimeException("deploy am with evm contract failed");
+                } else {
+                    if (context.getAmContractClientEVM().addRelayers(
+                            mychain010Client.getConfig().getMychainAnchorAccount())) {
+                        LOGGER.info("[Mychain010BBCService] deploy am with evm contract for {} success",
+                                mychain010Client.getPrimary());
+                    } else {
+                        throw new RuntimeException(StrUtil.format("add relayers {} to am evm ailed",
+                                mychain010Client.getConfig().getMychainAnchorAccount()));
+                    }
+                }
+
+                // 4. 需要支持wasm，部署wasm合约
+                if (mychain010Client.getConfig().isWasmSupported()) {
+                    LOGGER.info("[Mychain010BBCService] deploy am with wasm contract for {}",
+                            mychain010Client.getPrimary());
+                    if (!context.getAmContractClientWASM().deployContract()) {
+                        throw new RuntimeException("deploy am with wasm contract failed");
+                    } else {
+                        if (context.getAmContractClientWASM().addRelayers(mychain010Client.getConfig().getMychainAnchorAccount())) {
+                            LOGGER.info("[Mychain010BBCService] deploy am with wasm contract for {} success",
+                                    mychain010Client.getPrimary());
+                        } else {
+                            throw new RuntimeException(StrUtil.format("add relayers {} to am wasm failed",
+                                    mychain010Client.getConfig().getMychainAnchorAccount()));
+                        }
+                    }
+                }
+
+                // 设置context里面的总状态
+                if (StrUtil.isEmpty(context.getAmContractClientEVM().getContractAddress()) || (
+                        mychain010Client.getConfig().isWasmSupported()
+                                && StrUtil.isEmpty(context.getAmContractClientWASM().getContractAddress()))) {
+                    throw new RuntimeException(StrUtil.format("empty am evm({}) or wasm({}) contract",
+                            context.getAmContractClientEVM().getContractAddress(),
+                            context.getAmContractClientWASM().getContractAddress()
+                    ));
+                } else {
+                    context.setAuthMessageContract(new AuthMessageContract(
+                            MychainUtils.contractAddrFormat(
+                                    context.getAmContractClientEVM().getContractAddress(),
+                                    context.getAmContractClientWASM().getContractAddress()),
+                            ContractStatusEnum.CONTRACT_DEPLOYED)
+                    );
+                }
             }
+        } catch (Exception e) {
+            LOGGER.error("[Mychain010BBCService] setup AuthMessageContract for {} failed",
+                    mychain010Client.getPrimary(), e);
+            throw new RuntimeException(StrUtil.format("[Mychain010BBCService] setup AuthMessageContract for {} failed",
+                    mychain010Client.getPrimary()), e);
         }
 
-        // 设置context里面的总状态
-        if (isDeploy) {
-            context.setAuthMessageContract(new AuthMessageContract(
-                    MychainUtils.contractAddrFormat(
-                            ObjectUtil.isNotEmpty(context.getAmContractClientEVM()) ?
-                                    context.getAmContractClientEVM().getContractAddress() : ""
-                            ,
-                            mychain010Client.isTeeChain() ?
-                                    (ObjectUtil.isNotEmpty(context.getAmContractClientTeeWASM()) ?
-                                            context.getAmContractClientTeeWASM().getContractAddress() : "") :
-                                    (ObjectUtil.isNotEmpty(context.getAmContractClientWASM()) ?
-                                            context.getAmContractClientWASM().getContractAddress() : ""))
-                    ,
-                    ContractStatusEnum.CONTRACT_DEPLOYED)
-            );
-        }
     }
 
     @Override
@@ -225,72 +219,77 @@ public class Mychain010BBCService implements IBBCService {
 
         // 1. check context
         if (ObjectUtil.isNull(this.context)) {
-            throw new RuntimeException("empty bbc context");
+            throw new RuntimeException("[Mychain010BBCService] empty bbc context");
         }
 
-        boolean isDeploy = false;
-        if (mychain010Client.isTeeChain()) {
-            // 2. tee链只需要部署teewasm合约
-            LOGGER.info("[Mychain010BBCService] deploy sdp with tee wasm contract for {}",
-                    mychain010Client.getPrimary());
+        try {
 
-            if (!context.getSdpContractClientTeeWASM().deployContract()) {
-                LOGGER.error("[Mychain010BBCService] deploy sdp with tee wasm contract for {} failed",
+            if (mychain010Client.isTeeChain()) {
+                // 2. tee链只需要部署teewasm合约
+                LOGGER.info("[Mychain010BBCService] deploy sdp with tee wasm contract for {}",
                         mychain010Client.getPrimary());
-                throw new RuntimeException(StrUtil.format("[Mychain010BBCService] deploy sdp with tee wasm contract for {} failed",
-                        mychain010Client.getPrimary()));
-            } else {
-                LOGGER.info("[Mychain010BBCService] deploy sdp with tee wasm contract for {} success",
-                        mychain010Client.getPrimary());
-                isDeploy = true;
-            }
-        } else {
-            // 3. 部署evm合约
-            LOGGER.info("[Mychain010BBCService] deploy sdp with evm contract for {}",
-                    mychain010Client.getPrimary());
-            if (!context.getSdpContractClientEVM().deployContract()) {
-                LOGGER.error("[Mychain010BBCService] deploy sdp with evm contract for {} failed",
-                        mychain010Client.getPrimary());
-                throw new RuntimeException(StrUtil.format("[Mychain010BBCService] deploy sdp with evm contract for {} failed",
-                        mychain010Client.getPrimary()));
-            } else {
-                LOGGER.info("[Mychain010BBCService] deploy sdp with evm contract for {} success",
-                        mychain010Client.getPrimary());
-                isDeploy = true;
-            }
 
-            // 4. 需要支持wasm，部署wasm合约
-            if (mychain010Client.getConfig().isWasmSupported()) {
-                LOGGER.info("[Mychain010BBCService] deploy sdp with wasm contract for {}",
-                        mychain010Client.getPrimary());
-                if (!context.getSdpContractClientWASM().deployContract()) {
-                    LOGGER.error("[Mychain010BBCService] deploy sdp with wasm contract for {} failed",
-                            mychain010Client.getPrimary());
-                    throw new RuntimeException(StrUtil.format("[Mychain010BBCService] deploy sdp with wasm contract for {} failed",
-                            mychain010Client.getPrimary()));
+                if (!context.getSdpContractClientTeeWASM().deployContract()) {
+                    throw new RuntimeException("deploy sdp with tee wasm contract failed");
                 } else {
-                    LOGGER.info("[Mychain010BBCService] deploy sdp with wasm contract for {} success",
+                    LOGGER.info("[Mychain010BBCService] deploy sdp with tee wasm contract for {} success",
                             mychain010Client.getPrimary());
-                    isDeploy = true;
+                }
+
+                // 设置context里面的总状态
+                if (StrUtil.isEmpty(context.getSdpContractClientTeeWASM().getContractAddress())) {
+                    throw new RuntimeException("empty sdp tee wasm contract");
+                } else {
+                    context.setSdpContract(new SDPContract(
+                            MychainUtils.contractAddrFormat("", context.getSdpContractClientTeeWASM().getContractAddress()),
+                            ContractStatusEnum.CONTRACT_DEPLOYED)
+                    );
+                }
+            } else {
+                // 3. 部署evm合约
+                LOGGER.info("[Mychain010BBCService] deploy sdp with evm contract for {}",
+                        mychain010Client.getPrimary());
+                if (!context.getSdpContractClientEVM().deployContract()) {
+                    throw new RuntimeException("deploy sdp with evm contract failed");
+                } else {
+                    LOGGER.info("[Mychain010BBCService] deploy sdp with evm contract for {} success",
+                            mychain010Client.getPrimary());
+                }
+
+                // 4. 需要支持wasm，部署wasm合约
+                if (mychain010Client.getConfig().isWasmSupported()) {
+                    LOGGER.info("[Mychain010BBCService] deploy sdp with wasm contract for {}",
+                            mychain010Client.getPrimary());
+                    if (!context.getSdpContractClientWASM().deployContract()) {
+                        throw new RuntimeException("deploy sdp with wasm contract failed");
+                    } else {
+                        LOGGER.info("[Mychain010BBCService] deploy sdp with wasm contract for {} success",
+                                mychain010Client.getPrimary());
+                    }
+                }
+
+                // 设置context里面的总状态
+                if (StrUtil.isEmpty(context.getSdpContractClientEVM().getContractAddress()) || (
+                        mychain010Client.getConfig().isWasmSupported()
+                                && StrUtil.isEmpty(context.getSdpContractClientWASM().getContractAddress()))) {
+                    throw new RuntimeException(StrUtil.format("empty sdp evm({}) or wasm({}) contract",
+                            context.getSdpContractClientEVM().getContractAddress(),
+                            context.getSdpContractClientWASM().getContractAddress()
+                    ));
+                } else {
+                    context.setSdpContract(new SDPContract(
+                            MychainUtils.contractAddrFormat(
+                                    context.getSdpContractClientEVM().getContractAddress(),
+                                    context.getSdpContractClientWASM().getContractAddress()),
+                            ContractStatusEnum.CONTRACT_DEPLOYED)
+                    );
                 }
             }
-        }
-
-        // 设置context里面的总状态
-        if (isDeploy) {
-            context.setSdpContract(new SDPContract(
-                    MychainUtils.contractAddrFormat(
-                            ObjectUtil.isNotEmpty(context.getSdpContractClientEVM()) ?
-                                    context.getSdpContractClientEVM().getContractAddress() : ""
-                            ,
-                            mychain010Client.isTeeChain() ?
-                                    (ObjectUtil.isNotEmpty(context.getSdpContractClientTeeWASM()) ?
-                                            context.getSdpContractClientTeeWASM().getContractAddress() : "") :
-                                    (ObjectUtil.isNotEmpty(context.getSdpContractClientWASM()) ?
-                                            context.getSdpContractClientWASM().getContractAddress() : ""))
-                    ,
-                    ContractStatusEnum.CONTRACT_DEPLOYED)
-            );
+        } catch (Exception e) {
+            LOGGER.error("[Mychain010BBCService] setup SDPMessageContract for {} failed",
+                    mychain010Client.getPrimary(), e);
+            throw new RuntimeException(StrUtil.format("[Mychain010BBCService] setup SDPMessageContract for {} failed",
+                    mychain010Client.getPrimary()), e);
         }
     }
 
@@ -357,7 +356,7 @@ public class Mychain010BBCService implements IBBCService {
                 LOGGER.error("[Mychain010BBCService] call am contract to set sdp with teewasm  contract for {} failed",
                         mychain010Client.getPrimary());
                 throw new RuntimeException(StrUtil.format("[Mychain010BBCService] call am contract to set sdp with teewasm  contract for {} failed",
-                                mychain010Client.getPrimary()));
+                        mychain010Client.getPrimary()));
             }
         } else {
             // 2. evm
