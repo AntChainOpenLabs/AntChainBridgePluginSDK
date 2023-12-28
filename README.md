@@ -30,11 +30,15 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 在当前的工程实现中，BBC链下部分是以插件的形式实现的。AntChain Bridge实现了一套SDK，通过实现SDK中规定的接口（SPI），经过简单的编译，即可生成插件包。插件服务（PluginServer, PS）可以加载BBC链下插件，详情可以参考插件服务的介绍[文档](https://github.com/AntChainOpenLab/AntChainBridgePluginServer/blob/main/README.md)。
 
-以下介绍了插件的一个集成架构：
+在v0.2.0版本之后，加入了区块链域名服务（BlockChain Domain Name Service, BCDNS）模块以及其他数据结构，比如区块链域名证书等类型和工具，并在`antchain-bridge-bcdns`中增加了基于[星火链网](https://bitfactory.cn/)的BCDNS服务的客户端实现，该BCDNS服务由[中国信息通信研究院](http://www.caict.ac.cn/)开发支持，详情请[见](https://git.xinghuo.space/xinghuo-open-source/DLT/bcdns)。
 
-![](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/deploy_arch_230428.jpg)
+在SDK中抽象了BCDNS服务的接口[IBlockChainDomainNameService](antchain-bridge-bcdns/src/main/java/com/alipay/antchain/bridge/bcdns/service/IBlockChainDomainNameService.java)，描述了BCDNS应该提供的功能，目前仅支持官方实现的BCDNS，支持的类型可[见](antchain-bridge-bcdns/src/main/java/com/alipay/antchain/bridge/bcdns/service/BCDNSTypeEnum.java)。
 
-插件SDK共有四个部分，包括：
+以下介绍了基于SDK的一个集成架构：
+
+![](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/deploy_arch_231228.png)
+
+SDK共有五个部分，包括：
 
 - **antchain-bridge-commons**：包含很多工具方法和数据结构，帮助BBC实现快速开发；
 
@@ -44,27 +48,23 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 - **antchain-bridge-spi**：主要包含了接口`IBBCService`，描述了一个BBC实现类应该有的功能，开发者只要依次实现接口即可，详细接口介绍请[见](./antchain-bridge-spi/README.md)；
 
+- **antchain-bridge-bcdns**：主要包含了接口`IBlockChainDomainNameService`，描述了一个BCDNS客户端应该有的功能，目前仅支持星火链网（BIF）的BCDNS客户端实现，详细使用可以参考[wiki]()中“如何实现跨链”的内容；
+
   
 
 # 构建
 
-**在开始之前，请您确保安装了maven和JDK，这里推荐使用openjdk-1.8版本*
-
-在项目根目录下面的`scripts`路径下，运行脚本完成编译和打包：
-
-```
-./package.sh 
-```
-
-可以在`scripts`下，看到一个压缩包：`antchain-bridge-sdk.tar.gz`
-
-
-
-# 安装
+**在开始之前，请您确保安装了maven和JDK，这里推荐使用[openjdk-1.8](https://adoptium.net/zh-CN/temurin/releases/?version=8)版本*
 
 ## 本地安装
 
-解压上一步产生的压缩包`antchain-bridge-sdk.tar.gz`，或者在release[页面](https://github.com/AntChainOpenLab/AntChainBridgePluginSDK/releases)找到适合的版本并下载到本地，解压之后，在根目录下，运行脚本完成SDK的安装：
+在项目根目录下，直接使用maven编译即可：
+
+```
+mvn install -Dmaven.test.skip=true
+```
+
+或者在release[页面](https://github.com/AntChainOpenLab/AntChainBridgePluginSDK/releases)找到适合的版本并下载到本地，解压之后，在根目录下，运行脚本完成SDK的安装：
 
 ```
 ./install_sdk.sh
@@ -80,16 +80,17 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 /_/  |_|/_/ /_/ \__/ \____//_/ /_/ \__,_//_//_/ /_/  /_____//_/   /_/ \__,_/ \__, / \___/
                                                                             /____/        
 
-[ INFO ]_[ 2023-06-14 14:23:47.168 ] : successful to install antchain-bridge-commons-0.1.1.jar
-[ INFO ]_[ 2023-06-14 14:23:49.168 ] : successful to install antchain-bridge-spi-0.1.1.jar
-[ INFO ]_[ 2023-06-14 14:23:50.168 ] : successful to install antchain-bridge-plugin-lib-0.1.1.jar
-[ INFO ]_[ 2023-06-14 14:23:52.168 ] : successful to install antchain-bridge-plugin-manager-0.1.1.jar
-[ INFO ]_[ 2023-06-14 14:23:52.168 ] : success
+[ INFO ]_[ 2023-12-27 17:40:42.170 ] : successful to install antchain-bridge-commons-0.2.0.jar
+[ INFO ]_[ 2023-12-27 17:40:44.170 ] : successful to install antchain-bridge-spi-0.2.0.jar
+[ INFO ]_[ 2023-12-27 17:40:45.170 ] : successful to install antchain-bridge-plugin-lib-0.2.0.jar
+[ INFO ]_[ 2023-12-27 17:40:47.170 ] : successful to install antchain-bridge-plugin-manager-0.2.0.jar
+[ INFO ]_[ 2023-12-27 17:40:48.170 ] : successful to install antchain-bridge-bcdns-0.2.0.jar
+[ INFO ]_[ 2023-12-27 17:40:48.170 ] : success
 ```
 
 这样，SDK的Jar包就被安装在本地了。
 
-然后，可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在`print.sh`的`SDK_VERSION`中看到。
+然后，可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在项目目录的[po m.xml](pom.xml)看到。
 
 ```xml
 <dependency>
@@ -110,6 +111,11 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 <dependency>
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-commons</artifactId>
+    <version>${antchain-bridge.sdk.version}</version>
+</dependency>
+<dependency>
+    <groupId>com.alipay.antchain.bridge</groupId>
+    <artifactId>antchain-bridge-bcdns</artifactId>
     <version>${antchain-bridge.sdk.version}</version>
 </dependency>
 ```
@@ -174,6 +180,20 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
   - **scenarios**：本路径下的`nft_crosschain`中，我们实现了一套跨链桥方案，用于ERC1155资产的跨链。
 
 详细操作请[见](pluginset/ethereum/offchain-plugin/README.md)。
+
+## EOS
+
+基于SDK，我们提供了一个打通EOS链的BBC[插件](pluginset/eos)。
+
+- **offchain-plugin**工程下面实现了EOS的BBC插件的链下部分；
+- **onchain-plugin**工程下面，主要分为两部分：
+  - **合约代码**：合约代码放在[路径](pluginset/eos/onchain-plugin/cpp/sys/src)下面，包含AM合约、SDP合约、Demo合约，详情请[见](pluginset/eos/onchain-plugin/README.md)。
+
+详细操作请[见](pluginset/ethereum/offchain-plugin/README.md)。
+
+## Mychain
+
+基于SDK我们给出了打通蚂蚁链（Mychain）的BBC[插件](pluginset/mychain0.10)，目前内部依赖发布中，发布之后即可编译使用。
 
 # 社区治理
 
