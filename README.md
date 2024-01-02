@@ -385,6 +385,29 @@ AbstractCrossChainCertificate  -->  IssueProof
 
   域名空间证书用于表示某个BCDNS持有该域名空间，该空间不可以是根空间，这些BCDNS为下级BCDNS，而根BCDNS为最高级BCDNS，比如当前的星火链BCDNS，上级BCDNS可以给下级签发域名空间证书，每个BCDNS可以签发自己空间的区块链域名。
 
+#### 序列化介绍
+
+跨链证书的序列化使用了AntChain Bridge 提供的一个TLV序列化工具（使用[介绍](antchain-bridge-commons/src/main/java/com/alipay/antchain/bridge/commons/utils/codec/tlv/annotation/TLVField.java)）。
+
+跨链证书支持保存为PEM格式，证书对象可以通过[CrossChainCertificateUtil](antchain-bridge-commons/src/main/java/com/alipay/antchain/bridge/commons/bcdns/utils/CrossChainCertificateUtil.java)转化至PEM格式，比如：
+
+```
+-----BEGIN BCDNS TRUST ROOT CERTIFICATE-----
+AADZAQAAAAABAAAAMQEABAAAAHRlc3QCAAEAAAAAAwA7AAAAAAA1AAAAAAABAAAA
+AQEAKAAAAGRpZDpiaWQ6ZWZiVGh5NXNiRzdQM21GVXAyRVdONW9RR1g2TFVHd2cE
+AAgAAAChN2RlAAAAAAUACAAAACFrRWcAAAAABgDQAAAAAADKAAAAAAADAAAAYmlm
+AQA7AAAAAAA1AAAAAAABAAAAAQEAKAAAAGRpZDpiaWQ6ZWZiVGh5NXNiRzdQM21G
+VXAyRVdONW9RR1g2TFVHd2cCAHoAAAB7InB1YmxpY0tleSI6W3sidHlwZSI6IkVE
+MjU1MTkiLCJwdWJsaWNLZXlIZXgiOiJiMDY1NjZhZjY2NWVlNTUwNjM1ZTk4Mzc1
+YzdiMzg4NzZhMmNjMzFlM2E5ZDgxODk1N2U0NmEyNGEwZjI1YTc0YTQ0Y2NlIn1d
+fQcAiAAAAAAAggAAAAAAAwAAAFNNMwEAIAAAALKKKxzUTalyw2vp96hOJ3TuDsNZ
+/pjgltTL+ip2bsRNAgAHAAAARWQyNTUxOQMAQAAAAMsFd4D9Gf3hiIebiq5MFTpw
+IV4AUtT9d+Y8gRK/kmNySzlJ32Shw3FNj8Uvy3yjBxjO6vKOWH5Jhu936zMWOgk=
+-----END BCDNS TRUST ROOT CERTIFICATE-----
+```
+
+
+
 ### 星火链网（BIF）BCDNS
 
 目前SDK仅支持星火链网的BCDNS服务客户端，这里介绍其配置项和如何实例化该客户端。
