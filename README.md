@@ -441,7 +441,7 @@ IV4AUtT9d+Y8gRK/kmNySzlJ32Shw3FNj8Uvy3yjBxjO6vKOWH5Jhu936zMWOgk=
 首先是颁证服务的配置：
 
 - authorizedKeyPem：有权限申请跨链身份（Relayer、PTC）的私钥，填入PEM格式的PKCS#8的私钥，目前仅支持Ed25519算法。
-- authorizedPublicKeyPem：`authorizedKeyPem`对应的公钥，填入PEM格式的PKCS#8的私钥，目前仅支持Ed25519算法。
+- authorizedPublicKeyPem：`authorizedKeyPem`对应的公钥，填入PEM格式的PKCS#8的公钥，目前仅支持Ed25519算法。
 - authorizedSigAlgo：`authorizedKeyPem`私钥的签名算法，目前仅支持[Ed25519](http://oid-info.com/get/1.3.101.112)算法。
 - clientCrossChainCertPem：Relayer的跨链证书，需要提前从BCDNS处获取。
 - clientPrivateKeyPem：Relayer跨链证书持有者的私钥，填入PEM格式的PKCS#8的私钥，目前仅支持Ed25519算法。
