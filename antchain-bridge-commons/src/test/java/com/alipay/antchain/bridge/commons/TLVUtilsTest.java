@@ -28,8 +28,6 @@ import com.alipay.antchain.bridge.commons.exception.base.AntChainBridgeBaseExcep
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
-import lombok.Getter;
-import lombok.Setter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -222,12 +220,18 @@ public class TLVUtilsTest {
         }
     }
 
-    @Getter
-    @Setter
     public static class TestStringArray {
 
         @TLVField(tag = 1, type = TLVTypeEnum.STRING_ARRAY, order = 0)
         List<String> value;
+
+        public List<String> getValue() {
+            return value;
+        }
+
+        public void setValue(List<String> value) {
+            this.value = value;
+        }
     }
 
     public static class TestRecursiveOuter {

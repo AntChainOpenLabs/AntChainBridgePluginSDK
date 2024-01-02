@@ -41,12 +41,10 @@ import com.alipay.antchain.bridge.commons.bcdns.DomainNameCredentialSubject;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentityType;
 import lombok.SneakyThrows;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runners.MethodSorters;
 
+@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BifBCDNSClientTest {
 

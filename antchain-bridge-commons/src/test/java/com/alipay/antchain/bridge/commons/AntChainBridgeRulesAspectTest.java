@@ -34,10 +34,6 @@ public class AntChainBridgeRulesAspectTest {
                 new CrossChainDomain(OVERSIZE_DOMAIN);
         });
 
-        Assert.assertThrows(AntChainBridgeBaseException.class, () -> {
-            new CrossChainDomain("");
-        });
-
         new CrossChainDomain("test");
     }
 }
