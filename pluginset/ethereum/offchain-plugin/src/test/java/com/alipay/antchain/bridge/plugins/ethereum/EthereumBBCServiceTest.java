@@ -16,15 +16,19 @@
 
 package com.alipay.antchain.bridge.plugins.ethereum;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.ByteUtil;
 import cn.hutool.core.util.HexUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
@@ -41,10 +45,10 @@ import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import com.alipay.antchain.bridge.plugins.ethereum.abi.AppContract;
+import com.alipay.antchain.bridge.plugins.ethereum.abi.AuthMsg;
 import com.alipay.antchain.bridge.plugins.ethereum.abi.SDPMsg;
 import lombok.Getter;
 import lombok.Setter;
-import com.alipay.antchain.bridge.plugins.ethereum.abi.AuthMsg;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -573,7 +577,7 @@ public class EthereumBBCServiceTest {
                 1,
                 "receiverDomain",
                 HexUtil.decodeHex(
-                        String.format("000000000000000000000000%s", appContract.getContractAddress().replaceAll("0x", ""))
+                        String.format("000000000000000000000000%s", HexUtil.encodeHexStr(RandomUtil.randomBytes(20)))
                 ),
                 -1,
                 "awesome antchain-bridge".getBytes()
@@ -607,6 +611,34 @@ public class EthereumBBCServiceTest {
         stream.write(rawProof);
 
         return stream.toByteArray();
+    }
+
+    /**
+     * Get the sdp message payload from the raw bytes
+     * which is the input for {@link com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService#relayAuthMessage(byte[])}
+     *
+     * @param raw the input for {@link com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService#relayAuthMessage(byte[])}
+     * @return {@code byte[]} sdp payload
+     */
+    private static byte[] getSDPPayloadFromRawMsg(byte[] raw) {
+        ByteArrayInputStream stream = new ByteArrayInputStream(raw);
+
+        byte[] zeros = new byte[4];
+        stream.read(zeros, 0, 4);
+
+        byte[] rawLen = new byte[4];
+        stream.read(rawLen, 0, 4);
+
+        int len = ByteUtil.bytesToInt(rawLen, ByteOrder.BIG_ENDIAN);
+
+        byte[] rawProof = new byte[len];
+        stream.read(rawProof, 0, len);
+
+        MockProof proof = TLVUtils.decode(rawProof, MockProof.class);
+        IAuthMessage authMessage = AuthMessageFactory.createAuthMessage(proof.getResp().getRawResponse());
+        ISDPMessage sdpMessage = SDPMessageFactory.createSDPMessage(authMessage.getPayload());
+
+        return sdpMessage.getPayload();
     }
 
     @Getter

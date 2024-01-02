@@ -90,6 +90,21 @@ public class TLVItem {
         }
     }
 
+    public static TLVItem fromStringArray(short type, List<String> strArray) {
+        ByteArrayOutputStream byteos = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(byteos);
+
+        try {
+            for (String str : strArray) {
+                os.writeInt(Integer.reverseBytes(str.getBytes().length));
+                os.write(str.getBytes());
+            }
+            return new TLVItem(type, os.size(), byteos.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static TLVItem fromUint8(short type, byte uint8) {
         return new TLVItem(type, 1, new byte[]{uint8});
     }
@@ -168,6 +183,25 @@ public class TLVItem {
                 bytesArray.add(lvValue);
             }
             return bytesArray;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<String> getStringArray() {
+        List<String> strArray = new ArrayList<>();
+
+        ByteArrayInputStream stream = new ByteArrayInputStream(value);
+        DataInputStream dataStream = new DataInputStream(stream);
+
+        try {
+            while (dataStream.available() > 0) {
+                int lvLen = Integer.reverseBytes(dataStream.readInt());
+                byte[] lvValue = new byte[lvLen];
+                dataStream.readFully(lvValue);
+                strArray.add(new String(lvValue));
+            }
+            return strArray;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

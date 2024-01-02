@@ -16,7 +16,6 @@
 
 package com.alipay.antchain.bridge.commons.core.rules;
 
-import cn.hutool.core.util.ObjectUtil;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 
 public class DomainLengthRule implements AntChainBridgeRule<CrossChainDomain> {
@@ -25,6 +24,6 @@ public class DomainLengthRule implements AntChainBridgeRule<CrossChainDomain> {
 
     @Override
     public boolean check(CrossChainDomain obj) {
-        return obj.toBytes().length < MAX_DOMAIN_LENGTH && !ObjectUtil.isEmpty(obj.toBytes());
+        return obj.toBytes().length < MAX_DOMAIN_LENGTH;
     }
 }

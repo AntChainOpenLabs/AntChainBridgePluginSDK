@@ -23,17 +23,18 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ByteUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
+import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVMapping;
 
+@SuppressWarnings("all")
 public class TLVUtils {
 
     public static byte[] encode(Object obj) {
@@ -78,14 +79,18 @@ public class TLVUtils {
         try {
             for (Field field : orderFields(fieldList, maxOrder, requiredOrderList)) {
                 field.setAccessible(true);
+                if (ObjectUtil.isNull(field.get(obj))) {
+                    continue;
+                }
                 TLVField tlvField = field.getAnnotation(TLVField.class);
                 if (
                         field.getType().isPrimitive()
                                 || field.getType().isArray()
                                 || String.class.isAssignableFrom(field.getType())
                                 || "java.util.List<byte[]>".equalsIgnoreCase(field.getGenericType().getTypeName())
-                ) {
-                    items.add(getItem(tlvField.type(), tlvField.tag(), Objects.requireNonNull(field.get(obj))));
+                                || "java.util.List<java.lang.String>".equalsIgnoreCase(field.getGenericType().getTypeName())
+                        ) {
+                    items.add(getItem(tlvField.type(), tlvField.tag(), field.get(obj)));
                 } else if (field.getType().isEnum()) {
                     Method getValueM = field.getType().getMethod("ordinal");
                     if (ObjectUtil.isEmpty(getValueM)) {
@@ -194,16 +199,17 @@ public class TLVUtils {
     }
 
     private static List<Field> getAnnotatedFields(Class clz) {
-        List<Field> fieldList = new ArrayList<>();
-        Class tempClass = clz;
-        while (tempClass != null && !tempClass.getName().equalsIgnoreCase("java.lang.object")) {
-            fieldList.addAll(Arrays.asList(tempClass.getDeclaredFields()));
-            tempClass = tempClass.getSuperclass();
-        }
-
-        return fieldList.stream()
+        return fillFields(ListUtil.toList(), clz).stream()
                 .filter(field -> ObjectUtil.isNotEmpty(field.getAnnotation(TLVField.class)))
                 .collect(Collectors.toList());
+    }
+
+    private static List<Field> fillFields(List<Field> fields, Class clz) {
+        if (ObjectUtil.isNull(clz) || clz.getName().equalsIgnoreCase("java.lang.object")) {
+            return fields;
+        }
+        fields.addAll(ListUtil.of(clz.getDeclaredFields()));
+        return fillFields(fields, clz.getSuperclass());
     }
 
     public static <T> T decode(byte[] raw, Class<T> clz) {
@@ -230,6 +236,7 @@ public class TLVUtils {
                                     || field.getType().isArray()
                                     || String.class.isAssignableFrom(field.getType())
                                     || "java.util.List<byte[]>".equalsIgnoreCase(field.getGenericType().getTypeName())
+                                    || "java.util.List<java.lang.String>".equalsIgnoreCase(field.getGenericType().getTypeName())
                     ) {
                         field.set(obj, val);
                     } else if (field.getType().isEnum()) {
@@ -307,6 +314,8 @@ public class TLVUtils {
                 return item.getValue();
             case BYTES_ARRAY:
                 return item.getBytesArray();
+            case STRING_ARRAY:
+                return item.getStringArray();
             default:
                 throw new AntChainBridgeCommonsException(
                         CommonsErrorCodeEnum.CODEC_TLV_DECODE_ERROR,
@@ -342,6 +351,9 @@ public class TLVUtils {
                 break;
             case BYTES_ARRAY:
                 item = TLVItem.fromBytesArray(tag, (List<byte[]>) value);
+                break;
+            case STRING_ARRAY:
+                item = TLVItem.fromStringArray(tag, (List<String>) value);
                 break;
             default:
                 throw new AntChainBridgeCommonsException(

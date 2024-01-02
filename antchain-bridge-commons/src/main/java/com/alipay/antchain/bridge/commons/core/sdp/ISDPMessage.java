@@ -31,4 +31,6 @@ public interface ISDPMessage extends IMessage {
     byte[] getPayload();
 
     int getVersion();
+
+    boolean getAtomic();
 }
