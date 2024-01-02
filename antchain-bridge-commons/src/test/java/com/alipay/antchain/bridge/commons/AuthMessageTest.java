@@ -34,9 +34,9 @@ public class AuthMessageTest {
 
     private static final String RAW_MESSAGE_HEX_PAYLOAD_V1_MOD32 = RAW_MESSAGE_HEX_V1_MOD32.substring(64, 128) + RAW_MESSAGE_HEX_V1_MOD32.substring(0, 64);
 
-    private static final String RAW_MESSAGE_HEX_V2 = "97943daf4ed8cb477ef2e0048f5baede046f6bf797943daf4ed8cb477ef2e0048f5baede046f6bf700000028000000010000000000000000000000007ef2e0048f5baede046f6bf797943daf4ed8cb4700000002";
+    private static final String RAW_MESSAGE_HEX_V2 = "97943daf4ed8cb477ef2e0048f5baede046f6bf797943daf4ed8cb477ef2e0048f5baede046f6bf70000002802000000010000000000000000000000007ef2e0048f5baede046f6bf797943daf4ed8cb4700000002";
 
-    private static final String RAW_MESSAGE_HEX_ID_V2 = RAW_MESSAGE_HEX_V2.substring(96, 160);
+    private static final String RAW_MESSAGE_HEX_ID_V2 = RAW_MESSAGE_HEX_V2.substring(98, 162);
 
     private static final String RAW_MESSAGE_HEX_PAYLOAD_V2 = RAW_MESSAGE_HEX_V2.substring(0, 80);
 
@@ -84,7 +84,7 @@ public class AuthMessageTest {
     public void testAuthMessageV2Decode() {
         byte[] rawMessage = Convert.hexToBytes(RAW_MESSAGE_HEX_V2);
 
-        IAuthMessage am = new AuthMessageV2();
+        AuthMessageV2 am = new AuthMessageV2();
         am.decode(rawMessage);
 
         Assert.assertEquals(2, am.getVersion());
@@ -92,14 +92,16 @@ public class AuthMessageTest {
         Assert.assertEquals(RAW_MESSAGE_HEX_ID_V2, am.getIdentity().toHex());
         Assert.assertEquals(40, am.getPayload().length);
         Assert.assertEquals(RAW_MESSAGE_HEX_PAYLOAD_V2, HexUtil.encodeHexStr(am.getPayload()));
+        Assert.assertEquals(AuthMessageTrustLevelEnum.NEGATIVE_TRUST, am.getTrustLevel());
     }
 
     @Test
     public void testAuthMessageV2Encode() {
-        AbstractAuthMessage am = new AuthMessageV2();
+        AuthMessageV2 am = new AuthMessageV2();
         am.setUpperProtocol(1);
         am.setIdentity(CrossChainIdentity.fromHexStr(RAW_MESSAGE_HEX_ID_V2));
         am.setPayload(HexUtil.decodeHex(RAW_MESSAGE_HEX_PAYLOAD_V2));
+        am.setTrustLevel(AuthMessageTrustLevelEnum.NEGATIVE_TRUST);
 
         Assert.assertEquals(RAW_MESSAGE_HEX_V2, HexUtil.encodeHexStr(am.encode()));
     }
