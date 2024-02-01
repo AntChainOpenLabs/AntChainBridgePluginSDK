@@ -4,6 +4,8 @@
  */
 package com.alipay.antchain.bridge.plugins.mychain.contract;
 
+import java.util.UUID;
+
 import cn.hutool.core.util.StrUtil;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.plugins.mychain.sdk.Mychain010Client;
@@ -14,21 +16,16 @@ import com.alipay.mychain.sdk.vm.WASMParameter;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
 
 @Getter
 @Setter
 public class SDPContractClientTeeWASM extends SDPContractClientWASM {
     private static final String SDP_TEE_WASM_CONTRACT_PREFIX = "SDP_TEE_WASM_CONTRACT_";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SDPContractClientTeeWASM.class);
 
     private String filePathAMP2PMsgClientContract = "";
 
-    public SDPContractClientTeeWASM(Mychain010Client mychain010Client) {
-        super(mychain010Client);
-        this.mychain010Client = mychain010Client;
+    public SDPContractClientTeeWASM(Mychain010Client mychain010Client, Logger logger) {
+        super(mychain010Client, logger);
     }
 
     @Override

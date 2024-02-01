@@ -43,7 +43,7 @@ import com.alipay.antchain.bridge.plugins.eos.types.EosTxActions;
 import com.alipay.antchain.bridge.plugins.eos.types.EosTxInfo;
 import com.alipay.antchain.bridge.plugins.eos.utils.Utils;
 import com.alipay.antchain.bridge.plugins.lib.BBCService;
-import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
+import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import lombok.Getter;
 import okhttp3.RequestBody;
 import one.block.eosiojava.error.rpcProvider.RpcProviderError;
@@ -68,7 +68,7 @@ import one.block.eosiosoftkeysignatureprovider.error.ImportKeyError;
 
 @BBCService(products = "eos", pluginId = "plugin-eos")
 @Getter
-public class EosBBCService implements IBBCService {
+public class EosBBCService extends AbstractBBCService {
 
     /**
      * 跨链事件标识
@@ -227,7 +227,7 @@ public class EosBBCService implements IBBCService {
      */
     @Override
     public void startup(AbstractBBCContext abstractBBCContext) {
-        System.out.printf("EOS BBCService startup with context: %s \n",
+        getBBCLogger().info("EOS BBCService startup with context: {}",
                 new String(abstractBBCContext.getConfForBlockchainClient()));
 
         if (ObjectUtil.isNull(abstractBBCContext)) {
@@ -311,7 +311,7 @@ public class EosBBCService implements IBBCService {
      */
     @Override
     public void shutdown() {
-        System.out.println("shut down EOS BBCService!");
+        getBBCLogger().info("shut down EOS BBCService!");
     }
 
     /**
@@ -325,7 +325,7 @@ public class EosBBCService implements IBBCService {
             throw new RuntimeException("empty bbc context");
         }
 
-        System.out.printf("EOS BBCService context (amAddr: %s, amStatus: %s, sdpAddr: %s, sdpStatus: %s) \n",
+        getBBCLogger().info("EOS BBCService context (amAddr: {}, amStatus: {}, sdpAddr: {}, sdpStatus: {})",
                 this.bbcContext.getAuthMessageContract() != null ? this.bbcContext.getAuthMessageContract().getContractAddress() : "",
                 this.bbcContext.getAuthMessageContract() != null ? this.bbcContext.getAuthMessageContract().getStatus() : "",
                 this.bbcContext.getSdpContract() != null ? this.bbcContext.getSdpContract().getContractAddress() : "",
@@ -391,7 +391,7 @@ public class EosBBCService implements IBBCService {
         crossChainMessageReceipt.setTxhash(txHash);
         crossChainMessageReceipt.setErrorMsg(crossChainMessageReceipt.isSuccessful() ? "SUCCESS" : txInfo.getStatus().getStatus());
 
-        System.out.printf("cross chain message receipt for tx %s : %s\n", crossChainMessageReceipt.getTxhash(), crossChainMessageReceipt.getErrorMsg());
+        getBBCLogger().info("cross chain message receipt for tx {} : {}", crossChainMessageReceipt.getTxhash(), crossChainMessageReceipt.getErrorMsg());
 
         return crossChainMessageReceipt;
     }
@@ -448,7 +448,7 @@ public class EosBBCService implements IBBCService {
                 }
             }
 
-            System.out.printf("read cross chain messages (height: %d, msg_size: %s)\n", height, messageList.size());
+            getBBCLogger().info("read cross chain messages (height: {}, msg_size: {})", height, messageList.size());
 
             return messageList;
         } catch (Exception e) {
@@ -563,8 +563,8 @@ public class EosBBCService implements IBBCService {
         // 3. check transaction
         if (txInfo.isSuccess()) {
             waitUntilTxIrreversible(txInfo);
-            System.out.printf(
-                    "set protocol (address: %s, type: %s) to AM %s by tx %s \n",
+            getBBCLogger().info(
+                    "set protocol (address: {}, type: {}) to AM {} by tx {} ",
                     protocolAddress,
                     protocolType,
                     this.bbcContext.getAuthMessageContract().getContractAddress(),
@@ -669,8 +669,8 @@ public class EosBBCService implements IBBCService {
             throw new RuntimeException(String.format("fail to invoke setamcontract by send transaction %s", txInfo.getTxId()));
         }
         waitUntilTxIrreversible(txInfo);
-        System.out.printf(
-                "set AM contract (%s) to SDP (%s) by tx %s \n",
+        getBBCLogger().info(
+                "set AM contract ({}) to SDP ({}) by tx {}",
                 contractAddress,
                 this.bbcContext.getSdpContract().getContractAddress(),
                 txInfo.getTxId()
@@ -726,8 +726,8 @@ public class EosBBCService implements IBBCService {
             throw new RuntimeException(String.format("fail to invoke setlocaldomain by send transaction %s", txInfo.getTxId()));
         }
         waitUntilTxIrreversible(txInfo);
-        System.out.printf(
-                "set localdomain (%s) to SDP (%s) by tx %s \n",
+        getBBCLogger().info(
+                "set localdomain ({}) to SDP ({}) by tx {}",
                 domain,
                 this.bbcContext.getSdpContract().getContractAddress(),
                 txInfo.getTxId()
@@ -788,7 +788,7 @@ public class EosBBCService implements IBBCService {
             throw new RuntimeException("empty am contract in bbc context");
         }
 
-        System.out.printf("relay AM %s to %s \n",
+        getBBCLogger().debug("relay AM {} to {} ",
                 HexUtil.encodeHexStr(rawMessage), this.bbcContext.getAuthMessageContract().getContractAddress());
 
         // 2. invoke am contract
@@ -820,7 +820,7 @@ public class EosBBCService implements IBBCService {
         crossChainMessageReceipt.setTxhash(txInfo.getTxId());
         crossChainMessageReceipt.setErrorMsg(crossChainMessageReceipt.isSuccessful() ? "" : txInfo.getStatus().getStatus());
 
-        System.out.printf("relay auth message by tx %s \n", txInfo.getTxId());
+        getBBCLogger().info("relay auth message by tx {}", txInfo.getTxId());
 
         return crossChainMessageReceipt;
     }
@@ -1039,7 +1039,7 @@ public class EosBBCService implements IBBCService {
         // 3. 解析rpc结果，返回结果应当只有0或1行的数据
         JSONArray resArray = JSON.parseObject(response)
                 .getJSONArray("rows");
-        if (resArray.size() == 0 && ObjectUtil.isNotNull(defaultValue)) {
+        if (resArray.isEmpty() && ObjectUtil.isNotNull(defaultValue)) {
             return defaultValue;
         }
         // 根据value名称返回value值

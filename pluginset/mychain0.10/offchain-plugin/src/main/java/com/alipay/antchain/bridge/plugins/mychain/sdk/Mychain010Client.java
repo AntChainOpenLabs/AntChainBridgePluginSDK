@@ -1,5 +1,11 @@
 package com.alipay.antchain.bridge.plugins.mychain.sdk;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Map;
+
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alipay.antchain.bridge.plugins.mychain.crypto.CryptoSuiteEnum;
@@ -34,24 +40,18 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
 
 public class Mychain010Client {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Mychain010Client.class);
     private static final int AUTH_MAP_WEIGHT = 100;
     private Mychain010Config config;
     private Mychain010TeeConfig teeConfig;
     private ClientEnv env = null;
     private final MychainClient sdk;
-    
-    public Mychain010Client(byte[] configData) {
+
+    private final Logger logger;
+
+    public Mychain010Client(byte[] configData, Logger logger) {
         try {
             this.config = Mychain010Config.fromJsonString(new String(configData));
         } catch (IOException e) {
@@ -62,29 +62,30 @@ public class Mychain010Client {
             this.teeConfig.setTeePublicKeys(
                     config.getMychainTeePublicKey().getBytes());
         }
-        
+
         this.env = config.buildMychainEnvWithConfigUpdate();
         this.sdk = new MychainClient();
+        this.logger = logger;
     }
 
-    public boolean startup(){
+    public boolean startup() {
         if (!sdk.init(env)) {
-            LOGGER.error("[Mychain010BBCService] init mychain sdk fail for {}.",
+            logger.error("[Mychain010BBCService] init mychain sdk fail for {}.",
                     config.getMychainPrimary());
             sdk.shutDown();
             return false;
         }
 
         if (!ifAccountValid()) {
-            LOGGER.error("[Mychain010BBCService] account is invalid for {}, account: {},  pubkey: {}",
+            logger.error("[Mychain010BBCService] account is invalid for {}, account: {},  pubkey: {}",
                     config.getMychainPrimary(),
                     config.getMychainAnchorAccount(),
                     config.getMychainAccountPubKey()
-                    );
+            );
             return false;
         }
 
-        LOGGER.info("[Mychain010Client] startup mychain0.10 sdk success for {}, isSM:{}",
+        logger.info("[Mychain010Client] startup mychain0.10 sdk success for {}, isSM:{}",
                 config.getMychainPrimary(),
                 config.isSMChain());
         return true;
@@ -93,7 +94,7 @@ public class Mychain010Client {
     public boolean shutdown() {
         sdk.shutDown();
 
-        LOGGER.info("[Mychain010Client] shutdown mychain0.10 sdk success for {}, isSM:{}",
+        logger.info("[Mychain010Client] shutdown mychain0.10 sdk success for {}, isSM:{}",
                 config.getMychainPrimary(),
                 config.isSMChain());
 
@@ -107,12 +108,12 @@ public class Mychain010Client {
         VMTypeEnum vmType = MychainUtils.getSupportedParameterType(parameters);
         switch (vmType) {
             case EVM:
-                LOGGER.info("call contractID {}.{}",
+                logger.info("call contractID {}.{}",
                         contractID,
                         ((EVMParameter) parameters).getMethodSignature());
                 break;
             case WASM:
-                LOGGER.info("call contractID {}.{}",
+                logger.info("call contractID {}.{}",
                         contractID,
                         ((WASMParameter) parameters).getMethodSignature());
                 break;
@@ -133,13 +134,13 @@ public class Mychain010Client {
             } else {
                 long async_ts = System.currentTimeMillis();
                 int ret = sdk.getContractService().asyncCallContract(request, (errorCode, response) -> {
-                            LOGGER.info(
+                            logger.info(
                                     "async call contract async result callback: errorCode:{}, result:{}", errorCode, response.getErrorCode());
                         }
                 );
 
-                LOGGER.info("call contract tx {}, no receipt", request.getTransaction().getHash().hexStrValue());
-                LOGGER.info("async call contract tx {}, cost {} ms", request.getTransaction().getHash(),
+                logger.info("call contract tx {}, no receipt", request.getTransaction().getHash().hexStrValue());
+                logger.info("async call contract tx {}, cost {} ms", request.getTransaction().getHash(),
                         System.currentTimeMillis() - async_ts);
 
                 // 异步调用注意需要关注是否调用成功
@@ -153,7 +154,7 @@ public class Mychain010Client {
             }
         } catch (
                 Exception e) {
-            LOGGER.error("send call contract error.", e);
+            logger.error("send call contract error.", e);
             throw new RuntimeException(e);
         }
     }
@@ -161,7 +162,7 @@ public class Mychain010Client {
     public TransactionReceiptResponse callTeeWasmContract(String contractID, WASMParameter parameters, boolean sync) {
         String account = config.getMychainAnchorAccount();
 
-        LOGGER.info("call tee contractID {}.{}", contractID, parameters.getMethodSignature());
+        logger.info("call tee contractID {}.{}", contractID, parameters.getMethodSignature());
 
         try {
 
@@ -188,13 +189,13 @@ public class Mychain010Client {
                 return sdk.getConfidentialService().confidentialRequest(confidentialRequest);
             } else {
                 int ret = sdk.getConfidentialService().asyncConfidentialRequest(confidentialRequest, (errorCode, response) ->
-                        LOGGER.info("async call tee contract, errorCode:{}, response:{}", errorCode, response.getErrorCode()));
+                        logger.info("async call tee contract, errorCode:{}, response:{}", errorCode, response.getErrorCode()));
 
-                LOGGER.info("async call tee contract tx {}, no receipt", confidentialRequest.getTransaction().getHash().hexStrValue());
+                logger.info("async call tee contract tx {}, no receipt", confidentialRequest.getTransaction().getHash().hexStrValue());
                 return null;
             }
         } catch (Exception e) {
-            LOGGER.error("call tee contract error.", e);
+            logger.error("call tee contract error.", e);
             throw new RuntimeException(e);
         }
     }
@@ -205,10 +206,10 @@ public class Mychain010Client {
         VMTypeEnum vmType = this.getSupportedParameterType(parameters);
         switch (vmType) {
             case EVM:
-                LOGGER.info("local call contractID {}.{}", contractID, ((EVMParameter) parameters).getMethodSignature());
+                logger.info("local call contractID {}.{}", contractID, ((EVMParameter) parameters).getMethodSignature());
                 break;
             case WASM:
-                LOGGER.info("local call contractID {}.{}", contractID, ((WASMParameter) parameters).getMethodSignature());
+                logger.info("local call contractID {}.{}", contractID, ((WASMParameter) parameters).getMethodSignature());
                 break;
         }
 
@@ -224,16 +225,16 @@ public class Mychain010Client {
         try {
             request.setLocal();
 
-            LOGGER.info("call detail {}", request.toString());
+            logger.info("call detail {}", request.toString());
 
             CallContractResponse result = sdk.getContractService().callContract(request);
 
-            LOGGER.info("call result {}", result.toString());
+            logger.info("call result {}", result.toString());
 
             return result.getTransactionReceipt();
 
         } catch (Exception e) {
-            LOGGER.error("send local call error.", e);
+            logger.error("send local call error.", e);
             throw new RuntimeException(e);
         }
     }
@@ -241,7 +242,7 @@ public class Mychain010Client {
     public TransactionReceipt localCallTeeWasmContract(String contractID, WASMParameter parameters) {
         String account = config.getMychainAnchorAccount();
 
-        LOGGER.info("localcall tee contractID {}.{}", contractID, parameters.getMethodSignature());
+        logger.info("localcall tee contractID {}.{}", contractID, parameters.getMethodSignature());
         CallContractRequest request = new CallContractRequest(
                 Utils.getIdentityByName(account, config.getMychainHashType()),
                 Utils.getIdentityByName(contractID, config.getMychainHashType()),
@@ -253,7 +254,7 @@ public class Mychain010Client {
 
         try {
             request.setLocal();
-            LOGGER.info("tee localcall detail {}", request.toString());
+            logger.info("tee localcall detail {}", request.toString());
 
             generateTeeRequest(request);
 
@@ -271,7 +272,7 @@ public class Mychain010Client {
 
             return response.getReceipt(transactionKey);
         } catch (Exception e) {
-            LOGGER.error("send tee local call error.", e);
+            logger.error("send tee local call error.", e);
             throw new RuntimeException(e);
         }
     }
@@ -288,7 +289,7 @@ public class Mychain010Client {
     }
 
     public boolean deployContract(String contractFilename, String contractId, VMTypeEnum vmType, Parameters parameters) {
-        LOGGER.info("deploy contract {} {}", contractId, contractFilename);
+        logger.info("deploy contract {} {}", contractId, contractFilename);
         String account = config.getMychainAnchorAccount();
 
         byte[] contractCode = readFileBytes(contractFilename);
@@ -308,7 +309,7 @@ public class Mychain010Client {
         //deploy contract
         DeployContractResponse response = sdk.getContractService().deployContract(request);
 
-        LOGGER.info("chain {} with crypto_suite {} deploy contract {} txHash {} - {} - {} - {} ",
+        logger.info("chain {} with crypto_suite {} deploy contract {} txHash {} - {} - {} - {} ",
                 config.getMychainPrimary(),
                 config.getMychainCryptoSuiteEnum().getName(),
                 contractId,
@@ -320,12 +321,12 @@ public class Mychain010Client {
             return false;
         }
 
-        LOGGER.info("deploy receipt : {}", response.toString());
+        logger.info("deploy receipt : {}", response.toString());
         return ErrorCode.SUCCESS.getErrorCode() == response.getTransactionReceipt().getResult();
     }
 
     public boolean deployTeeWasmContract(String contractFilename, String contractId, WASMParameter parameters) {
-        LOGGER.info("deploy tee contract {} {}", contractId, contractFilename);
+        logger.info("deploy tee contract {} {}", contractId, contractFilename);
         String account = config.getMychainAnchorAccount();
 
         byte[] contractCode = this.readFileBytes(contractFilename);
@@ -355,7 +356,7 @@ public class Mychain010Client {
         //deploy contract
         ConfidentialResponse response = sdk.getConfidentialService().confidentialRequest(confidentialRequest);
 
-        LOGGER.info("deploy tee wasm contract {}~{} txHash {} - {} - {} - {}", account, contractId,
+        logger.info("deploy tee wasm contract {}~{} txHash {} - {} - {} - {}", account, contractId,
                 response.getTxHash().hexStrValue(),
                 response.isSuccess(), response.getErrorCode().getErrorCode(), response.getErrorCode().getErrorDesc());
 
@@ -364,7 +365,7 @@ public class Mychain010Client {
         }
 
         TransactionReceipt receipt = response.getReceipt(transactionKey);
-        LOGGER.info("deploy tee wasm receipt : {}-{}", receipt.getResult(), receipt.toString());
+        logger.info("deploy tee wasm receipt : {}-{}", receipt.getResult(), receipt.toString());
 
         return receipt.getResult() == ErrorCode.SUCCESS.getErrorCode();
     }
@@ -375,7 +376,7 @@ public class Mychain010Client {
 
     public boolean upgradeTeeWasmContract(byte[] contractCode, String contractId) {
         if (StringUtils.isEmpty(contractId)) {
-            LOGGER.info("tee contract do not be deployed yet : {}", contractId);
+            logger.info("tee contract do not be deployed yet : {}", contractId);
             return false;
         }
         UpdateContractRequest request = new UpdateContractRequest(
@@ -397,7 +398,7 @@ public class Mychain010Client {
         //upgrade contract
         ConfidentialResponse response = sdk.getConfidentialService().confidentialRequest(confidentialRequest);
 
-        LOGGER.info("upgrade tee wasm contract {} txHash {} - {} - {} - {}", contractId,
+        logger.info("upgrade tee wasm contract {} txHash {} - {} - {} - {}", contractId,
                 response.getTxHash().hexStrValue(),
                 response.isSuccess(), response.getErrorCode().getErrorCode(), response.getErrorCode().getErrorDesc());
 
@@ -406,7 +407,7 @@ public class Mychain010Client {
         }
 
         TransactionReceipt receipt = response.getReceipt(transactionKey);
-        LOGGER.info("upgrade tee wasm receipt : {}", receipt.toString());
+        logger.info("upgrade tee wasm receipt : {}", receipt.toString());
 
         return receipt.getResult() == ErrorCode.SUCCESS.getErrorCode();
     }
@@ -417,7 +418,7 @@ public class Mychain010Client {
 
     public boolean upgradeContract(byte[] contractCode, String contractId, VMTypeEnum type) {
         if (StringUtils.isEmpty(contractId)) {
-            LOGGER.error("contract do not be deployed yet : {}", contractId);
+            logger.error("contract do not be deployed yet : {}", contractId);
             return false;
         }
         if (type == VMTypeEnum.EVM) {
@@ -432,7 +433,7 @@ public class Mychain010Client {
 
         UpdateContractResponse response = sdk.getContractService().updateContract(request);
         if (!response.isSuccess()) {
-            LOGGER.error(
+            logger.error(
                     "upgrade contract failed: {} - {} - {}",
                     contractId,
                     response.getErrorCode().getErrorCode(),
@@ -440,7 +441,7 @@ public class Mychain010Client {
             );
             return false;
         }
-        LOGGER.info(
+        logger.info(
                 "upgrade contract {} txHash {} - {} - {} - {}",
                 contractId,
                 response.getTxHash().hexStrValue(),
@@ -449,7 +450,7 @@ public class Mychain010Client {
                 response.getErrorCode().getErrorDesc()
         );
 
-        LOGGER.info("upgrade contract receipt : {}", response.getTransactionReceipt());
+        logger.info("upgrade contract receipt : {}", response.getTransactionReceipt());
 
         return response.getTransactionReceipt().getResult() == (long) ErrorCode.SUCCESS.getErrorCode();
     }
@@ -469,12 +470,12 @@ public class Mychain010Client {
             InputStream stream = this.getClass().getResourceAsStream(filePath);
             if (stream == null) {
                 String msg = StrUtil.format("load contract file fail. filePath={}", filePath);
-                LOGGER.error(msg);
+                logger.error(msg);
                 throw new RuntimeException(msg);
             }
             return IOUtils.toByteArray(stream);
         } catch (IOException e) {
-            LOGGER.error("load contract error.", e);
+            logger.error("load contract error.", e);
             throw new RuntimeException(e);
         }
     }
@@ -483,6 +484,7 @@ public class Mychain010Client {
 
     /**
      * 根据交易哈希查询交易回执
+     *
      * @param txHash
      * @return
      */
@@ -492,6 +494,7 @@ public class Mychain010Client {
 
     /**
      * 根据区块高度获取区块
+     *
      * @param height
      */
     public Block getBlockByHeight(long height) {
@@ -500,6 +503,7 @@ public class Mychain010Client {
 
     /**
      * 根据区块高度获取区块头信息
+     *
      * @param height
      * @param maxAmount
      * @param reverse
@@ -511,14 +515,15 @@ public class Mychain010Client {
 
     /**
      * 获取最新区块高度
+     *
      * @return
      */
-    public Long queryLatestHeight(){
+    public Long queryLatestHeight() {
         return sdk.getQueryService().queryLastBlock().getBlock().getBlockHeader().getNumber().longValue();
     }
 
     // ==================================================== 其他查询接口
-    public Mychain010Config getConfig(){
+    public Mychain010Config getConfig() {
         return config;
     }
 
@@ -538,6 +543,7 @@ public class Mychain010Client {
 
     /**
      * 入参为合约id，即合约名称的哈希字符串，不能直接传合约名称！！！
+     *
      * @param contractId
      * @return
      */
@@ -561,11 +567,14 @@ public class Mychain010Client {
     }
 
     public boolean ifAccountValid() {
-        if (!MychainUtils.checkKeyPair(
-                config.getMychainAccountPriKey(),
-                config.getMychainAccountPubKey(),
-                config.getMychainCryptoSuiteEnum())) {
-            LOGGER.info("invalid key pair.");
+        try {
+            MychainUtils.checkKeyPair(
+                    config.getMychainAccountPriKey(),
+                    config.getMychainAccountPubKey(),
+                    config.getMychainCryptoSuiteEnum()
+            );
+        } catch (Exception e) {
+            logger.error("invalid key pair.", e);
             return false;
         }
 
@@ -574,7 +583,7 @@ public class Mychain010Client {
                         config.getMychainAnchorAccount(),
                         config.getMychainHashType()));
 
-        LOGGER.info("Query mychain account: {} {} {} {}",
+        logger.info("Query mychain account: {} {} {} {}",
                 config.getMychainAnchorAccount(),
                 Utils.getIdentityByName(
                         config.getMychainAnchorAccount(),
@@ -589,7 +598,7 @@ public class Mychain010Client {
         Map<PublicKey, Integer> authMap = replayAccount.getAccount().getAuthMap().getAuthMap();
 
         if (authMap.size() != 1) {
-            LOGGER.info("auth map size must only has itself. size {}", authMap.size());
+            logger.info("auth map size must only has itself. size {}", authMap.size());
             return false;
         }
 
@@ -597,7 +606,7 @@ public class Mychain010Client {
 
         // Check whether the pubkey weights are consistent according to the auth_map
         if (authMap.get(publicKey) != AUTH_MAP_WEIGHT) {
-            LOGGER.info("auth weight must be 100, but it's {}", authMap.get(publicKey));
+            logger.info("auth weight must be 100, but it's {}", authMap.get(publicKey));
             return false;
         }
 
@@ -605,7 +614,7 @@ public class Mychain010Client {
         // The length of the normal pubkey is 64,
         // but the length of the sm pubkey is 67 (the extra 3-byte prefix needs to be removed).
         if (publicKey.getData().length != 64 && publicKey.getData().length != 67) {
-            LOGGER.info("invalid publickey from sdk");
+            logger.info("invalid publickey from sdk");
             return false;
         } else if (publicKey.getData().length == 67) {
             byte[] pubkeyByte = new byte[64];
@@ -614,7 +623,7 @@ public class Mychain010Client {
         }
 
         if (!publicKey.hexStrValue().equals(config.getMychainAccountPubKey())) {
-            LOGGER.info("auth map size must only has itself. size {}", authMap.size());
+            logger.info("auth map size must only has itself. size {}", authMap.size());
             return false;
         }
 

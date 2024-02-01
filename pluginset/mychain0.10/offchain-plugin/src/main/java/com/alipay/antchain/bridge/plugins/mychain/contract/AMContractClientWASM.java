@@ -25,15 +25,12 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author ccen
  * @version $Id: AMClientContractMY010WASM.java, v 0.1 2019-08-31 12:35 PM ccen Exp $$
  */
 public class AMContractClientWASM extends AuthMessageContract  implements AbstractAMContractClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AMContractClientWASM.class);
-
     // 合约名称前缀
     public static final String AM_WASM_CONTRACT_PREFIX = "AM_WASM_CONTRACT_";
 
@@ -50,8 +47,11 @@ public class AMContractClientWASM extends AuthMessageContract  implements Abstra
 
     protected Mychain010Client mychain010Client;
 
-    public AMContractClientWASM(Mychain010Client mychain010Client) {
+    private final Logger logger;
+
+    public AMContractClientWASM(Mychain010Client mychain010Client, Logger logger) {
         this.mychain010Client = mychain010Client;
+        this.logger = logger;
     }
 
     @Override
@@ -148,26 +148,26 @@ public class AMContractClientWASM extends AuthMessageContract  implements Abstra
             TransactionReceipt receipt = block.getBlockBody().getReceiptList().get(i);
 
             if (receipt.getResult() != 0) {
-                LOGGER.info("[notify] paas fail transaction, error code is {}", receipt.getResult());
+                logger.info("[notify] paas fail transaction, error code is {}", receipt.getResult());
                 continue;
             }
 
-            LOGGER.debug("receipt log size {}", receipt.getLogs().size());
+            logger.debug("receipt log size {}", receipt.getLogs().size());
 
             for (LogEntry logEntry : receipt.getLogs()) {
 
                 // 判断是否存在 AM 合约相关的消息
                 if (!amContractId.hexStrValue()
                         .equals(logEntry.getTo().hexStrValue())) {
-                    LOGGER.debug("[notify] no am wasm contract address log. sp:{} - ex:{}",
+                    logger.debug("[notify] no am wasm contract address log. sp:{} - ex:{}",
                             amContractId.hexStrValue(),
                             logEntry.getTo().hexStrValue());
                     continue;
                 }
 
-                LOGGER.debug("[notify] am wasm contract address log. {}", logEntry.getTo().hexStrValue());
+                logger.debug("[notify] am wasm contract address log. {}", logEntry.getTo().hexStrValue());
 
-                if (logEntry.getTopics().size() == 0) {
+                if (logEntry.getTopics().isEmpty()) {
                     continue;
                 }
 
@@ -175,14 +175,14 @@ public class AMContractClientWASM extends AuthMessageContract  implements Abstra
 
                 // 判断是否存在 AM 跨链消息
                 if (!AM_MSG_SEND_WASM_SIGN_HEX.equals(logSign)) {
-                    LOGGER.debug("[notify] no AuthenticMessage log {}. sp: {} - ex:{}]",
+                    logger.debug("[notify] no AuthenticMessage log {}. sp: {} - ex:{}]",
                             AM_MSG_SEND_WASM_SIGN_RAW,
                             logSign,
                             AM_MSG_SEND_WASM_SIGN_HEX);
                     continue;
                 }
 
-                LOGGER.debug("[notify] AuthenticMessage log. {}]", logSign);
+                logger.debug("[notify] AuthenticMessage log. {}]", logSign);
 
                 msgList.add(CrossChainMessage.createCrossChainMessage(
                         CrossChainMessage.CrossChainMessageType.AUTH_MSG,
