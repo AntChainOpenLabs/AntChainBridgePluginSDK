@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
+import org.slf4j.Logger;
 
 public interface IAntChainBridgePluginManager {
 
@@ -45,6 +46,8 @@ public interface IAntChainBridgePluginManager {
     boolean hasPlugin(String product);
 
     IBBCService createBBCService(String product, CrossChainDomain domain);
+
+    IBBCService createBBCService(String product, CrossChainDomain domain, Logger logger);
 
     IBBCService getBBCService(String product, CrossChainDomain domain);
 

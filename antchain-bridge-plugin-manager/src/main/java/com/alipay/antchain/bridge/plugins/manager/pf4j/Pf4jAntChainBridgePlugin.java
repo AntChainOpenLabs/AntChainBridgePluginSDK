@@ -17,7 +17,6 @@
 package com.alipay.antchain.bridge.plugins.manager.pf4j;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,6 +31,7 @@ import lombok.Synchronized;
 import org.pf4j.PluginManager;
 import org.pf4j.PluginState;
 import org.pf4j.PluginWrapper;
+import org.slf4j.Logger;
 
 @NoArgsConstructor
 public class Pf4jAntChainBridgePlugin extends AbstractAntChainBridgePlugin {
@@ -151,6 +151,18 @@ public class Pf4jAntChainBridgePlugin extends AbstractAntChainBridgePlugin {
             );
         }
         return this.getBbcServiceFactory().create();
+    }
+
+    @Override
+    @Synchronized
+    public IBBCService createBBCService(Logger logger) {
+        if (ObjectUtil.notEqual(this.getState(), AntChainBridgePluginState.START)) {
+            throw new AntChainBridgePluginManagerException(
+                    AntChainBridgePluginManagerErrorCodeEnum.CREATE_BBCSERVICE_FAILED,
+                    String.format("plugin is %s", this.getState().name())
+            );
+        }
+        return this.getBbcServiceFactory().create(logger);
     }
 
     @Override

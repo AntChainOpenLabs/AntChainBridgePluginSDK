@@ -1,5 +1,7 @@
 package com.alipay.antchain.bridge.plugins.mychain;
 
+import java.io.IOException;
+
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -12,8 +14,7 @@ import com.alipay.antchain.bridge.plugins.mychain.sdk.Mychain010Client;
 import com.alipay.antchain.bridge.plugins.mychain.sdk.Mychain010Config;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.io.IOException;
+import org.slf4j.Logger;
 
 @Getter
 @Setter
@@ -28,6 +29,7 @@ public class Mychain010BBCContext extends AbstractBBCContext {
     private SDPContractClientEVM sdpContractClientEVM;
     private SDPContractClientWASM sdpContractClientWASM;
     private SDPContractClientTeeWASM sdpContractClientTeeWASM;
+    private final Logger logger;
 
     /**
      * 如果 context 是 Mychain010BBCContext，可以直接进行赋值
@@ -35,12 +37,13 @@ public class Mychain010BBCContext extends AbstractBBCContext {
      *
      * @param context
      */
-    public Mychain010BBCContext(AbstractBBCContext context) {
+    public Mychain010BBCContext(AbstractBBCContext context, Logger logger) {
         // 初始化合约状态
         this.setSdpContract(context.getSdpContract());
         this.setPtcContract(context.getPtcContract());
         this.setAuthMessageContract(context.getAuthMessageContract());
         this.setConfForBlockchainClient(context.getConfForBlockchainClient());
+        this.logger = logger;
 
         if (context instanceof Mychain010BBCContext) {
             // 如果 context 是 Mychain010BBCContext，可以直接进行赋值
@@ -91,7 +94,7 @@ public class Mychain010BBCContext extends AbstractBBCContext {
 
         if (mychain010Client.isTeeChain()) {
             if (ObjectUtil.isEmpty(amContractClientTeeWASM)) {
-                amContractClientTeeWASM = new AMContractClientTeeWASM(mychain010Client);
+                amContractClientTeeWASM = new AMContractClientTeeWASM(mychain010Client, logger);
             }
             if (StrUtil.isEmpty(amContractClientTeeWASM.getContractAddress())
                     && ObjectUtil.isNotEmpty(jsonObject) && jsonObject.containsKey(WASM_CONTRACT_KEY)) {
@@ -100,7 +103,7 @@ public class Mychain010BBCContext extends AbstractBBCContext {
             }
         } else {
             if (ObjectUtil.isEmpty(amContractClientEVM)) {
-                amContractClientEVM = new AMContractClientEVM(mychain010Client);
+                amContractClientEVM = new AMContractClientEVM(mychain010Client, logger);
             }
             if (StrUtil.isEmpty(amContractClientEVM.getContractAddress())
                     && ObjectUtil.isNotEmpty(jsonObject) && jsonObject.containsKey(EVM_CONTRACT_KEY)) {
@@ -109,7 +112,7 @@ public class Mychain010BBCContext extends AbstractBBCContext {
             }
 
             if (ObjectUtil.isEmpty(amContractClientWASM)) {
-                amContractClientWASM = new AMContractClientWASM(mychain010Client);
+                amContractClientWASM = new AMContractClientWASM(mychain010Client, logger);
             }
             if (StrUtil.isEmpty(amContractClientWASM.getContractAddress())
                     && ObjectUtil.isNotEmpty(jsonObject) && jsonObject.containsKey(WASM_CONTRACT_KEY)) {
@@ -140,7 +143,7 @@ public class Mychain010BBCContext extends AbstractBBCContext {
 
         if (mychain010Client.isTeeChain()) {
             if (ObjectUtil.isEmpty(sdpContractClientTeeWASM)) {
-                sdpContractClientTeeWASM = new SDPContractClientTeeWASM(mychain010Client);
+                sdpContractClientTeeWASM = new SDPContractClientTeeWASM(mychain010Client, logger);
             }
             if (StrUtil.isEmpty(sdpContractClientTeeWASM.getContractAddress())
                     && ObjectUtil.isNotEmpty(jsonObject) && jsonObject.containsKey(WASM_CONTRACT_KEY)) {
@@ -149,7 +152,7 @@ public class Mychain010BBCContext extends AbstractBBCContext {
             }
         } else {
             if (ObjectUtil.isEmpty(sdpContractClientEVM)) {
-                sdpContractClientEVM = new SDPContractClientEVM(mychain010Client);
+                sdpContractClientEVM = new SDPContractClientEVM(mychain010Client, logger);
             }
             if (StrUtil.isEmpty(sdpContractClientEVM.getContractAddress())
                     && ObjectUtil.isNotEmpty(jsonObject) && jsonObject.containsKey(EVM_CONTRACT_KEY)) {
@@ -158,7 +161,7 @@ public class Mychain010BBCContext extends AbstractBBCContext {
             }
 
             if (ObjectUtil.isEmpty(sdpContractClientWASM)) {
-                sdpContractClientWASM = new SDPContractClientWASM(mychain010Client);
+                sdpContractClientWASM = new SDPContractClientWASM(mychain010Client, logger);
             }
             if (StrUtil.isEmpty(sdpContractClientWASM.getContractAddress())
                     && ObjectUtil.isNotEmpty(jsonObject) && jsonObject.containsKey(WASM_CONTRACT_KEY)) {

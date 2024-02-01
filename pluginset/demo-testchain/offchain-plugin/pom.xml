@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.testchain</groupId>
-    <artifactId>plugin-testchain</artifactId>
+    <artifactId>plugin-testchain1</artifactId>
     <version>0.1-SNAPSHOT</version>
 
     <properties>
@@ -27,12 +27,12 @@
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-plugin-lib</artifactId>
-            <version>0.2.0</version>
+            <version>0.2.1</version>
         </dependency>
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-spi</artifactId>
-            <version>0.2.0</version>
+            <version>0.2.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

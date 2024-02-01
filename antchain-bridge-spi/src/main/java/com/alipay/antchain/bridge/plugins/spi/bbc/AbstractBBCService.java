@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Ant Group
+ * Copyright 2024 Ant Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package com.alipay.antchain.bridge.plugins.manager.core;
+package com.alipay.antchain.bridge.plugins.spi.bbc;
 
-import java.util.List;
-
-import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.slf4j.Logger;
+import org.slf4j.helpers.NOPLogger;
 
-public interface IBBCServiceFactory {
-    IBBCService create();
+public abstract class AbstractBBCService implements IBBCService {
 
-    IBBCService create(Logger logger);
+    private Logger bbcLogger = NOPLogger.NOP_LOGGER;
 
-    List<String> products();
+    private void setLogger(Logger bbcLogger) {
+        this.bbcLogger = bbcLogger;
+    }
+
+    public final Logger getBBCLogger() {
+        return bbcLogger;
+    }
 }

@@ -36,6 +36,7 @@ import com.alipay.antchain.bridge.plugins.manager.pf4j.finder.LegacyExtensionFin
 import com.alipay.antchain.bridge.plugins.manager.pf4j.finder.AntChainBridgePluginDescriptorFinder;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.pf4j.*;
+import org.slf4j.Logger;
 
 /**
  * {@code Pf4jAntChainBridgePluginManager} is the implementation for {@link IAntChainBridgePluginManager}
@@ -259,6 +260,21 @@ public class Pf4jAntChainBridgePluginManager implements IAntChainBridgePluginMan
         }
 
         IBBCService service = this.getPlugin(product).createBBCService();
+        this.bbcServiceMap.put(domain, service);
+
+        return service;
+    }
+
+    @Override
+    public IBBCService createBBCService(String product, CrossChainDomain domain, Logger logger) {
+        if (!hasPlugin(product)) {
+            throw new AntChainBridgePluginManagerException(
+                    AntChainBridgePluginManagerErrorCodeEnum.NONE_PLUGIN_FOUND_FOR_BLOCKCHAIN_PRODUCT,
+                    String.format("No plugin for blockchain %s with domain %s", product, domain)
+            );
+        }
+
+        IBBCService service = this.getPlugin(product).createBBCService(logger);
         this.bbcServiceMap.put(domain, service);
 
         return service;

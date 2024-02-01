@@ -21,7 +21,7 @@ import com.alipay.antchain.bridge.plugins.mychain.contract.AMContractClientWASM;
 import com.alipay.antchain.bridge.plugins.mychain.sdk.Mychain010Client;
 import com.alipay.antchain.bridge.plugins.mychain.utils.ContractUtils;
 import com.alipay.antchain.bridge.plugins.mychain.utils.MychainUtils;
-import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
+import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import com.alipay.mychain.sdk.api.utils.Utils;
 import com.alipay.mychain.sdk.common.VMTypeEnum;
 import com.alipay.mychain.sdk.domain.block.Block;
@@ -35,9 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @BBCService(products = "mychain010", pluginId = "plugin-mychain010")
-public class Mychain010BBCService implements IBBCService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Mychain010BBCService.class);
+public class Mychain010BBCService extends AbstractBBCService {
 
     private Mychain010BBCContext context;
 
@@ -52,7 +50,7 @@ public class Mychain010BBCService implements IBBCService {
      */
     @Override
     public void startup(AbstractBBCContext bbcContext) {
-        LOGGER.info("[Mychain010BBCService] start up mychain0.10 bbc service, context: {}",
+        getBBCLogger().info("[Mychain010BBCService] start up mychain0.10 bbc service, context: {}",
                 JSON.toJSONString(bbcContext));
 
         if (ObjectUtil.isNull(bbcContext)) {
@@ -61,7 +59,7 @@ public class Mychain010BBCService implements IBBCService {
 
         try {
             // 1. 根据 config 构造 sdk
-            mychain010Client = new Mychain010Client(bbcContext.getConfForBlockchainClient());
+            mychain010Client = new Mychain010Client(bbcContext.getConfForBlockchainClient(), getBBCLogger());
             if (!mychain010Client.startup()) {
                 throw new RuntimeException(
                         StrUtil.format("[Mychain010BBCService] start up mychain0.10 bbc service fail for {}, isSM:{}",
@@ -70,15 +68,15 @@ public class Mychain010BBCService implements IBBCService {
             }
 
             // 2. 根据 config 初始化 context
-            context = new Mychain010BBCContext(bbcContext);
+            context = new Mychain010BBCContext(bbcContext, getBBCLogger());
             context.initContractClient(mychain010Client);
 
-            LOGGER.info("[Mychain010BBCService] start up mychain0.10 bbc service success for {}, isSM:{}",
+            getBBCLogger().info("[Mychain010BBCService] start up mychain0.10 bbc service success for {}, isSM:{}",
                     mychain010Client.getPrimary(),
                     mychain010Client.isSMChain());
 
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] start up mychain0.10 bbc service error for {}",
+            getBBCLogger().error("[Mychain010BBCService] start up mychain0.10 bbc service error for {}",
                     mychain010Client.getPrimary(),
                     e);
             throw new RuntimeException(
@@ -90,7 +88,7 @@ public class Mychain010BBCService implements IBBCService {
 
     @Override
     public void shutdown() {
-        LOGGER.info("[Mychain010BBCService] shut down mychain0.10 bbc service for {}",
+        getBBCLogger().info("[Mychain010BBCService] shut down mychain0.10 bbc service for {}",
                 mychain010Client.getPrimary());
 
         mychain010Client.shutdown();
@@ -102,7 +100,7 @@ public class Mychain010BBCService implements IBBCService {
             throw new RuntimeException("empty bbc context!");
         }
 
-        LOGGER.info(StrUtil.format("[Mychain010BBCService] Mychain0.10 BBCService context: \n" +
+        getBBCLogger().info(StrUtil.format("[Mychain010BBCService] Mychain0.10 BBCService context: \n" +
                         " amAddr: {}, amStatus: {}, sdpAddr: {}, sdpStatus: {}",
                 this.context.getAuthMessageContract() != null ? this.context.getAuthMessageContract().getContractAddress() : "",
                 this.context.getAuthMessageContract() != null ? this.context.getAuthMessageContract().getStatus() : "",
@@ -115,7 +113,7 @@ public class Mychain010BBCService implements IBBCService {
 
     @Override
     public void setupAuthMessageContract() {
-        LOGGER.info("[Mychain010BBCService] set up auth message contract for {}",
+        getBBCLogger().info("[Mychain010BBCService] set up auth message contract for {}",
                 mychain010Client.getPrimary());
 
         // 1. check context
@@ -126,7 +124,7 @@ public class Mychain010BBCService implements IBBCService {
         try {
             if (mychain010Client.isTeeChain()) {
                 // 2. tee链只需要部署teewasm合约
-                LOGGER.info("[Mychain010BBCService] deploy am with tee wasm contract for {}",
+                getBBCLogger().info("[Mychain010BBCService] deploy am with tee wasm contract for {}",
                         mychain010Client.getPrimary());
 
                 if (!context.getAmContractClientTeeWASM().deployContract()) {
@@ -134,7 +132,7 @@ public class Mychain010BBCService implements IBBCService {
                 } else {
                     if (context.getAmContractClientTeeWASM().addRelayers(
                             mychain010Client.getConfig().getMychainAnchorAccount())) {
-                        LOGGER.info("[Mychain010BBCService] deploy am with tee wasm contract for {} success",
+                        getBBCLogger().info("[Mychain010BBCService] deploy am with tee wasm contract for {} success",
                                 mychain010Client.getPrimary());
                     } else {
                         throw new RuntimeException(StrUtil.format("add relayers {} to am tee wasm for {} failed",
@@ -154,14 +152,14 @@ public class Mychain010BBCService implements IBBCService {
                 }
             } else {
                 // 3. 部署evm合约
-                LOGGER.info("[Mychain010BBCService] deploy am with evm contract for {}",
+                getBBCLogger().info("[Mychain010BBCService] deploy am with evm contract for {}",
                         mychain010Client.getPrimary());
                 if (!context.getAmContractClientEVM().deployContract()) {
                     throw new RuntimeException("deploy am with evm contract failed");
                 } else {
                     if (context.getAmContractClientEVM().addRelayers(
                             mychain010Client.getConfig().getMychainAnchorAccount())) {
-                        LOGGER.info("[Mychain010BBCService] deploy am with evm contract for {} success",
+                        getBBCLogger().info("[Mychain010BBCService] deploy am with evm contract for {} success",
                                 mychain010Client.getPrimary());
                     } else {
                         throw new RuntimeException(StrUtil.format("add relayers {} to am evm ailed",
@@ -171,13 +169,13 @@ public class Mychain010BBCService implements IBBCService {
 
                 // 4. 需要支持wasm，部署wasm合约
                 if (mychain010Client.getConfig().isWasmSupported()) {
-                    LOGGER.info("[Mychain010BBCService] deploy am with wasm contract for {}",
+                    getBBCLogger().info("[Mychain010BBCService] deploy am with wasm contract for {}",
                             mychain010Client.getPrimary());
                     if (!context.getAmContractClientWASM().deployContract()) {
                         throw new RuntimeException("deploy am with wasm contract failed");
                     } else {
                         if (context.getAmContractClientWASM().addRelayers(mychain010Client.getConfig().getMychainAnchorAccount())) {
-                            LOGGER.info("[Mychain010BBCService] deploy am with wasm contract for {} success",
+                            getBBCLogger().info("[Mychain010BBCService] deploy am with wasm contract for {} success",
                                     mychain010Client.getPrimary());
                         } else {
                             throw new RuntimeException(StrUtil.format("add relayers {} to am wasm failed",
@@ -204,7 +202,7 @@ public class Mychain010BBCService implements IBBCService {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] setup AuthMessageContract for {} failed",
+            getBBCLogger().error("[Mychain010BBCService] setup AuthMessageContract for {} failed",
                     mychain010Client.getPrimary(), e);
             throw new RuntimeException(StrUtil.format("[Mychain010BBCService] setup AuthMessageContract for {} failed",
                     mychain010Client.getPrimary()), e);
@@ -214,7 +212,7 @@ public class Mychain010BBCService implements IBBCService {
 
     @Override
     public void setupSDPMessageContract() {
-        LOGGER.info("[Mychain010BBCService] set up sdp contract for {}",
+        getBBCLogger().info("[Mychain010BBCService] set up sdp contract for {}",
                 mychain010Client.getPrimary());
 
         // 1. check context
@@ -226,13 +224,13 @@ public class Mychain010BBCService implements IBBCService {
 
             if (mychain010Client.isTeeChain()) {
                 // 2. tee链只需要部署teewasm合约
-                LOGGER.info("[Mychain010BBCService] deploy sdp with tee wasm contract for {}",
+                getBBCLogger().info("[Mychain010BBCService] deploy sdp with tee wasm contract for {}",
                         mychain010Client.getPrimary());
 
                 if (!context.getSdpContractClientTeeWASM().deployContract()) {
                     throw new RuntimeException("deploy sdp with tee wasm contract failed");
                 } else {
-                    LOGGER.info("[Mychain010BBCService] deploy sdp with tee wasm contract for {} success",
+                    getBBCLogger().info("[Mychain010BBCService] deploy sdp with tee wasm contract for {} success",
                             mychain010Client.getPrimary());
                 }
 
@@ -247,23 +245,23 @@ public class Mychain010BBCService implements IBBCService {
                 }
             } else {
                 // 3. 部署evm合约
-                LOGGER.info("[Mychain010BBCService] deploy sdp with evm contract for {}",
+                getBBCLogger().info("[Mychain010BBCService] deploy sdp with evm contract for {}",
                         mychain010Client.getPrimary());
                 if (!context.getSdpContractClientEVM().deployContract()) {
                     throw new RuntimeException("deploy sdp with evm contract failed");
                 } else {
-                    LOGGER.info("[Mychain010BBCService] deploy sdp with evm contract for {} success",
+                    getBBCLogger().info("[Mychain010BBCService] deploy sdp with evm contract for {} success",
                             mychain010Client.getPrimary());
                 }
 
                 // 4. 需要支持wasm，部署wasm合约
                 if (mychain010Client.getConfig().isWasmSupported()) {
-                    LOGGER.info("[Mychain010BBCService] deploy sdp with wasm contract for {}",
+                    getBBCLogger().info("[Mychain010BBCService] deploy sdp with wasm contract for {}",
                             mychain010Client.getPrimary());
                     if (!context.getSdpContractClientWASM().deployContract()) {
                         throw new RuntimeException("deploy sdp with wasm contract failed");
                     } else {
-                        LOGGER.info("[Mychain010BBCService] deploy sdp with wasm contract for {} success",
+                        getBBCLogger().info("[Mychain010BBCService] deploy sdp with wasm contract for {} success",
                                 mychain010Client.getPrimary());
                     }
                 }
@@ -286,7 +284,7 @@ public class Mychain010BBCService implements IBBCService {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] setup SDPMessageContract for {} failed",
+            getBBCLogger().error("[Mychain010BBCService] setup SDPMessageContract for {} failed",
                     mychain010Client.getPrimary(), e);
             throw new RuntimeException(StrUtil.format("[Mychain010BBCService] setup SDPMessageContract for {} failed",
                     mychain010Client.getPrimary()), e);
@@ -301,13 +299,13 @@ public class Mychain010BBCService implements IBBCService {
      */
     @Override
     public void setProtocol(String protocolAddress, String protocolType) {
-        LOGGER.info("[Mychain010BBCService] call am contract to set sdp for {}",
+        getBBCLogger().info("[Mychain010BBCService] call am contract to set sdp for {}",
                 mychain010Client.getPrimary());
 
         try {
             // 1. 判断 am 合约是否 ready，已 ready 不需要重复set am
             if (context.isAMReady(mychain010Client.isTeeChain())) {
-                LOGGER.info("[Mychain010BBCService] am contract is ready (protocol: {}) for {}, do not need to set protocol",
+                getBBCLogger().info("[Mychain010BBCService] am contract is ready (protocol: {}) for {}, do not need to set protocol",
                         context.getSdpContract().getContractAddress(),
                         mychain010Client.getPrimary());
                 return;
@@ -316,13 +314,13 @@ public class Mychain010BBCService implements IBBCService {
             // 2. 设置 protocol 信息
             doSetProtocol(protocolType);
 
-            LOGGER.info("[Mychain010BBCService] call am to set protocol {}-{} success, sdp is ready for {}",
+            getBBCLogger().info("[Mychain010BBCService] call am to set protocol {}-{} success, sdp is ready for {}",
                     protocolAddress,
                     protocolType,
                     mychain010Client.getPrimary());
 
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] call am to set protocol {}-{} for {} failed",
+            getBBCLogger().error("[Mychain010BBCService] call am to set protocol {}-{} for {} failed",
                     protocolAddress,
                     protocolType,
                     mychain010Client.getPrimary(),
@@ -350,10 +348,10 @@ public class Mychain010BBCService implements IBBCService {
             if (context.getAmContractClientTeeWASM().setProtocol(
                     context.getSdpContractClientTeeWASM().getContractAddress(),
                     protocolType)) {
-                LOGGER.info("[Mychain010BBCService] call am contract to set sdp with teewasm contract for {} success",
+                getBBCLogger().info("[Mychain010BBCService] call am contract to set sdp with teewasm contract for {} success",
                         mychain010Client.getPrimary());
             } else {
-                LOGGER.error("[Mychain010BBCService] call am contract to set sdp with teewasm  contract for {} failed",
+                getBBCLogger().error("[Mychain010BBCService] call am contract to set sdp with teewasm  contract for {} failed",
                         mychain010Client.getPrimary());
                 throw new RuntimeException(StrUtil.format("[Mychain010BBCService] call am contract to set sdp with teewasm  contract for {} failed",
                         mychain010Client.getPrimary()));
@@ -363,10 +361,10 @@ public class Mychain010BBCService implements IBBCService {
             if (context.getAmContractClientEVM().setProtocol(
                     context.getSdpContractClientEVM().getContractAddress(),
                     protocolType)) {
-                LOGGER.info("[Mychain010BBCService] call am contract to set sdp with evm contract for {} success",
+                getBBCLogger().info("[Mychain010BBCService] call am contract to set sdp with evm contract for {} success",
                         mychain010Client.getPrimary());
             } else {
-                LOGGER.error("[Mychain010BBCService] call am contract to set sdp with evm contract for {} failed",
+                getBBCLogger().error("[Mychain010BBCService] call am contract to set sdp with evm contract for {} failed",
                         mychain010Client.getPrimary());
                 throw new RuntimeException(StrUtil.format("[Mychain010BBCService] call am contract to set sdp with evm contract for {} failed",
                         mychain010Client.getPrimary()));
@@ -377,10 +375,10 @@ public class Mychain010BBCService implements IBBCService {
                 if (context.getAmContractClientWASM().setProtocol(
                         context.getSdpContractClientWASM().getContractAddress(),
                         protocolType)) {
-                    LOGGER.info("[Mychain010BBCService] call am contract to set sdp with wasm contract for {} success",
+                    getBBCLogger().info("[Mychain010BBCService] call am contract to set sdp with wasm contract for {} success",
                             mychain010Client.getPrimary());
                 } else {
-                    LOGGER.error("[Mychain010BBCService] call am contract to set sdp with wasm contract for {} failed",
+                    getBBCLogger().error("[Mychain010BBCService] call am contract to set sdp with wasm contract for {} failed",
                             mychain010Client.getPrimary());
                     throw new RuntimeException(StrUtil.format("[Mychain010BBCService] call am contract to set sdp with wasm contract for {} failed",
                             mychain010Client.getPrimary()));
@@ -407,7 +405,7 @@ public class Mychain010BBCService implements IBBCService {
      */
     @Override
     public void setAmContract(String contractAddress) {
-        LOGGER.info("[Mychain010BBCService] call sdp contract to set am {} for {}",
+        getBBCLogger().info("[Mychain010BBCService] call sdp contract to set am {} for {}",
                 contractAddress,
                 mychain010Client.getPrimary());
 
@@ -418,7 +416,7 @@ public class Mychain010BBCService implements IBBCService {
 
             // 1. 判断 sdp 合约是否ready，已ready不需要重复set am
             if (context.isSDPReady(mychain010Client.isTeeChain())) {
-                LOGGER.info("[Mychain010BBCService] sdp contract is ready (am: {}, domain: {}) for {}, do not need to set am contract",
+                getBBCLogger().info("[Mychain010BBCService] sdp contract is ready (am: {}, domain: {}) for {}, do not need to set am contract",
                         context.getAuthMessageContract().getContractAddress(),
                         localDomain,
                         mychain010Client.getPrimary());
@@ -431,18 +429,18 @@ public class Mychain010BBCService implements IBBCService {
                 // 3. domain准备好，调用sdp合约执行 setAmContractAndDomain
                 doSetAmAndDomain();
 
-                LOGGER.info("[Mychain010BBCService] sdp set domain {} and am {} success, sdp is ready for {}",
+                getBBCLogger().info("[Mychain010BBCService] sdp set domain {} and am {} success, sdp is ready for {}",
                         localDomain,
                         contractAddress,
                         mychain010Client.getPrimary());
             } else {
                 // domain未准备好，直接返回
-                LOGGER.info("[Mychain010BBCService] domain is not set, set am contract name into context success for {}",
+                getBBCLogger().info("[Mychain010BBCService] domain is not set, set am contract name into context success for {}",
                         mychain010Client.getPrimary());
             }
 
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] call sdp contract to set am {} for {}",
+            getBBCLogger().error("[Mychain010BBCService] call sdp contract to set am {} for {}",
                     contractAddress,
                     mychain010Client.getPrimary(),
                     e);
@@ -467,7 +465,7 @@ public class Mychain010BBCService implements IBBCService {
      */
     @Override
     public void setLocalDomain(String domain) {
-        LOGGER.info("[Mychain010BBCService] call sdp contract to set domain {} for {}",
+        getBBCLogger().info("[Mychain010BBCService] call sdp contract to set domain {} for {}",
                 domain,
                 mychain010Client.getPrimary());
 
@@ -477,7 +475,7 @@ public class Mychain010BBCService implements IBBCService {
                     context.getSdpContractClientEVM().getLocalDomain();
             // 1. 判断 sdp 合约是否 ready ，已 ready 不需要重复 set domain
             if (context.isSDPReady(mychain010Client.isTeeChain())) {
-                LOGGER.info("[Mychain010BBCService] sdp contract is ready (am: {}, domain: {}) for {}, do not need to set domain",
+                getBBCLogger().info("[Mychain010BBCService] sdp contract is ready (am: {}, domain: {}) for {}, do not need to set domain",
                         context.getAuthMessageContract().getContractAddress(),
                         localDomain,
                         mychain010Client.getPrimary());
@@ -489,7 +487,7 @@ public class Mychain010BBCService implements IBBCService {
                     !StrUtil.equals(
                             domain,
                             localDomain)) {
-                LOGGER.warn("[Mychain010BBCService] domain to set ({}) is not equal domain in context ({}) for {}. " +
+                getBBCLogger().warn("[Mychain010BBCService] domain to set ({}) is not equal domain in context ({}) for {}. " +
                                 "The new contract name will overwrite the old value in the context",
                         domain,
                         localDomain,
@@ -505,14 +503,14 @@ public class Mychain010BBCService implements IBBCService {
             // 3. 调用合约执行setAmContractAndDomain
             doSetAmAndDomain();
 
-            LOGGER.info("[Mychain010BBCService] sdp set domain {} and am {} success, sdp is ready for {}",
+            getBBCLogger().info("[Mychain010BBCService] sdp set domain {} and am {} success, sdp is ready for {}",
                     mychain010Client.isTeeChain() ?
                             context.getSdpContractClientTeeWASM().getLocalDomain() :
                             context.getSdpContractClientEVM().getLocalDomain(),
                     context.getAuthMessageContract().getContractAddress(),
                     mychain010Client.getPrimary());
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] fail to call sdp contract to set domain {} for {}, ",
+            getBBCLogger().error("[Mychain010BBCService] fail to call sdp contract to set domain {} for {}, ",
                     domain,
                     mychain010Client.getPrimary(),
                     e);
@@ -531,10 +529,10 @@ public class Mychain010BBCService implements IBBCService {
             if (context.getSdpContractClientTeeWASM().setAmContractAndDomain(
                     context.getAmContractClientTeeWASM().getContractAddress()
             )) {
-                LOGGER.info("[Mychain010BBCService] call sdp contract to set am and domain with teewasm contract for {} success",
+                getBBCLogger().info("[Mychain010BBCService] call sdp contract to set am and domain with teewasm contract for {} success",
                         mychain010Client.getPrimary());
             } else {
-                LOGGER.error("[Mychain010BBCService] call sdp contract to set am and domain with teewasm contract for {} failed",
+                getBBCLogger().error("[Mychain010BBCService] call sdp contract to set am and domain with teewasm contract for {} failed",
                         mychain010Client.getPrimary());
                 throw new RuntimeException(StrUtil.format("[Mychain010BBCService] call sdp contract to set am and domain with teewasm contract for {} failed",
                         mychain010Client.getPrimary()));
@@ -543,10 +541,10 @@ public class Mychain010BBCService implements IBBCService {
             // 2. evm
             if (context.getSdpContractClientEVM().setAmContractAndDomain(
                     context.getAmContractClientEVM().getContractAddress())) {
-                LOGGER.info("[Mychain010BBCService] call sdp contract to set am and domain with evm contract for {} success",
+                getBBCLogger().info("[Mychain010BBCService] call sdp contract to set am and domain with evm contract for {} success",
                         mychain010Client.getPrimary());
             } else {
-                LOGGER.error("[Mychain010BBCService] call sdp contract to set am and domain with evm contract for {} failed",
+                getBBCLogger().error("[Mychain010BBCService] call sdp contract to set am and domain with evm contract for {} failed",
                         mychain010Client.getPrimary());
                 throw new RuntimeException(StrUtil.format("[Mychain010BBCService] call sdp contract to set am and domain with evm contract for {} failed",
                         mychain010Client.getPrimary()));
@@ -556,10 +554,10 @@ public class Mychain010BBCService implements IBBCService {
             if (mychain010Client.getConfig().isWasmSupported()) {
                 if (context.getSdpContractClientWASM().setAmContractAndDomain(
                         context.getAmContractClientWASM().getContractAddress())) {
-                    LOGGER.info("[Mychain010BBCService] call sdp contract to set am and domain with wasm contract for {} success",
+                    getBBCLogger().info("[Mychain010BBCService] call sdp contract to set am and domain with wasm contract for {} success",
                             mychain010Client.getPrimary());
                 } else {
-                    LOGGER.error("[Mychain010BBCService] call sdp contract to set am and domain with wasm contract for {} failed",
+                    getBBCLogger().error("[Mychain010BBCService] call sdp contract to set am and domain with wasm contract for {} failed",
                             mychain010Client.getPrimary());
                     throw new RuntimeException(StrUtil.format("[Mychain010BBCService] call sdp contract to set am and domain with wasm contract for {} failed",
                             mychain010Client.getPrimary()));
@@ -585,7 +583,7 @@ public class Mychain010BBCService implements IBBCService {
      */
     @Override
     public long querySDPMessageSeq(String senderDomain, String fromName, String receiverDomain, String toName) {
-        LOGGER.info("[Mychain010BBCService] query SDP message seq for {}, " +
+        getBBCLogger().info("[Mychain010BBCService] query SDP message seq for {}, " +
                         "senderDomain: {}, fromName: {}, receiverDomain: {}, toName: {}",
                 mychain010Client.getPrimary(),
                 senderDomain,
@@ -627,7 +625,7 @@ public class Mychain010BBCService implements IBBCService {
                         toName);
             }
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] fail to query SDP message seq for {}, " +
+            getBBCLogger().error("[Mychain010BBCService] fail to query SDP message seq for {}, " +
                             "senderDomain: {}, fromName: {}, receiverDomain: {}, toName: {}",
                     mychain010Client.getPrimary(),
                     senderDomain,
@@ -651,7 +649,7 @@ public class Mychain010BBCService implements IBBCService {
 
     @Override
     public CrossChainMessageReceipt readCrossChainMessageReceipt(String txhash) {
-        LOGGER.info("[Mychain010BBCService] read cross chain message receipt with txHash {} for {}",
+        getBBCLogger().info("[Mychain010BBCService] read cross chain message receipt with txHash {} for {}",
                 txhash,
                 mychain010Client.getPrimary());
 
@@ -681,7 +679,7 @@ public class Mychain010BBCService implements IBBCService {
                                 getErrorMsgFromReceipt(receipt)));
             }
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] fail to read cross chain message receipt with txHash {} for {}, ",
+            getBBCLogger().error("[Mychain010BBCService] fail to read cross chain message receipt with txHash {} for {}, ",
                     txhash,
                     mychain010Client.getPrimary(),
                     e);
@@ -691,7 +689,7 @@ public class Mychain010BBCService implements IBBCService {
                             mychain010Client.getPrimary()), e);
         }
 
-        LOGGER.info("[Mychain010BBCService] read cross chain message receipt with txHash {} for {} success, " +
+        getBBCLogger().info("[Mychain010BBCService] read cross chain message receipt with txHash {} for {} success, " +
                         "isConfirmed: {}, isSuccessful: {}, errorMsg: {}",
                 txhash,
                 mychain010Client.getPrimary(),
@@ -740,7 +738,7 @@ public class Mychain010BBCService implements IBBCService {
 
     @Override
     public List<CrossChainMessage> readCrossChainMessagesByHeight(long l) {
-        LOGGER.info("[Mychain010BBCService] read cross chain message by height {} for {}",
+        getBBCLogger().info("[Mychain010BBCService] read cross chain message by height {} for {}",
                 l,
                 mychain010Client.getPrimary());
 
@@ -758,7 +756,7 @@ public class Mychain010BBCService implements IBBCService {
             }
         } catch (
                 Exception e) {
-            LOGGER.error("[Mychain010BBCService] fail to read cross chain message by height {} for {}, ",
+            getBBCLogger().error("[Mychain010BBCService] fail to read cross chain message by height {} for {}, ",
                     l,
                     mychain010Client.getPrimary(),
                     e);
@@ -769,7 +767,7 @@ public class Mychain010BBCService implements IBBCService {
                     e);
         }
 
-        LOGGER.info("[Mychain010BBCService] read cross chain message by height {} for {} success",
+        getBBCLogger().info("[Mychain010BBCService] read cross chain message by height {} for {} success",
                 l,
                 mychain010Client.getPrimary());
         return messageList;
@@ -777,7 +775,7 @@ public class Mychain010BBCService implements IBBCService {
 
     @Override
     public CrossChainMessageReceipt relayAuthMessage(byte[] pkg) {
-        LOGGER.info("[Mychain010BBCService] relay AuthMessage for {}, ",
+        getBBCLogger().info("[Mychain010BBCService] relay AuthMessage for {}, ",
                 mychain010Client.getPrimary());
 
         try {
@@ -816,7 +814,7 @@ public class Mychain010BBCService implements IBBCService {
 
             return crossChainMessageReceipt;
         } catch (Exception e) {
-            LOGGER.error("[Mychain010BBCService] fail to relay AuthMessage for {} ",
+            getBBCLogger().error("[Mychain010BBCService] fail to relay AuthMessage for {} ",
                     mychain010Client.getPrimary(),
                     e);
             throw new RuntimeException(
@@ -828,12 +826,12 @@ public class Mychain010BBCService implements IBBCService {
 
     @Override
     public Long queryLatestHeight() {
-        LOGGER.info("[Mychain010BBCService] query latest height for {}",
+        getBBCLogger().info("[Mychain010BBCService] query latest height for {}",
                 mychain010Client.getPrimary());
 
         Long ret = mychain010Client.queryLatestHeight();
 
-        LOGGER.info("[Mychain010BBCService] latest height is {} for {}",
+        getBBCLogger().info("[Mychain010BBCService] latest height is {} for {}",
                 ret,
                 mychain010Client.getPrimary());
 

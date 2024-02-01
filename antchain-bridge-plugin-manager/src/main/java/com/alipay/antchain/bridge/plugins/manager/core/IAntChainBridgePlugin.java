@@ -20,9 +20,9 @@ import java.nio.file.Path;
 import java.util.List;
 
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
+import org.slf4j.Logger;
 
 public interface IAntChainBridgePlugin {
-    // TODO: yy some functions
     void load(Path path);
 
     void unload();
@@ -38,6 +38,8 @@ public interface IAntChainBridgePlugin {
     List<String> getProducts();
 
     IBBCService createBBCService();
+
+    IBBCService createBBCService(Logger logger);
 
     AntChainBridgePluginState getCurrState();
 }

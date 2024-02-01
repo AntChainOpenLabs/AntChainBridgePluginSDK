@@ -1,5 +1,8 @@
 package com.alipay.antchain.bridge.plugins.mychain;
 
+import java.io.IOException;
+import java.util.List;
+
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.HexUtil;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
@@ -13,13 +16,12 @@ import com.alipay.mychain.sdk.common.VMTypeEnum;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
+import org.slf4j.helpers.NOPLogger;
 
 public class Mychain010BBCServiceTest {
 
     private static Mychain010BBCService mychain010BBCService;
+
     @Before
     public void init() throws Exception {
         mychain010BBCService = new Mychain010BBCService();
@@ -139,7 +141,10 @@ public class Mychain010BBCServiceTest {
 
         String receiver = ContractUtils.extractReceiverIdentity(proofs);
 
-        Mychain010Client mychain010Client = new Mychain010Client(mychain010BBCService.getContext().getConfForBlockchainClient());
+        Mychain010Client mychain010Client = new Mychain010Client(
+                mychain010BBCService.getContext().getConfForBlockchainClient(),
+                NOPLogger.NOP_LOGGER
+        );
         mychain010Client.startup();
         Assert.equals(VMTypeEnum.EVM, mychain010Client.getContractType(receiver));
     }
