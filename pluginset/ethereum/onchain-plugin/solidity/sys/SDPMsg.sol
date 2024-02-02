@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 import "./interfaces/ISDPMessage.sol";
@@ -116,8 +117,22 @@ contract SDPMsg is ISDPMessage, Ownable {
             "SDPMsg: sequence not equal"
         );
 
-        IContractUsingSDP(SDPLib.encodeCrossChainIDIntoAddress(sdpMessage.receiver))
-                .recvMessage(senderDomain, senderID, sdpMessage.message);
+        bool res = false;
+        string memory errMsg;
+        address receiver = SDPLib.encodeCrossChainIDIntoAddress(sdpMessage.receiver);
+        try
+            IContractUsingSDP(receiver).recvMessage(senderDomain, senderID, sdpMessage.message)
+        {
+            res = true;
+        } catch Error(
+            string memory reason
+        ) {
+            errMsg = reason;
+        } catch (
+            bytes memory /*lowLevelData*/
+        ) {}
+
+        emit receiveMessage(senderDomain, senderID, receiver, seqExpected, res, errMsg);
     }
 
     function _routeUnorderedMessage(string calldata senderDomain, bytes32 senderID, SDPMessage memory sdpMessage) internal {

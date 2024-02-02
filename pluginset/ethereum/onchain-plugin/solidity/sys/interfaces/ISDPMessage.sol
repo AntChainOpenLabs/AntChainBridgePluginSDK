@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 import "./ISubProtocol.sol";
@@ -14,6 +15,20 @@ import "./ISubProtocol.sol";
  *
  */
 interface ISDPMessage is ISubProtocol {
+
+    /**
+     * @dev When SDP contract receive msg from AuthMessage contract, SDP contract would call the receiver 
+     * contract decoded from sdp msg. And then, the result of calling receiver contract would emit this event
+     * `receiveMessage` to show detail about this calling.
+     *
+     * @param senderDomain the domain name of the sending blockchain.
+     * @param senderID the id of the sender.
+     * @param receiverID the address of the receiver.
+     * @param sequence the sequence number for this sdp msg
+     * @param result result of receiver contract calling
+     * @param errMsg the error msg if calling failed, default null
+     */
+    event receiveMessage(string senderDomain, bytes32 senderID, address receiverID, uint32 sequence, bool result, string errMsg);
 
     /**
      * @dev Smart contracts that want to cross-chain need to call this method to send orderly cross-chain messages.

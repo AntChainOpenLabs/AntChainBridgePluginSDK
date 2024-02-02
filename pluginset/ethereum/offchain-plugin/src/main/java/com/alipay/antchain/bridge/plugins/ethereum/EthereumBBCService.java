@@ -40,6 +40,7 @@ import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import lombok.Getter;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.DynamicBytes;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.Credentials;
@@ -170,21 +171,48 @@ public class EthereumBBCService extends AbstractBBCService {
         }
 
         // 2. Construct cross-chain message receipt
+        CrossChainMessageReceipt crossChainMessageReceipt = getCrossChainMessageReceipt(transactionReceipt);
+        getBBCLogger().info("cross chain message receipt for txhash {} : {}", txHash, JSON.toJSONString(crossChainMessageReceipt));
+
+        return crossChainMessageReceipt;
+    }
+
+    private CrossChainMessageReceipt getCrossChainMessageReceipt(TransactionReceipt transactionReceipt) {
         CrossChainMessageReceipt crossChainMessageReceipt = new CrossChainMessageReceipt();
-        if (transactionReceipt == null){
+        if (transactionReceipt == null) {
             // If the transaction is not packaged, the return receipt is empty
             crossChainMessageReceipt.setConfirmed(false);
             crossChainMessageReceipt.setSuccessful(false);
             crossChainMessageReceipt.setTxhash("");
             crossChainMessageReceipt.setErrorMsg("");
-        } else {
-            crossChainMessageReceipt.setConfirmed(true);
-            crossChainMessageReceipt.setSuccessful(transactionReceipt.isStatusOK());
-            crossChainMessageReceipt.setTxhash(transactionReceipt.getTransactionHash());
-            crossChainMessageReceipt.setErrorMsg(StrUtil.emptyToDefault(transactionReceipt.getRevertReason(), ""));
+            return crossChainMessageReceipt;
         }
 
-        getBBCLogger().info("cross chain message receipt for txhash {} : {}", txHash, JSON.toJSONString(crossChainMessageReceipt));
+        List<SDPMsg.ReceiveMessageEventResponse> receiveMessageEventResponses = SDPMsg.getReceiveMessageEvents(transactionReceipt);
+        if (ObjectUtil.isNotEmpty(receiveMessageEventResponses)) {
+            SDPMsg.ReceiveMessageEventResponse response = receiveMessageEventResponses.get(0);
+            crossChainMessageReceipt.setConfirmed(true);
+            crossChainMessageReceipt.setSuccessful(transactionReceipt.isStatusOK() && response.result);
+            crossChainMessageReceipt.setTxhash(transactionReceipt.getTransactionHash());
+            crossChainMessageReceipt.setErrorMsg(
+                    transactionReceipt.isStatusOK() ? StrUtil.format("SDP calls biz contract failed: {}", response.errMsg) :
+                            StrUtil.emptyToDefault(transactionReceipt.getRevertReason(), "")
+            );
+            getBBCLogger().info(
+                    "event receiveMessage from SDP contract is found in no.{} tx {} of block {} : " +
+                            "( send_domain: {}, sender: {}, receiver: {}, biz_call: {}, err_msg: {} )",
+                    transactionReceipt.getTransactionIndex().toString(), transactionReceipt.getTransactionHash(), transactionReceipt.getBlockHash(),
+                    response.senderDomain, HexUtil.encodeHexStr(response.senderID), response.receiverID, response.result.toString(),
+                    response.errMsg
+            );
+            return crossChainMessageReceipt;
+        }
+
+        crossChainMessageReceipt.setConfirmed(true);
+        crossChainMessageReceipt.setSuccessful(transactionReceipt.isStatusOK());
+        crossChainMessageReceipt.setTxhash(transactionReceipt.getTransactionHash());
+        crossChainMessageReceipt.setErrorMsg(StrUtil.emptyToDefault(transactionReceipt.getRevertReason(), ""));
+
         return crossChainMessageReceipt;
     }
 
