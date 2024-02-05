@@ -19,7 +19,7 @@ ACTION demo::recvunmsg(const name &invoker, const std::string &sender_domain, co
 ACTION demo::recvmsg(const name &invoker, const string &sender_domain, const string &sender_id, const string &msg)
 {
     require_auth(invoker);
-
+    check(msg.length() != 32, "revert it 32B");
     std::string s_id;
     BytesToHexString(sender_id.c_str(), sender_id.size(), s_id);
     print_f("invoker: % , sender_domain: % , sender_id: % , msg: % ", invoker.to_string(), sender_domain, s_id, msg);

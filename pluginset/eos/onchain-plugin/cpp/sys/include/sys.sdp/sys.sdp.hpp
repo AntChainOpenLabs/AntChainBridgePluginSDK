@@ -53,9 +53,16 @@ public:
         const string &receiver_id,
         const string &msg);
 
+    ACTION upseq(
+        const name &invoker,
+        const string &sender_domain,
+        const string &sender_id,
+        const string &pkg);
+
     using recvmsg_action = action_wrapper<"recvmsg"_n, &syssdp::recvmsg>;
     using sendmsg_action = action_wrapper<"sendmsg"_n, &syssdp::sendmsg>;
     using sendunmsg_action = action_wrapper<"sendunmsg"_n, &syssdp::sendunmsg>;
+    using upseq_action = action_wrapper<"upseq"_n, &syssdp::upseq>;
 
 private:
     // 合约初始化信息表：am、localdomain
