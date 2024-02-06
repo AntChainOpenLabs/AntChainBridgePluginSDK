@@ -402,6 +402,7 @@ public class EosBBCService extends AbstractBBCService {
             crossChainMessageReceipt.setErrorMsg(
                     "call biz failed but seq updated: " + (crossChainMessageReceipt.isSuccessful() ? "SUCCESS" : txInfo.getStatus().getStatus())
             );
+            crossChainMessageReceipt.setSuccessful(false);
         } else {
             crossChainMessageReceipt.setErrorMsg(
                     "call biz: " + (crossChainMessageReceipt.isSuccessful() ? "SUCCESS" : txInfo.getStatus().getStatus())

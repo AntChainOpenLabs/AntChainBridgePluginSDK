@@ -195,8 +195,9 @@ public class EthereumBBCService extends AbstractBBCService {
             crossChainMessageReceipt.setSuccessful(transactionReceipt.isStatusOK() && response.result);
             crossChainMessageReceipt.setTxhash(transactionReceipt.getTransactionHash());
             crossChainMessageReceipt.setErrorMsg(
-                    transactionReceipt.isStatusOK() ? StrUtil.format("SDP calls biz contract failed: {}", response.errMsg) :
-                            StrUtil.emptyToDefault(transactionReceipt.getRevertReason(), "")
+                    transactionReceipt.isStatusOK() ? StrUtil.format(
+                            "SDP calls biz contract: {}", response.result ? "SUCCESS" : response.errMsg
+                    ) : StrUtil.emptyToDefault(transactionReceipt.getRevertReason(), "")
             );
             getBBCLogger().info(
                     "event receiveMessage from SDP contract is found in no.{} tx {} of block {} : " +
@@ -298,7 +299,7 @@ public class EthereumBBCService extends AbstractBBCService {
             throw new RuntimeException("failed to query latest height", e);
         }
 
-        getBBCLogger().info("latest height: {}", l);
+        getBBCLogger().debug("latest height: {}", l);
         return l;
     }
 
