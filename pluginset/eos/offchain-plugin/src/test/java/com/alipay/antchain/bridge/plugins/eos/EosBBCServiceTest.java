@@ -45,6 +45,7 @@ import com.alipay.antchain.bridge.plugins.eos.types.EosTxInfo;
 import com.alipay.antchain.bridge.plugins.eos.utils.Utils;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import okhttp3.RequestBody;
 import one.block.eosiojava.error.session.TransactionPrepareError;
 import one.block.eosiojava.error.session.TransactionSignAndBroadCastError;
@@ -67,7 +68,7 @@ public class EosBBCServiceTest {
     private static final String INVALID_URL = "127.0.0.1:9999";
 
     // !!! replace to your test key
-    private static final String EOS_DEFAULT_PRIVATE_KEY = "5JzGkEmpSQWb92DAS...hhY5aCWN4VZQc6uAxrQLAr";
+    private static final String EOS_DEFAULT_PRIVATE_KEY = "5JzGkEmpSQWb92DASJiiBoNNfcbMmhhY5aCWN4VZQc6uAxrQLAr";
 
     private static final String EOS_DEFAULT_USER_NAME = "relayer1";
 
@@ -179,7 +180,7 @@ public class EosBBCServiceTest {
         relayAmPrepare();
 
         CrossChainMessageReceipt crossChainMessageReceipt = eosBBCService.relayAuthMessage(
-                getRawMsgFromRelayer(DigestUtil.sha256Hex(UUID.randomUUID().toString()), 0)
+                getRawMsgFromRelayer(DigestUtil.sha256Hex(UUID.randomUUID().toString()), "awesome antchain-bridge", 0)
         );
         Assert.assertNotNull(crossChainMessageReceipt);
         Assert.assertTrue(crossChainMessageReceipt.isSuccessful());
@@ -198,7 +199,7 @@ public class EosBBCServiceTest {
         relayAmPrepare();
 
         CrossChainMessageReceipt crossChainMessageReceipt = eosBBCService.relayAuthMessage(
-                getRawMsgFromRelayer(DigestUtil.sha256Hex(UUID.randomUUID().toString()), -1)
+                getRawMsgFromRelayer(DigestUtil.sha256Hex(UUID.randomUUID().toString()), "awesome antchain-bridge", -1)
         );
         Assert.assertNotNull(crossChainMessageReceipt);
         Assert.assertTrue(crossChainMessageReceipt.isSuccessful());
@@ -246,7 +247,7 @@ public class EosBBCServiceTest {
 
         // relay am msg
         CrossChainMessageReceipt receipt = eosBBCService.relayAuthMessage(
-                getRawMsgFromRelayer(DigestUtil.sha256Hex("senderID"), -1)
+                getRawMsgFromRelayer(DigestUtil.sha256Hex("senderID"), "awesome antchain-bridge", -1)
         );
         Assert.assertTrue(receipt.isSuccessful());
 
@@ -266,6 +267,24 @@ public class EosBBCServiceTest {
                         .getJSONObject("receipt")
                         .getString("status")
         );
+    }
+
+    @Test
+    public void testRelayFailedAuthMessage() throws Exception {
+        relayAmPrepare();
+
+        // relay am msg
+        CrossChainMessageReceipt receipt = eosBBCService.relayAuthMessage(
+                getRawMsgFromRelayer(DigestUtil.sha256Hex(UUID.randomUUID().toString()), "12345678123456781234567812345678", 0)
+        );
+        Assert.assertTrue(receipt.isSuccessful());
+
+        Thread.sleep(WAIT_TIME);
+
+        receipt = eosBBCService.readCrossChainMessageReceipt(receipt.getTxhash());
+        Assert.assertTrue(receipt.isSuccessful());
+        Assert.assertTrue(receipt.isConfirmed());
+        Assert.assertEquals("call biz failed but seq updated: SUCCESS", receipt.getErrorMsg());
     }
 
     private SendTransactionResponse bbcInvokeContractsOnRpc(String[][] invokeParams) {
@@ -449,7 +468,7 @@ public class EosBBCServiceTest {
         return padding.toString();
     }
 
-    private byte[] getRawMsgFromRelayer(String senderHex, int seq) throws IOException {
+    private byte[] getRawMsgFromRelayer(String senderHex, String msg, int seq) throws IOException {
         byte[] raw = Utils.convertEosBase32NameToNum(EOS_RECEIVER_CONTRACT_NAME).toByteArray();
 
         ISDPMessage sdpMessage = SDPMessageFactory.createSDPMessage(
@@ -459,7 +478,7 @@ public class EosBBCServiceTest {
                         String.format(generatePaddingZero(32 - raw.length) + "%s", HexUtil.encodeHexStr(raw))
                 ),
                 seq,
-                "awesome antchain-bridge".getBytes()
+                msg.getBytes()
         );
 
         IAuthMessage am = AuthMessageFactory.createAuthMessage(

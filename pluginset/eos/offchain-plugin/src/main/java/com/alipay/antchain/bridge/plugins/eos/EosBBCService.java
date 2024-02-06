@@ -30,6 +30,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONPath;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.AuthMessageContract;
@@ -37,10 +38,7 @@ import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
-import com.alipay.antchain.bridge.plugins.eos.types.EosBlockInfo;
-import com.alipay.antchain.bridge.plugins.eos.types.EosTransactionStatusEnum;
-import com.alipay.antchain.bridge.plugins.eos.types.EosTxActions;
-import com.alipay.antchain.bridge.plugins.eos.types.EosTxInfo;
+import com.alipay.antchain.bridge.plugins.eos.types.*;
 import com.alipay.antchain.bridge.plugins.eos.utils.Utils;
 import com.alipay.antchain.bridge.plugins.lib.BBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
@@ -61,6 +59,7 @@ import one.block.eosiojava.models.rpcProvider.response.SendTransactionResponse;
 import one.block.eosiojava.session.TransactionProcessor;
 import one.block.eosiojava.session.TransactionSession;
 import one.block.eosiojavaabieosserializationprovider.AbiEosSerializationProviderImpl;
+import one.block.eosiojavarpcprovider.error.EosioJavaRpcProviderCallError;
 import one.block.eosiojavarpcprovider.error.EosioJavaRpcProviderInitializerError;
 import one.block.eosiojavarpcprovider.implementations.EosioJavaRpcProviderImpl;
 import one.block.eosiosoftkeysignatureprovider.SoftKeySignatureProviderImpl;
@@ -183,6 +182,16 @@ public class EosBBCService extends AbstractBBCService {
      * - 参数格式
      */
     private static final String AM_RECV_PKG_FROM_RELAYER_PARAMETER_FORMAT = "{\"invoker\": \"%s\", \"pkg_hex\": \"%s\"}";
+
+    /**
+     * reject the message when calling {@code recvrelayerx} failed
+     */
+    private static final String AM_REJECT_AM_FROM_RELAYER_ACTION = "rejectamx";
+
+    /**
+     * - 参数格式
+     */
+    private static final String AM_REJECT_AM_FROM_RELAYER_PARAMETER_FORMAT = "{\"invoker\": \"%s\", \"pkg_hex\": \"%s\"}";
 
     // ============================== 插件基本变量 ==============================
     private EosConfig config;
@@ -389,7 +398,15 @@ public class EosBBCService extends AbstractBBCService {
         crossChainMessageReceipt.setSuccessful(txInfo.isSuccess());
         crossChainMessageReceipt.setConfirmed(txInfo.isConfirmed());
         crossChainMessageReceipt.setTxhash(txHash);
-        crossChainMessageReceipt.setErrorMsg(crossChainMessageReceipt.isSuccessful() ? "SUCCESS" : txInfo.getStatus().getStatus());
+        if (txInfo.containsAction(config.getAmContractAddressDeployed(), AM_REJECT_AM_FROM_RELAYER_ACTION)) {
+            crossChainMessageReceipt.setErrorMsg(
+                    "call biz failed but seq updated: " + (crossChainMessageReceipt.isSuccessful() ? "SUCCESS" : txInfo.getStatus().getStatus())
+            );
+        } else {
+            crossChainMessageReceipt.setErrorMsg(
+                    "call biz: " + (crossChainMessageReceipt.isSuccessful() ? "SUCCESS" : txInfo.getStatus().getStatus())
+            );
+        }
 
         getBBCLogger().info("cross chain message receipt for tx {} : {}", crossChainMessageReceipt.getTxhash(), crossChainMessageReceipt.getErrorMsg());
 
@@ -555,6 +572,9 @@ public class EosBBCService extends AbstractBBCService {
                         },
                 }
         );
+        if (ObjectUtil.isNull(sendTransactionResponse)) {
+            throw new RuntimeException("null transaction response means that calling tx failed");
+        }
         EosTxInfo txInfo = bbcGetTxInfoByTransactionHashOnRpc(sendTransactionResponse.getTransactionId());
         if (ObjectUtil.isNull(txInfo)) {
             throw new RuntimeException(String.format("failed to get transaction info %s", sendTransactionResponse.getTransactionId()));
@@ -659,6 +679,9 @@ public class EosBBCService extends AbstractBBCService {
                         },
                 }
         );
+        if (ObjectUtil.isNull(sendTransactionResponse)) {
+            throw new RuntimeException("null transaction response means that calling tx failed");
+        }
         EosTxInfo txInfo = bbcGetTxInfoByTransactionHashOnRpc(sendTransactionResponse.getTransactionId());
         if (ObjectUtil.isNull(txInfo)) {
             throw new RuntimeException(String.format("failed to get transaction info %s", sendTransactionResponse.getTransactionId()));
@@ -716,6 +739,9 @@ public class EosBBCService extends AbstractBBCService {
                         },
                 }
         );
+        if (ObjectUtil.isNull(sendTransactionResponse)) {
+            throw new RuntimeException("null transaction response means that calling tx failed");
+        }
         EosTxInfo txInfo = bbcGetTxInfoByTransactionHashOnRpc(sendTransactionResponse.getTransactionId());
         if (ObjectUtil.isNull(txInfo)) {
             throw new RuntimeException(String.format("failed to get transaction info %s", sendTransactionResponse.getTransactionId()));
@@ -792,37 +818,80 @@ public class EosBBCService extends AbstractBBCService {
                 HexUtil.encodeHexStr(rawMessage), this.bbcContext.getAuthMessageContract().getContractAddress());
 
         // 2. invoke am contract
-        SendTransactionResponse sendTransactionResponse = bbcInvokeContractsOnRpc(
-                new String[][]{
-                        {
-                                this.bbcContext.getAuthMessageContract().getContractAddress(),
-                                AM_RECV_PKG_FROM_RELAYER_ACTION,
-                                String.format(
-                                        AM_RECV_PKG_FROM_RELAYER_PARAMETER_FORMAT,
-                                        this.config.getUserName(),
-                                        generateRandomPrefix() + HexUtil.encodeHexStr(rawMessage)
-                                )
-                        },
-                }
-        );
-        EosTxInfo txInfo = bbcGetTxInfoByTransactionHashOnRpc(sendTransactionResponse.getTransactionId());
-        if (ObjectUtil.isNull(txInfo)) {
-            throw new RuntimeException(String.format("failed to get transaction info %s", sendTransactionResponse.getTransactionId()));
+        String baseMsg = "call biz";
+        EosTxInfo txInfo = null;
+        SendTransactionResponse sendTransactionResponse = bbcInvokeContractsOnRpc(getRelayAuthMessageArgs(rawMessage));
+        if (ObjectUtil.isNotNull(sendTransactionResponse)) {
+            txInfo = bbcGetTxInfoByTransactionHashOnRpc(sendTransactionResponse.getTransactionId());
+            if (ObjectUtil.isNull(txInfo)) {
+                throw new RuntimeException(String.format("failed to get transaction info %s", sendTransactionResponse.getTransactionId()));
+            }
+            waitUntilTxIrreversible(txInfo);
         }
 
-        waitUntilTxIrreversible(txInfo);
+        if (ObjectUtil.isNull(txInfo) || !txInfo.isSuccess()) {
+            getBBCLogger().error("failed to call biz contract with tx {}", ObjectUtil.isNull(txInfo) ? "no tx sent" : txInfo.getTxId());
+
+            sendTransactionResponse = bbcInvokeContractsOnRpc(getRejectAuthMessageArgs(rawMessage));
+            if (ObjectUtil.isNull(sendTransactionResponse)) {
+                getBBCLogger().error("calling `rejectamx` failed");
+            } else {
+                txInfo = bbcGetTxInfoByTransactionHashOnRpc(sendTransactionResponse.getTransactionId());
+                if (ObjectUtil.isNull(txInfo)) {
+                    throw new RuntimeException(String.format("failed to get transaction info %s for adding seq", sendTransactionResponse.getTransactionId()));
+                }
+
+                baseMsg = "call biz failed but seq updated";
+                getBBCLogger().info("send tx {} to add sequence by 1", txInfo.getTxId());
+            }
+        }
 
         // 3. check transaction
         CrossChainMessageReceipt crossChainMessageReceipt = new CrossChainMessageReceipt();
 
-        crossChainMessageReceipt.setSuccessful(txInfo.isSuccess());
-        crossChainMessageReceipt.setConfirmed(txInfo.isConfirmed());
-        crossChainMessageReceipt.setTxhash(txInfo.getTxId());
-        crossChainMessageReceipt.setErrorMsg(crossChainMessageReceipt.isSuccessful() ? "" : txInfo.getStatus().getStatus());
+        crossChainMessageReceipt.setSuccessful(ObjectUtil.isNotNull(txInfo) && txInfo.isSuccess());
+        crossChainMessageReceipt.setConfirmed(ObjectUtil.isNotNull(txInfo) && txInfo.isConfirmed());
+        crossChainMessageReceipt.setTxhash(ObjectUtil.isNotNull(txInfo) ? txInfo.getTxId() : "");
 
-        getBBCLogger().info("relay auth message by tx {}", txInfo.getTxId());
+        String errorMsg = StrUtil.format(
+                "{}: {}",
+                baseMsg,
+                crossChainMessageReceipt.isSuccessful() ? "SUCCESS"
+                        : ObjectUtil.isNull(txInfo) ? "FAILED TO CALL" : txInfo.getStatus().getStatus()
+        );
+        crossChainMessageReceipt.setErrorMsg(errorMsg);
+
+        getBBCLogger().info("relay auth message by tx {} with msg {}", crossChainMessageReceipt.getTxhash(), errorMsg);
 
         return crossChainMessageReceipt;
+    }
+
+    private String[][] getRelayAuthMessageArgs(byte[] rawMessage) {
+        return new String[][]{
+                {
+                        this.bbcContext.getAuthMessageContract().getContractAddress(),
+                        AM_RECV_PKG_FROM_RELAYER_ACTION,
+                        String.format(
+                                AM_RECV_PKG_FROM_RELAYER_PARAMETER_FORMAT,
+                                this.config.getUserName(),
+                                generateRandomPrefix() + HexUtil.encodeHexStr(rawMessage)
+                        )
+                },
+        };
+    }
+
+    private String[][] getRejectAuthMessageArgs(byte[] rawMessage) {
+        return new String[][]{
+                {
+                        this.bbcContext.getAuthMessageContract().getContractAddress(),
+                        AM_REJECT_AM_FROM_RELAYER_ACTION,
+                        String.format(
+                                AM_REJECT_AM_FROM_RELAYER_PARAMETER_FORMAT,
+                                this.config.getUserName(),
+                                generateRandomPrefix() + HexUtil.encodeHexStr(rawMessage)
+                        )
+                },
+        };
     }
 
     private String generateRandomPrefix() {
@@ -865,6 +934,18 @@ public class EosBBCService extends AbstractBBCService {
         } catch (TransactionPrepareError e) {
             throw new RuntimeException("failed to prepare invoke contract action", e);
         } catch (TransactionSignAndBroadCastError e) {
+            if (e.getCause().getCause().getCause() instanceof EosioJavaRpcProviderCallError) {
+                EosioJavaRpcProviderCallError callError = (EosioJavaRpcProviderCallError) e.getCause().getCause().getCause();
+                if (callError.getRpcResponseError().getCode().equals(BigInteger.valueOf(500))) {
+                    getBBCLogger().error(
+                            "failed to call biz contract: ( code: {}, msg: {}, detail: {} ) ",
+                            callError.getRpcResponseError().getCode(),
+                            callError.getRpcResponseError().getMessage(),
+                            JSON.toJSONString(callError.getRpcResponseError().getError())
+                    );
+                    return null;
+                }
+            }
             throw new RuntimeException("failed to sign and broadcast invoke contract action", e);
         }
     }
@@ -903,6 +984,12 @@ public class EosBBCService extends AbstractBBCService {
                         (String) JSONPath.extract(response, "$.trx.receipt.status")
                 )
         );
+
+        JSONArray actions = (JSONArray) JSONPath.extract(response, "$.trx.trx.actions");
+        if (ObjectUtil.isNotNull(actions)) {
+            txInfo.setActions(actions.toJavaList(EosTxAction.class));
+        }
+
         return txInfo;
     }
 
