@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>eos-bbc</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.2</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -30,20 +30,26 @@
 
     <dependencies>
         <dependency>
+            <groupId>one.block</groupId>
+            <artifactId>eosiojava</artifactId>
+            <version>${eosiojava.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-plugin-lib</artifactId>
-            <version>0.2.0</version>
+            <version>0.2.1</version>
         </dependency>
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-spi</artifactId>
-            <version>0.2.0</version>
+            <version>0.2.1</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>one.block</groupId>
-            <artifactId>eosiojava</artifactId>
-            <version>${eosiojava.version}</version>
         </dependency>
         <dependency>
             <groupId>one.block</groupId>
@@ -64,12 +70,6 @@
             <groupId>com.github.EOSEssentials</groupId>
             <artifactId>eos-java-rpc-wrapper</artifactId>
             <version>master</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.30</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

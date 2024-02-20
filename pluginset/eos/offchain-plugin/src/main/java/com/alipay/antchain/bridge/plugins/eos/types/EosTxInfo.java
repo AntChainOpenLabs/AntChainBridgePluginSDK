@@ -16,6 +16,9 @@
 
 package com.alipay.antchain.bridge.plugins.eos.types;
 
+import java.util.List;
+
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,11 +40,19 @@ public class EosTxInfo {
     @JSONField(name = "last_irreversible_block")
     private long irreversibleNum;
 
+    private List<EosTxAction> actions;
+
     public boolean isSuccess() {
         return status == EosTransactionStatusEnum.EXECUTED;
     }
 
     public boolean isConfirmed() {
         return irreversibleNum >= blockNum;
+    }
+
+    public boolean containsAction(String account, String name) {
+        return actions.stream().anyMatch(
+                eosTxAction -> StrUtil.equals(eosTxAction.getAccount(), account) && StrUtil.equals(eosTxAction.getName(), name)
+        );
     }
 }

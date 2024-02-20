@@ -1,5 +1,7 @@
 package com.alipay.antchain.bridge.plugins.mychain.contract;
 
+import java.util.UUID;
+
 import cn.hutool.core.util.StrUtil;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
@@ -14,9 +16,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -27,14 +26,15 @@ public class SDPContractClientEVM extends SDPContract implements AbstractSDPCont
     private static final String SET_AM_CONTRACT_AND_DOMAIN_SIGN = "SetAmContractAndDomain(identity,string)";
     private static final String QUERY_SDP_SEQ_SIGN = "queryP2PMsgSeqOnChain(bytes,identity,bytes,identity)";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SDPContractClientEVM.class);
+    private final Logger logger;
 
     private Mychain010Client mychain010Client;
 
     public String localDomain;
 
-    public SDPContractClientEVM(Mychain010Client mychain010Client) {
+    public SDPContractClientEVM(Mychain010Client mychain010Client, Logger logger) {
         this.mychain010Client = mychain010Client;
+        this.logger = logger;
     }
 
     @Override

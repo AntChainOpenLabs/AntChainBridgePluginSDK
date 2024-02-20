@@ -33,6 +33,8 @@ public:
 
   ACTION recvrelayerx(const name &invoker, const string &pkg_hex);
 
+  ACTION rejectamx(const name &invoker, const string &pkg_hex);
+
   // 跨链事件
   ACTION crossing(const name &invoker, const string &msg_hex);
 
@@ -70,6 +72,7 @@ private:
 
   void parse_am_pkg(const string &pkg, string &sender_id, uint32_t &protocol_type, string &msg);
   void do_udag_proof_data(const string &proof, const string &hints, bool if_verify);
-  void forward_am_pkg(const string &domain_name, const string &pkg);
+  void forward_am_pkg(const string &domain_name, const string &pkg, bool if_reject);
   void RecvPkgFromRelayerCore(const string &pkg, bool if_verify);
+  void process_am(const string &pkg, bool if_reject);
 };

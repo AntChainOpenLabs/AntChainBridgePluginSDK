@@ -23,14 +23,11 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * mychain0.10的evm版本oracle合约实现
  */
 public class AMContractClientEVM extends AuthMessageContract implements AbstractAMContractClient {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AMContractClientEVM.class);
 
     // 合约名称前缀
     public static final String AM_EVM_CONTRACT_PREFIX = "AM_EVM_CONTRACT_";
@@ -50,9 +47,12 @@ public class AMContractClientEVM extends AuthMessageContract implements Abstract
             HashFactory.getHash(HashTypeEnum.Keccak).hash(AM_MSG_RECV_SIGN_RAW.getBytes()));
 
     protected Mychain010Client mychain010Client;
+    
+    private final Logger logger;
 
-    public AMContractClientEVM(Mychain010Client mychain010Client) {
+    public AMContractClientEVM(Mychain010Client mychain010Client, Logger logger) {
         this.mychain010Client = mychain010Client;
+        this.logger = logger;
     }
 
     @Override
@@ -149,24 +149,24 @@ public class AMContractClientEVM extends AuthMessageContract implements Abstract
             TransactionReceipt receipt = block.getBlockBody().getReceiptList().get(i);
 
             if (receipt.getResult() != 0) {
-                LOGGER.info("[notify] paas fail transaction, error code is {}", receipt.getResult());
+                logger.info("[notify] paas fail transaction, error code is {}", receipt.getResult());
                 continue;
             }
 
-            LOGGER.debug("receipt log size {}", receipt.getLogs().size());
+            logger.debug("receipt log size {}", receipt.getLogs().size());
 
             for (LogEntry logEntry : receipt.getLogs()) {
 
                 // 判断是否存在 AM 合约相关的消息
                 if (!amContractId.hexStrValue()
                         .equals(logEntry.getTo().hexStrValue())) {
-                    LOGGER.debug("[notify] no am evm contract address log. sp:{} - ex:{}",
+                    logger.debug("[notify] no am evm contract address log. sp:{} - ex:{}",
                             amContractId.hexStrValue(),
                             logEntry.getTo().hexStrValue());
                     continue;
                 }
 
-                LOGGER.debug("[notify] am evm contract address log. {}", logEntry.getTo().hexStrValue());
+                logger.debug("[notify] am evm contract address log. {}", logEntry.getTo().hexStrValue());
 
                 if (logEntry.getTopics().size() == 0) {
                     continue;
@@ -176,14 +176,14 @@ public class AMContractClientEVM extends AuthMessageContract implements Abstract
 
                 // 判断是否存在 AM 跨链消息
                 if (!AM_MSG_SEND_SIGN_HEX.equals(logSign)) {
-                    LOGGER.debug("[notify] no AuthenticMessage log {}. sp: {} - ex:{}]",
+                    logger.debug("[notify] no AuthenticMessage log {}. sp: {} - ex:{}]",
                             AM_MSG_SEND_SIGN_RAW,
                             logSign,
                             AM_MSG_SEND_SIGN_HEX);
                     continue;
                 }
 
-                LOGGER.debug("[notify] AuthenticMessage log. {}]", logSign);
+                logger.debug("[notify] AuthenticMessage log. {}]", logSign);
 
                 msgList.add(CrossChainMessage.createCrossChainMessage(
                         CrossChainMessage.CrossChainMessageType.AUTH_MSG,

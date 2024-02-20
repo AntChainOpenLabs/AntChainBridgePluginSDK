@@ -1,5 +1,11 @@
 package com.alipay.antchain.bridge.plugins.mychain.utils;
 
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.Security;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
+
 import cn.hutool.core.util.StrUtil;
 import com.alipay.antchain.bridge.plugins.mychain.crypto.CryptoSuiteEnum;
 import com.alipay.mychain.sdk.common.Parameters;
@@ -12,18 +18,8 @@ import org.bouncycastle.jcajce.util.DefaultJcaJceHelper;
 import org.bouncycastle.jcajce.util.JcaJceHelper;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.Security;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 
 public class MychainUtils {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MychainUtils.class);
 
     public static String contractAddrFormat(String evmContractName, String wasmContractName) {
         return StrUtil.format("{\"evm\":\"{}\", \"wasm\":\"{}\"}", evmContractName, wasmContractName);
@@ -41,7 +37,7 @@ public class MychainUtils {
         }
     }
 
-    public static boolean checkKeyPair(String priKey, String pubKey, CryptoSuiteEnum cryptoSuiteEnum) {
+    public static void checkKeyPair(String priKey, String pubKey, CryptoSuiteEnum cryptoSuiteEnum) {
 
         try {
             priKey = extract(priKey);
@@ -62,16 +58,11 @@ public class MychainUtils {
             byte[] transform = new byte[originalBytes.length - 1];
             System.arraycopy(originalBytes, 1, transform, 0, transform.length);
 
-            boolean ret = Hex.toHexString(transform).equals(pubKey);
-
-            if (!ret) {
-                LOGGER.info("invalid key pair, ep pub key is {}, sp pub key is {}", pubKey, Hex.toHexString(transform));
+            if (!StrUtil.equalsIgnoreCase(Hex.toHexString(transform), pubKey)) {
+                throw new RuntimeException("pubkey in hex not equal");
             }
-
-            return ret;
         } catch (Exception e) {
-            LOGGER.error("invalid pri key", e);
-            return false;
+            throw new RuntimeException(e);
         }
     }
 

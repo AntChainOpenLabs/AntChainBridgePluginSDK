@@ -4,6 +4,8 @@
  */
 package com.alipay.antchain.bridge.plugins.mychain.contract;
 
+import java.util.UUID;
+
 import cn.hutool.core.util.StrUtil;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
@@ -19,9 +21,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -29,14 +28,16 @@ public class SDPContractClientWASM extends SDPContract implements AbstractSDPCon
     private static final String SDP_WASM_CONTRACT_PREFIX = "SDP_WASM_CONTRACT_";
     private static final String SET_AM_CONTRACT_AND_DOMAIN_WASM_SIGN = "SetAmContractAndDomain";
     private static final String QUERY_SDP_SEQ_WASM_SIGN = "QueryP2PMsgSeqOnChain";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SDPContractClientWASM.class);
 
     protected Mychain010Client mychain010Client;
 
     public String localDomain;
 
-    public SDPContractClientWASM(Mychain010Client mychain010Client) {
+    private Logger logger;
+
+    public SDPContractClientWASM(Mychain010Client mychain010Client, Logger logger) {
         this.mychain010Client = mychain010Client;
+        this.logger = logger;
     }
 
     @Override

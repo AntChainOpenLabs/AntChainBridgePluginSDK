@@ -4,6 +4,8 @@
  */
 package com.alipay.antchain.bridge.plugins.mychain.contract;
 
+import java.util.UUID;
+
 import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.plugins.mychain.sdk.Mychain010Client;
 import com.alipay.mychain.sdk.common.VMTypeEnum;
@@ -12,9 +14,6 @@ import com.alipay.mychain.sdk.message.transaction.TransactionReceiptResponse;
 import com.alipay.mychain.sdk.vm.WASMParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
 
 /**
  * @author hanghang.whh
@@ -23,11 +22,8 @@ public class AMContractClientTeeWASM extends AMContractClientWASM {
 
     private static final String AM_TEE_WASM_CONTRACT_PREFIX = "AM_TEE_WASM_CONTRACT_";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AMContractClientTeeWASM.class);
-
-    public AMContractClientTeeWASM(Mychain010Client mychain010Client) {
-        super(mychain010Client);
-        this.mychain010Client = mychain010Client;
+    public AMContractClientTeeWASM(Mychain010Client mychain010Client, Logger logger) {
+        super(mychain010Client, logger);
     }
 
     @Override

@@ -26,6 +26,7 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.AuthMessageContract;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
@@ -35,10 +36,11 @@ import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
 import com.alipay.antchain.bridge.plugins.ethereum.abi.AuthMsg;
 import com.alipay.antchain.bridge.plugins.ethereum.abi.SDPMsg;
 import com.alipay.antchain.bridge.plugins.lib.BBCService;
-import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
+import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import lombok.Getter;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.DynamicBytes;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.Credentials;
@@ -56,7 +58,7 @@ import static com.alipay.antchain.bridge.plugins.ethereum.abi.AuthMsg.SENDAUTHME
 
 @BBCService(products = "simple-ethereum", pluginId = "plugin-simple-ethereum")
 @Getter
-public class EthereumBBCService implements IBBCService {
+public class EthereumBBCService extends AbstractBBCService {
 
     private EthereumConfig config;
 
@@ -70,8 +72,7 @@ public class EthereumBBCService implements IBBCService {
 
     @Override
     public void startup(AbstractBBCContext abstractBBCContext) {
-        System.out.printf("ETH BBCService startup with context: %s \n",
-                new String(abstractBBCContext.getConfForBlockchainClient()));
+        getBBCLogger().info("ETH BBCService startup with context: {}", new String(abstractBBCContext.getConfForBlockchainClient()));
 
         if (ObjectUtil.isNull(abstractBBCContext)) {
             throw new RuntimeException("null bbc context");
@@ -133,7 +134,7 @@ public class EthereumBBCService implements IBBCService {
 
     @Override
     public void shutdown() {
-        System.out.println("shut down ETH BBCService!");
+        getBBCLogger().info("shut down ETH BBCService!");
         this.web3j.shutdown();
     }
 
@@ -143,7 +144,7 @@ public class EthereumBBCService implements IBBCService {
             throw new RuntimeException("empty bbc context");
         }
 
-        System.out.printf("ETH BBCService context (amAddr: %s, amStatus: %s, sdpAddr: %s, sdpStatus: %s) \n",
+        getBBCLogger().debug("ETH BBCService context (amAddr: {}, amStatus: {}, sdpAddr: {}, sdpStatus: {})",
                 this.bbcContext.getAuthMessageContract() != null ? this.bbcContext.getAuthMessageContract().getContractAddress() : "",
                 this.bbcContext.getAuthMessageContract() != null ? this.bbcContext.getAuthMessageContract().getStatus() : "",
                 this.bbcContext.getSdpContract() != null ? this.bbcContext.getSdpContract().getContractAddress() : "",
@@ -170,21 +171,49 @@ public class EthereumBBCService implements IBBCService {
         }
 
         // 2. Construct cross-chain message receipt
+        CrossChainMessageReceipt crossChainMessageReceipt = getCrossChainMessageReceipt(transactionReceipt);
+        getBBCLogger().info("cross chain message receipt for txhash {} : {}", txHash, JSON.toJSONString(crossChainMessageReceipt));
+
+        return crossChainMessageReceipt;
+    }
+
+    private CrossChainMessageReceipt getCrossChainMessageReceipt(TransactionReceipt transactionReceipt) {
         CrossChainMessageReceipt crossChainMessageReceipt = new CrossChainMessageReceipt();
-        if (transactionReceipt == null){
+        if (transactionReceipt == null) {
             // If the transaction is not packaged, the return receipt is empty
             crossChainMessageReceipt.setConfirmed(false);
             crossChainMessageReceipt.setSuccessful(false);
             crossChainMessageReceipt.setTxhash("");
             crossChainMessageReceipt.setErrorMsg("");
-        } else {
-            crossChainMessageReceipt.setConfirmed(true);
-            crossChainMessageReceipt.setSuccessful(transactionReceipt.isStatusOK());
-            crossChainMessageReceipt.setTxhash(transactionReceipt.getTransactionHash());
-            crossChainMessageReceipt.setErrorMsg(StrUtil.emptyToDefault(transactionReceipt.getRevertReason(), ""));
+            return crossChainMessageReceipt;
         }
 
-        System.out.printf("cross chain message receipt: %s\n", crossChainMessageReceipt);
+        List<SDPMsg.ReceiveMessageEventResponse> receiveMessageEventResponses = SDPMsg.getReceiveMessageEvents(transactionReceipt);
+        if (ObjectUtil.isNotEmpty(receiveMessageEventResponses)) {
+            SDPMsg.ReceiveMessageEventResponse response = receiveMessageEventResponses.get(0);
+            crossChainMessageReceipt.setConfirmed(true);
+            crossChainMessageReceipt.setSuccessful(transactionReceipt.isStatusOK() && response.result);
+            crossChainMessageReceipt.setTxhash(transactionReceipt.getTransactionHash());
+            crossChainMessageReceipt.setErrorMsg(
+                    transactionReceipt.isStatusOK() ? StrUtil.format(
+                            "SDP calls biz contract: {}", response.result ? "SUCCESS" : response.errMsg
+                    ) : StrUtil.emptyToDefault(transactionReceipt.getRevertReason(), "")
+            );
+            getBBCLogger().info(
+                    "event receiveMessage from SDP contract is found in no.{} tx {} of block {} : " +
+                            "( send_domain: {}, sender: {}, receiver: {}, biz_call: {}, err_msg: {} )",
+                    transactionReceipt.getTransactionIndex().toString(), transactionReceipt.getTransactionHash(), transactionReceipt.getBlockHash(),
+                    response.senderDomain, HexUtil.encodeHexStr(response.senderID), response.receiverID, response.result.toString(),
+                    response.errMsg
+            );
+            return crossChainMessageReceipt;
+        }
+
+        crossChainMessageReceipt.setConfirmed(true);
+        crossChainMessageReceipt.setSuccessful(transactionReceipt.isStatusOK());
+        crossChainMessageReceipt.setTxhash(transactionReceipt.getTransactionHash());
+        crossChainMessageReceipt.setErrorMsg(StrUtil.emptyToDefault(transactionReceipt.getRevertReason(), ""));
+
         return crossChainMessageReceipt;
     }
 
@@ -240,10 +269,13 @@ public class EthereumBBCService implements IBBCService {
                 ).collect(Collectors.toList()));
             }
 
-            System.out.printf("read cross chain messages (height: %d, msgs: %s)\n",
-                    height,
-                    messageList.stream().map(Object::toString).collect(Collectors.joining(","))
-            );
+            if (!messageList.isEmpty()) {
+                getBBCLogger().info("read cross chain messages (height: {}, msg_size: {})", height, messageList.size());
+                getBBCLogger().debug("read cross chain messages (height: {}, msgs: {})",
+                        height,
+                        messageList.stream().map(JSON::toJSONString).collect(Collectors.joining(","))
+                );
+            }
 
             return messageList;
         } catch (Exception e) {
@@ -267,7 +299,7 @@ public class EthereumBBCService implements IBBCService {
             throw new RuntimeException("failed to query latest height", e);
         }
 
-        System.out.printf("latest height: %d\n", l);
+        getBBCLogger().debug("latest height: {}", l);
         return l;
     }
 
@@ -309,7 +341,7 @@ public class EthereumBBCService implements IBBCService {
             authMessageContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
             bbcContext.setAuthMessageContract(authMessageContract);
 
-            System.out.printf("setup am contract successful: %s\n", authMsg.getContractAddress());
+            getBBCLogger().info("setup am contract successful: {}", authMsg.getContractAddress());
         } else {
             throw new RuntimeException("failed to get deploy authMsg tx receipt");
         }
@@ -352,7 +384,7 @@ public class EthereumBBCService implements IBBCService {
             sdpContract.setContractAddress(sdpMsg.getContractAddress());
             sdpContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
             bbcContext.setSdpContract(sdpContract);
-            System.out.printf("setup sdp contract successful: %s\n", sdpMsg.getContractAddress());
+            getBBCLogger().info("setup sdp contract successful: {}", sdpMsg.getContractAddress());
         } else {
             throw new RuntimeException("failed to get deploy sdpMsg tx receipt");
         }
@@ -389,7 +421,7 @@ public class EthereumBBCService implements IBBCService {
                     HexUtil.decodeHex(receiverID)
             ).send().longValue();
 
-            System.out.printf("sdpMsg seq: %d (senderDomain: %s, senderID: %s, receiverDomain: %s, receiverID: %s)\n",
+            getBBCLogger().info("sdpMsg seq: {} (senderDomain: {}, senderID: {}, receiverDomain: {}, receiverID: {})",
                     seq,
                     senderDomain,
                     senderID,
@@ -433,8 +465,8 @@ public class EthereumBBCService implements IBBCService {
         // 3. set protocol to am
         try {
             TransactionReceipt receipt = am.setProtocol(protocolAddress, BigInteger.valueOf(Long.parseLong(protocolType))).send();
-            System.out.printf(
-                    "set protocol (address: %s, type: %s) to AM %s%n by tx %s \n",
+            getBBCLogger().info(
+                    "set protocol (address: {}, type: {}) to AM {} by tx {} ",
                     protocolAddress, protocolType,
                     this.bbcContext.getAuthMessageContract().getContractAddress(),
                     receipt.getTransactionHash()
@@ -486,8 +518,8 @@ public class EthereumBBCService implements IBBCService {
         // 3. set am to sdp
         try {
             TransactionReceipt receipt = sdp.setAmContract(contractAddress).send();
-            System.out.printf(
-                    "set am contract (address: %s) to SDP %s by tx %s \n",
+            getBBCLogger().info(
+                    "set am contract (address: {}) to SDP {} by tx {}",
                     contractAddress,
                     this.bbcContext.getSdpContract().getContractAddress(),
                     receipt.getTransactionHash()
@@ -549,8 +581,8 @@ public class EthereumBBCService implements IBBCService {
         // 3. set domain to sdp
         try {
             TransactionReceipt receipt = sdp.setLocalDomain(domain).send();
-            System.out.printf(
-                    "set domain (%s) to SDP %s by tx %s \n",
+            getBBCLogger().info(
+                    "set domain ({}) to SDP {} by tx {}",
                     domain,
                     this.bbcContext.getSdpContract().getContractAddress(),
                     receipt.getTransactionHash()
@@ -589,7 +621,7 @@ public class EthereumBBCService implements IBBCService {
             throw new RuntimeException("empty am contract in bbc context");
         }
 
-        System.out.printf("relay AM %s to %s \n",
+        getBBCLogger().info("relay AM {} to {} ",
                 HexUtil.encodeHexStr(rawMessage), this.bbcContext.getAuthMessageContract().getContractAddress());
 
         // 2. creat Transaction
@@ -636,7 +668,7 @@ public class EthereumBBCService implements IBBCService {
             crossChainMessageReceipt.setTxhash(ethSendTransaction.getTransactionHash());
             crossChainMessageReceipt.setErrorMsg("");
 
-            System.out.printf("relay tx %s \n", ethSendTransaction.getTransactionHash());
+            getBBCLogger().info("relay tx {}", ethSendTransaction.getTransactionHash());
 
             return crossChainMessageReceipt;
         } catch (Exception e) {

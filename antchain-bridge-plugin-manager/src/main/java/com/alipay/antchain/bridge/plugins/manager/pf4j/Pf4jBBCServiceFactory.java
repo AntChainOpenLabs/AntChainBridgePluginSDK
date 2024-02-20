@@ -18,13 +18,17 @@ package com.alipay.antchain.bridge.plugins.manager.pf4j;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.alipay.antchain.bridge.plugins.manager.core.IBBCServiceFactory;
 import com.alipay.antchain.bridge.plugins.manager.exception.AntChainBridgePluginManagerErrorCodeEnum;
 import com.alipay.antchain.bridge.plugins.manager.exception.AntChainBridgePluginManagerException;
 import com.alipay.antchain.bridge.plugins.manager.pf4j.utils.AntChainBridgePf4jUtils;
+import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
+import org.slf4j.Logger;
 
 public class Pf4jBBCServiceFactory implements IBBCServiceFactory {
 
@@ -36,6 +40,11 @@ public class Pf4jBBCServiceFactory implements IBBCServiceFactory {
 
     @Override
     public IBBCService create() {
+        return create(null);
+    }
+
+    @Override
+    public IBBCService create(Logger logger) {
         if (baseClz.getConstructors().length < 1) {
             throw new AntChainBridgePluginManagerException(
                     AntChainBridgePluginManagerErrorCodeEnum.CREATE_BBCSERVICE_FAILED,
@@ -44,7 +53,13 @@ public class Pf4jBBCServiceFactory implements IBBCServiceFactory {
         }
         try {
             Constructor<? extends IBBCService> constructor = baseClz.getConstructor();
-            return constructor.newInstance();
+            IBBCService bbcService = constructor.newInstance();
+            if (ObjectUtil.isNotNull(logger) && AbstractBBCService.class.isAssignableFrom(baseClz)) {
+                Method method = AbstractBBCService.class.getDeclaredMethod("setLogger", Logger.class);
+                method.setAccessible(true);
+                method.invoke(bbcService, logger);
+            }
+            return bbcService;
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new AntChainBridgePluginManagerException(
                     AntChainBridgePluginManagerErrorCodeEnum.CREATE_BBCSERVICE_FAILED,

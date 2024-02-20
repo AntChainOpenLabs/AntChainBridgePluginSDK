@@ -167,6 +167,36 @@ ACTION syssdp::sendunmsg(
         pkg);
 }
 
+ACTION syssdp::upseq(
+    const name &invoker,
+    const string &sender_domain,
+    const string &sender_id,
+    const string &pkg)
+{
+    require_auth(invoker);
+    only_amclient(invoker);
+
+    name receiver_id;
+    string msg;
+    uint32_t recv_seq;
+    parse_message(pkg, receiver_id, msg, recv_seq);
+
+    if (UNORDERED_SEQUENCE == recv_seq)
+    {
+        print_f("not expect that update unorder seq");
+        return;
+    }
+
+    string raw_id_b32(32, 0);
+    uint32_t offset = 32;
+    NameToBytes(receiver_id, raw_id_b32, offset);
+
+    auto msg_seq_key = get_sdp_msg_key(sender_domain, sender_id, raw_id_b32);
+    check(recv_seq == get_sequence(invoker, msg_seq_key), "UP_SEQ: invalid receiving sequence");
+    // 序号自增
+    set_sequence(invoker, msg_seq_key, 1 + recv_seq);
+}
+
 // 如果不存在会初始化一个0
 uint32_t syssdp::get_sequence(const name &invoker, checksum256 key)
 {
