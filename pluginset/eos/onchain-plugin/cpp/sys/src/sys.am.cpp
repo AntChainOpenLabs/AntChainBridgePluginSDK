@@ -107,29 +107,7 @@ ACTION sysam::recvrelayer(const name &invoker, const string &pkg)
     require_auth(invoker);
     only_relayers(invoker);
 
-    // print("AMMSG_INFO: recv pkh ", pkg, " from relayer ", invoker);
-
-    // ignore the beggining 4 bytes of random prefix
-    uint32_t offset = 4;
-    while (offset < pkg.size())
-    {
-        string hints;
-        string proof;
-        SequentialBytesToString(pkg, offset, hints);
-        SequentialBytesToString(pkg, offset, proof);
-        print("AMMSG_INFO: after data transfder");
-
-        // 中继解析proof获取domain及pkg
-        string domain_name = "";
-        string pkg = "";
-        check(decode_proof(proof, domain_name, pkg), "AMMSG_ERROR: decode proof failed");
-        print("AMMSG_INFO: after proof decode");
-
-        // 转发am消息到上层协议
-        forward_am_pkg(domain_name, pkg);
-        print("AMMSG_INFO: after forward am pkg");
-    }
-    check(pkg.size() == offset, "AMMSG_ERROR: offset incorrect RecvPkgFromRelayerCore");
+    process_am(pkg, false);
 }
 
 ACTION sysam::recvrelayerx(const name &invoker, const string &pkg_hex)
@@ -137,6 +115,17 @@ ACTION sysam::recvrelayerx(const name &invoker, const string &pkg_hex)
     std::string pkg(pkg_hex.size() / 2, 0);
     check(HexStringToBytes(pkg_hex.c_str(), pkg.data(), pkg.size()) != -1, "failed to convert pkg from hex string");
     recvrelayer(invoker, pkg);
+}
+
+ACTION sysam::rejectamx(const name &invoker, const string &pkg_hex)
+{
+    require_auth(invoker);
+    only_relayers(invoker);
+
+    std::string pkg(pkg_hex.size() / 2, 0);
+    check(HexStringToBytes(pkg_hex.c_str(), pkg.data(), pkg.size()) != -1, "failed to convert pkg from hex string");
+
+    process_am(pkg, true);
 }
 
 bool sysam::decode_proof(const std::string &raw_proof, std::string &domain, std::string &pkg)
@@ -193,7 +182,7 @@ bool sysam::decode_proof(const std::string &raw_proof, std::string &domain, std:
     return true;
 }
 
-void sysam::forward_am_pkg(const string &sender_domain, const string &pkg)
+void sysam::forward_am_pkg(const string &sender_domain, const string &pkg, bool if_reject)
 {
     string sender_id;
     uint32_t protocol_type;
@@ -202,13 +191,23 @@ void sysam::forward_am_pkg(const string &sender_domain, const string &pkg)
 
     name protocol_name = get_protocol_account_by_type(protocol_type);
 
-    // 调用protocol(sdp)合约的 recvmsg
-    syssdp::recvmsg_action recvmsg(protocol_name, {get_self(), "active"_n});
-    recvmsg.send(
-        get_self(),
-        sender_domain,
-        sender_id,
-        msg);
+    if (!if_reject) {
+        // 调用protocol(sdp)合约的 recvmsg
+        syssdp::recvmsg_action recvmsg(protocol_name, {get_self(), "active"_n});
+        recvmsg.send(
+            get_self(),
+            sender_domain,
+            sender_id,
+            msg);
+    } else {
+        syssdp::upseq_action upseq(protocol_name, {get_self(), "active"_n});
+        upseq.send(
+            get_self(),
+            sender_domain,
+            sender_id,
+            msg
+        );
+    }
 }
 
 void sysam::parse_am_pkg(const string &pkg, string &sender_id, uint32_t &protocol_type, string &msg)
@@ -253,4 +252,29 @@ void sysam::only_protocols(const name &invoker)
     auto acc_idx = tbl_protocols_by_type.get_index<name("protacckey")>();
     auto data_itr = acc_idx.find(invoker.value);
     check(data_itr != acc_idx.end(), "the invoker should be protocol");
+}
+
+void sysam::process_am(const string &pkg, bool if_reject)
+{
+    // ignore the beggining 4 bytes of random prefix
+    uint32_t offset = 4;
+    while (offset < pkg.size())
+    {
+        string hints;
+        string proof;
+        SequentialBytesToString(pkg, offset, hints);
+        SequentialBytesToString(pkg, offset, proof);
+        print("AMMSG_INFO: after data transfer");
+
+        // 中继解析proof获取domain及pkg
+        string domain_name = "";
+        string pkg = "";
+        check(decode_proof(proof, domain_name, pkg), "AMMSG_ERROR: decode proof failed");
+        print("AMMSG_INFO: after proof decode");
+
+        // 转发am消息到上层协议
+        forward_am_pkg(domain_name, pkg, if_reject);
+        print("AMMSG_INFO: after forward am pkg");
+    }
+    check(pkg.size() == offset, "AMMSG_ERROR: offset incorrect RecvPkgFromRelayerCore");
 }
