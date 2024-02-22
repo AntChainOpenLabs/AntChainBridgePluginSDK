@@ -30,12 +30,21 @@ public class SDPMessageFactory {
     }
 
     public static ISDPMessage createSDPMessage(int version, String targetDomain, byte[] targetIdentity, int sequence, byte[] payload) {
+        return createSDPMessage(version, targetDomain, targetIdentity, AtomicFlagEnum.NONE_ATOMIC, -1, sequence, payload);
+    }
+
+    public static ISDPMessage createSDPMessage(int version, String targetDomain, byte[] targetIdentity, AtomicFlagEnum atomicFlag, long nonce, int sequence, byte[] payload) {
         AbstractSDPMessage sdpMessage = createAbstractSDPMessage(version);
 
         sdpMessage.setTargetDomain(new CrossChainDomain(targetDomain));
         sdpMessage.setTargetIdentity(new CrossChainIdentity(targetIdentity));
         sdpMessage.setSequence(sequence);
         sdpMessage.setPayload(payload);
+
+        if (version == SDPMessageV2.MY_VERSION) {
+            ((SDPMessageV2) sdpMessage).setNonce(nonce);
+            ((SDPMessageV2) sdpMessage).setAtomicFlag(atomicFlag);
+        }
 
         return sdpMessage;
     }

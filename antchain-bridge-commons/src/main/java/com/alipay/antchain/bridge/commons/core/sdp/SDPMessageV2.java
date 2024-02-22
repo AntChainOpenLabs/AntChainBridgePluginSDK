@@ -25,7 +25,10 @@ import com.alipay.antchain.bridge.commons.core.base.CrossChainIdentity;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class SDPMessageV2 extends AbstractSDPMessage {
 
     public static final int MY_VERSION = 2;
@@ -33,21 +36,23 @@ public class SDPMessageV2 extends AbstractSDPMessage {
     @Getter
     public static class SDPPayloadV2 implements ISDPPayload {
 
-        private byte[] payload;
+        private final byte[] payload;
 
         public SDPPayloadV2(byte[] payload) {
             this.payload = payload;
         }
     }
 
-    private boolean atomic;
+    private AtomicFlagEnum atomicFlag;
+
+    private long nonce;
 
     @Override
     public void decode(byte[] rawMessage) {
-        if (rawMessage.length < 49) {
+        if (rawMessage.length < 57) {
             throw new AntChainBridgeCommonsException(
                     CommonsErrorCodeEnum.SDP_MESSAGE_DECODE_ERROR,
-                    String.format("length of message v2 supposes to be 49 bytes at least but get %d . ", rawMessage.length)
+                    String.format("length of message v2 supposes to be 57 bytes at least but get %d . ", rawMessage.length)
             );
         }
 
@@ -56,13 +61,14 @@ public class SDPMessageV2 extends AbstractSDPMessage {
         offset = extractTargetDomain(rawMessage, offset);
         offset = extractTargetIdentity(rawMessage, offset);
         offset = extractAtomic(rawMessage, offset);
+        offset = extractNonce(rawMessage, offset);
         offset = extractSequence(rawMessage, offset);
         extractPayload(rawMessage, offset);
     }
 
     @Override
     public byte[] encode() {
-        byte[] rawMessage = new byte[49
+        byte[] rawMessage = new byte[57
                 + this.getTargetDomain().toBytes().length
                 + this.getPayload().length];
 
@@ -70,6 +76,7 @@ public class SDPMessageV2 extends AbstractSDPMessage {
         offset = putTargetDomain(rawMessage, offset);
         offset = putTargetIdentity(rawMessage, offset);
         offset = putAtomic(rawMessage, offset);
+        offset = putNonce(rawMessage, offset);
         offset = putSequence(rawMessage, offset);
         putPayload(rawMessage, offset);
 
@@ -86,12 +93,9 @@ public class SDPMessageV2 extends AbstractSDPMessage {
         return MY_VERSION;
     }
 
-    public void setAtomic(boolean atomic) {
-        this.atomic = atomic;
-    }
-
+    @Override
     public boolean getAtomic() {
-        return atomic;
+        return atomicFlag.isAtomic();
     }
 
     private int extractTargetDomain(byte[] rawMessage, int offset) {
@@ -114,7 +118,16 @@ public class SDPMessageV2 extends AbstractSDPMessage {
     }
 
     private int extractAtomic(byte[] rawMessage, int offset) {
-        this.setAtomic(ByteUtil.byteToUnsignedInt(rawMessage[--offset]) != 0);
+        this.setAtomicFlag(AtomicFlagEnum.parseFrom(rawMessage[--offset]));
+        return offset;
+    }
+
+    private int extractNonce(byte[] rawMessage, int offset) {
+        offset -= 8;
+        byte[] rawSeq = new byte[8];
+        System.arraycopy(rawMessage, offset, rawSeq, 0, 8);
+        this.setNonce(ByteUtil.bytesToLong(rawSeq, ByteOrder.BIG_ENDIAN));
+
         return offset;
     }
 
@@ -182,6 +195,13 @@ public class SDPMessageV2 extends AbstractSDPMessage {
 
     private int putAtomic(byte[] rawMessage, int offset) {
         rawMessage[--offset] = BooleanUtil.toByte(this.getAtomic());
+        return offset;
+    }
+
+    private int putNonce(byte[] rawMessage, int offset) {
+        offset -= 8;
+        System.arraycopy(ByteUtil.longToBytes(this.getNonce(), ByteOrder.BIG_ENDIAN), 0, rawMessage, offset, 8);
+
         return offset;
     }
 

@@ -132,4 +132,14 @@ public class SDPMessageV1 extends AbstractSDPMessage {
     public boolean getAtomic() {
         return false;
     }
+
+    @Override
+    public AtomicFlagEnum getAtomicFlag() {
+        return AtomicFlagEnum.NONE_ATOMIC;
+    }
+
+    @Override
+    public long getNonce() {
+        return -1;
+    }
 }
