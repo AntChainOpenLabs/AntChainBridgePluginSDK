@@ -81,6 +81,14 @@ contract SDPMsg is ISDPMessage, Ownable {
         _afterSendUnordered();
     }
 
+    function sendMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) override external returns (uint32) {
+        return 0;
+    }
+
+    function sendUnorderedMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (uint64) {
+        return 0;
+    }
+
     function recvMessage(string calldata senderDomain, bytes32 senderID, bytes calldata pkg) override external onlyAM {
         _beforeRecv(senderDomain, senderID, pkg);
 
