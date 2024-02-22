@@ -18,7 +18,6 @@ package com.alipay.antchain.bridge.commons.core.sdp;
 
 import java.nio.ByteOrder;
 
-import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ByteUtil;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainIdentity;
@@ -194,7 +193,7 @@ public class SDPMessageV2 extends AbstractSDPMessage {
     }
 
     private int putAtomic(byte[] rawMessage, int offset) {
-        rawMessage[--offset] = BooleanUtil.toByte(this.getAtomic());
+        rawMessage[--offset] = this.getAtomicFlag().getValue();
         return offset;
     }
 
