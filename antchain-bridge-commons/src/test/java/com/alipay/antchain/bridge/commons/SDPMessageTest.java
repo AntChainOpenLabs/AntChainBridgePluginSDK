@@ -28,6 +28,8 @@ public class SDPMessageTest {
 
     private static final long NONCE_V2 = ByteUtil.bytesToLong(HexUtil.decodeHex(RAW_MESSAGE_HEX_V2.substring(96, 112)), ByteOrder.BIG_ENDIAN);
 
+    private static final String RAW_MESSAGE_HEX_ACK_ERROR_V2 = "0000002817943daf4ed8cb477ef2e0048f5baede046f6bf797943daf4ed8cb477ef2e0048f5baede046f6bf2000000056572726f7200000035ffffffff000000000000000001000000000000000000000000d9145cce52d386f254917e481eb44e9943f3913874657374646f6d61696e0000000aff000002";
+
     @Test
     public void testSDPMessageV1Decode() {
         ISDPMessage sdpMessage = SDPMessageFactory.createSDPMessage(HexUtil.decodeHex(RAW_MESSAGE_HEX_V1));
@@ -58,6 +60,18 @@ public class SDPMessageTest {
         );
         Assert.assertTrue(sdpMessage instanceof SDPMessageV2);
         Assert.assertEquals(RAW_MESSAGE_HEX_V2, HexUtil.encodeHexStr(sdpMessage.encode()));
+
+        ISDPMessage sdpMessageAckError = SDPMessageFactory.createSDPMessage(
+                2,
+                TARGET_DOMAIN_V2,
+                HexUtil.decodeHex(TARGET_ID_V2),
+                AtomicFlagEnum.ATOMIC_REQUEST,
+                NONCE_V2,
+                AbstractSDPMessage.UNORDERED_SEQUENCE,
+                new SDPMessageV2.SDPPayloadV2(HexUtil.decodeHex(PAYLOAD_V2), "error").getPayload()
+        );
+        Assert.assertTrue(sdpMessageAckError instanceof SDPMessageV2);
+        Assert.assertEquals(RAW_MESSAGE_HEX_ACK_ERROR_V2, HexUtil.encodeHexStr(sdpMessageAckError.encode()));
     }
 
     @Test
@@ -68,5 +82,13 @@ public class SDPMessageTest {
         Assert.assertEquals(TARGET_ID_V2, sdpMessage.getTargetIdentity().toHex());
         Assert.assertEquals(NONCE_V2, sdpMessage.getNonce());
         Assert.assertEquals(PAYLOAD_V2, HexUtil.encodeHexStr(sdpMessage.getPayload()));
+
+        sdpMessage = SDPMessageFactory.createSDPMessage(HexUtil.decodeHex(RAW_MESSAGE_HEX_ACK_ERROR_V2));
+        Assert.assertTrue(sdpMessage instanceof SDPMessageV2);
+        Assert.assertEquals(TARGET_DOMAIN_V2, sdpMessage.getTargetDomain().getDomain());
+        Assert.assertEquals(TARGET_ID_V2, sdpMessage.getTargetIdentity().toHex());
+        Assert.assertEquals(NONCE_V2, sdpMessage.getNonce());
+        Assert.assertEquals(PAYLOAD_V2, HexUtil.encodeHexStr(((SDPMessageV2) sdpMessage).getSDPPayloadV2().getOriginalMessageFromErrorAck()));
+        Assert.assertEquals("error", ((SDPMessageV2) sdpMessage).getSDPPayloadV2().getErrorMsgFromErrorAck());
     }
 }
