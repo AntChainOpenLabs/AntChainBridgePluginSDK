@@ -31,6 +31,13 @@ library TypesToBytes {
         }
     }
 
+    function byteToBytes(uint _offset, uint8 _input, bytes memory _output) internal pure {
+
+        assembly {
+            mstore(add(_output, _offset), _input)
+        }
+    }
+
     function boolToBytes(uint _offset, bool _input, bytes memory _output) internal pure {
         uint8 x = _input == false ? 0 : 1;
         assembly {
@@ -156,6 +163,18 @@ library TypesToBytes {
             let prev_word := mload(prev_word_pos)
 
             mstore(add(prev_word_pos, 4), _input)
+
+            mstore(prev_word_pos, prev_word)
+        }
+    }
+
+    function uint64ToBytes(uint _offset, uint64 _input, bytes memory _output) internal pure {
+
+        assembly {
+            let prev_word_pos := add(_output, _offset)
+            let prev_word := mload(prev_word_pos)
+
+            mstore(add(prev_word_pos, 8), _input)
 
             mstore(prev_word_pos, prev_word)
         }

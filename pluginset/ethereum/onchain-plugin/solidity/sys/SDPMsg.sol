@@ -9,7 +9,8 @@ import "./lib/utils/Ownable.sol";
 
 contract SDPMsg is ISDPMessage, Ownable {
 
-    uint32 constant UNORDERED_SEQUENCE = 0xffffffff;
+    using SDPLib for SDPMessage;
+    using SDPLib for SDPMessageV2;
 
     address public amAddress;
 
@@ -17,6 +18,8 @@ contract SDPMsg is ISDPMessage, Ownable {
 
     mapping(bytes32 => uint32) sendSeq;
     mapping(bytes32 => uint32) recvSeq;
+
+    mapping(bytes32 => uint32) sendNonce;
 
     modifier onlyAM() {
         require(
@@ -55,7 +58,7 @@ contract SDPMsg is ISDPMessage, Ownable {
             }
         );
 
-        bytes memory rawMsg = SDPLib.encodeSDPMessage(sdpMessage);
+        bytes memory rawMsg = sdpMessage.encodeSDPMessage();
 
         IAuthMessage(amAddress).recvFromProtocol(msg.sender, rawMsg);
 
@@ -70,36 +73,71 @@ contract SDPMsg is ISDPMessage, Ownable {
                 receiveDomain: receiverDomain,
                 receiver: receiverID,
                 message: message,
-                sequence: UNORDERED_SEQUENCE
+                sequence: SDPLib.UNORDERED_SEQUENCE
             }
         );
 
-        bytes memory rawMsg = SDPLib.encodeSDPMessage(sdpMessage);
-
-        IAuthMessage(amAddress).recvFromProtocol(msg.sender, rawMsg);
+        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encodeSDPMessage());
 
         _afterSendUnordered();
     }
 
     function sendMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) override external returns (uint32) {
-        return 0;
+         _beforeSend(receiverDomain, receiverID, message);
+
+        SDPMessageV2 memory sdpMessage = SDPMessageV2(
+            {
+                version: 2,
+                receiveDomain: receiverDomain,
+                receiver: receiverID,
+                atomicFlag: atomic ? SDPLib.SDP_V2_ATOMIC_FLAG_ATOMIC_REQUEST : SDPLib.SDP_V2_ATOMIC_FLAG_NONE_ATOMIC,
+                nonce: SDPLib.MAX_NONCE,
+                sequence: _getAndUpdateSendSeq(receiverDomain, msg.sender, receiverID),
+                message: message
+            }
+        );
+
+        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encodeSDPMessage());
+
+        _afterSend();
+
+        return sdpMessage.sequence;
     }
 
     function sendUnorderedMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (uint64) {
-        return 0;
+        _beforeSendUnordered(receiverDomain, receiverID, message);
+
+        SDPMessageV2 memory sdpMessage = SDPMessageV2(
+            {
+                version: 2,
+                receiveDomain: receiverDomain,
+                receiver: receiverID,
+                atomicFlag: atomic ? SDPLib.SDP_V2_ATOMIC_FLAG_ATOMIC_REQUEST : SDPLib.SDP_V2_ATOMIC_FLAG_NONE_ATOMIC,
+                nonce: _getAndUpdateSendNonce(receiverDomain, msg.sender, receiverID),
+                sequence: SDPLib.UNORDERED_SEQUENCE,
+                message: message
+            }
+        );
+
+        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encodeSDPMessage());
+
+        _afterSendUnordered();
+
+        return sdpMessage.nonce;
     }
 
     function recvMessage(string calldata senderDomain, bytes32 senderID, bytes calldata pkg) override external onlyAM {
         _beforeRecv(senderDomain, senderID, pkg);
 
-        SDPMessage memory sdpMessage = SDPLib.decodeSDPMessage(pkg);
+        SDPMessage memory sdpMessage;
+        sdpMessage.decodeSDPMessage(pkg);
 
         require(
             keccak256(abi.encodePacked(sdpMessage.receiveDomain)) == localDomainHash,
             "SDPMsg: wrong receiving domain"
         );
 
-        if (sdpMessage.sequence == UNORDERED_SEQUENCE) {
+        if (sdpMessage.sequence == SDPLib.UNORDERED_SEQUENCE) {
             _routeUnorderedMessage(senderDomain, senderID, sdpMessage);
         } else {
             _routeOrderedMessage(senderDomain, senderID, sdpMessage);
@@ -160,6 +198,13 @@ contract SDPMsg is ISDPMessage, Ownable {
         uint32 seq = recvSeq[seqKey];
         recvSeq[seqKey]++;
         return seq;
+    }
+
+    function _getAndUpdateSendNonce(string memory receiveDomain, address sender, bytes32 receiver) internal returns (uint32) {
+        bytes32 nonceKey = SDPLib.getSendingSeqID(receiveDomain, sender, receiver);
+        uint32 nonce = sendNonce[nonceKey];
+        sendNonce[nonceKey]++;
+        return nonce;
     }
 
     function _beforeSend(string calldata receiverDomain, bytes32 receiverID, bytes calldata message) internal {}
