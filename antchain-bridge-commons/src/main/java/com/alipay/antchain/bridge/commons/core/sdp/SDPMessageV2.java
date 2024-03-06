@@ -40,97 +40,60 @@ public class SDPMessageV2 extends AbstractSDPMessage {
         public SDPPayloadV2(byte[] payload) {
             this.payload = payload;
         }
-
-        public SDPPayloadV2(byte[] message, String errorMsg) {
-            byte[] rawErrorMsg = errorMsg.getBytes();
-            this.payload = new byte[8 + message.length + rawErrorMsg.length];
-            System.arraycopy(ByteUtil.intToBytes(message.length, ByteOrder.BIG_ENDIAN), 0, this.payload, 0, 4);
-            System.arraycopy(message, 0, this.payload, 4, message.length);
-            System.arraycopy(ByteUtil.intToBytes(rawErrorMsg.length, ByteOrder.BIG_ENDIAN), 0, this.payload, 4 + message.length, 4);
-            System.arraycopy(rawErrorMsg, 0, this.payload, 8 + message.length, rawErrorMsg.length);
-        }
-
-        public String getErrorMsgFromErrorAck() {
-            if (payload.length < 8) {
-                throw new AntChainBridgeCommonsException(
-                        CommonsErrorCodeEnum.SDP_MESSAGE_DECODE_ERROR,
-                        "payload at least 8 bytes but get " + payload.length
-                );
-            }
-
-            int offset = 0;
-            byte[] rawPayloadLen = new byte[4];
-            System.arraycopy(payload, offset, rawPayloadLen, 0, 4);
-            offset = 4 + ByteUtil.bytesToInt(rawPayloadLen, ByteOrder.BIG_ENDIAN);
-
-            byte[] rawErrorMsgLen = new byte[4];
-            System.arraycopy(payload, offset, rawErrorMsgLen, 0, 4);
-            byte[] rawErrorMsg = new byte[ByteUtil.bytesToInt(rawErrorMsgLen, ByteOrder.BIG_ENDIAN)];
-            System.arraycopy(payload, offset + 4, rawErrorMsg, 0, rawErrorMsg.length);
-
-            return new String(rawErrorMsg);
-        }
-
-        public byte[] getOriginalMessageFromErrorAck() {
-            if (payload.length < 8) {
-                throw new AntChainBridgeCommonsException(
-                        CommonsErrorCodeEnum.SDP_MESSAGE_DECODE_ERROR,
-                        "payload at least 8 bytes but get " + payload.length
-                );
-            }
-
-            byte[] rawPayloadLen = new byte[4];
-            System.arraycopy(payload, 0, rawPayloadLen, 0, 4);
-
-            byte[] originalMsg = new byte[ByteUtil.bytesToInt(rawPayloadLen, ByteOrder.BIG_ENDIAN)];
-            System.arraycopy(payload, 4, originalMsg, 0, originalMsg.length);
-
-            return originalMsg;
-        }
     }
 
     private AtomicFlagEnum atomicFlag;
 
     private long nonce;
 
+    private SDPMessageId messageId;
+
+    private String errorMsg;
+
     @Override
     public void decode(byte[] rawMessage) {
-        if (rawMessage.length < 57) {
+        if (rawMessage.length < 89) {
             throw new AntChainBridgeCommonsException(
                     CommonsErrorCodeEnum.SDP_MESSAGE_DECODE_ERROR,
-                    String.format("length of message v2 supposes to be 57 bytes at least but get %d . ", rawMessage.length)
+                    String.format("length of message v2 supposes to be 89 bytes at least but get %d . ", rawMessage.length)
             );
         }
 
         int offset = rawMessage.length - 4;
 
+        offset = extractMessageId(rawMessage, offset);
         offset = extractTargetDomain(rawMessage, offset);
         offset = extractTargetIdentity(rawMessage, offset);
         offset = extractAtomic(rawMessage, offset);
         offset = extractNonce(rawMessage, offset);
         offset = extractSequence(rawMessage, offset);
-        extractPayload(rawMessage, offset);
+        offset = extractPayload(rawMessage, offset);
+        if (AtomicFlagEnum.withErrorMsg(getAtomicFlag())) {
+            extractErrorMsg(rawMessage, offset);
+        }
     }
 
     @Override
     public byte[] encode() {
-        byte[] rawMessage = new byte[57
-                + this.getTargetDomain().toBytes().length
-                + this.getPayload().length];
+        byte[] rawMessage = new byte[calcMessageLength()];
 
         int offset = putVersion(rawMessage, rawMessage.length);
+        offset = putMessageId(rawMessage, offset);
         offset = putTargetDomain(rawMessage, offset);
         offset = putTargetIdentity(rawMessage, offset);
         offset = putAtomic(rawMessage, offset);
         offset = putNonce(rawMessage, offset);
         offset = putSequence(rawMessage, offset);
-        putPayload(rawMessage, offset);
+        offset = putPayload(rawMessage, offset);
+        if (AtomicFlagEnum.withErrorMsg(getAtomicFlag())) {
+            putErrorMsg(rawMessage, offset);
+        }
 
         return rawMessage;
     }
 
     @Override
-    void setPayload(byte[] payload) {
+    public void setPayload(byte[] payload) {
         this.setSdpPayload(new SDPPayloadV2(payload));
     }
 
@@ -146,6 +109,15 @@ public class SDPMessageV2 extends AbstractSDPMessage {
 
     public SDPPayloadV2 getSDPPayloadV2() {
         return (SDPPayloadV2) getSdpPayload();
+    }
+
+    private int extractMessageId(byte[] rawMessage, int offset) {
+        offset -= 32;
+        byte[] msgId = new byte[32];
+        System.arraycopy(rawMessage, offset, msgId, 0, 32);
+        this.setMessageId(new SDPMessageId(msgId));
+
+        return offset;
     }
 
     private int extractTargetDomain(byte[] rawMessage, int offset) {
@@ -218,10 +190,36 @@ public class SDPMessageV2 extends AbstractSDPMessage {
         return offset;
     }
 
+    private int extractErrorMsg(byte[] rawMessage, int offset) {
+        offset -= 4;
+        byte[] rawErrorMsgLen = new byte[4];
+        System.arraycopy(rawMessage, offset, rawErrorMsgLen, 0, 4);
+
+        byte[] errorMsg = new byte[ByteUtil.bytesToInt(rawErrorMsgLen, ByteOrder.BIG_ENDIAN)];
+        offset -= errorMsg.length;
+        if (offset < 0) {
+            throw new AntChainBridgeCommonsException(
+                    CommonsErrorCodeEnum.SDP_MESSAGE_DECODE_ERROR,
+                    "length of error message in SDPv2 is incorrect"
+            );
+        }
+        System.arraycopy(rawMessage, offset, errorMsg, 0, errorMsg.length);
+        this.setErrorMsg(new String(errorMsg));
+
+        return offset;
+    }
+
     private int putVersion(byte[] rawMessage, int offset) {
         offset -= 4;
         System.arraycopy(ByteUtil.intToBytes(this.getVersion(), ByteOrder.BIG_ENDIAN), 0, rawMessage, offset, 4);
         rawMessage[offset] = ByteUtil.intToByte(0xFF);
+        return offset;
+    }
+
+    private int putMessageId(byte[] rawMessage, int offset) {
+        offset -= 32;
+        System.arraycopy(this.getMessageId().toByte32(), 0, rawMessage, offset, 32);
+
         return offset;
     }
 
@@ -270,5 +268,21 @@ public class SDPMessageV2 extends AbstractSDPMessage {
         System.arraycopy(this.getPayload(), 0, rawMessage, offset, this.getPayload().length);
 
         return offset;
+    }
+
+    private int putErrorMsg(byte[] rawMessage, int offset) {
+        offset -= 4;
+        System.arraycopy(ByteUtil.intToBytes(this.getErrorMsg().getBytes().length, ByteOrder.BIG_ENDIAN), 0, rawMessage, offset, 4);
+
+        offset -= this.getErrorMsg().length();
+        System.arraycopy(this.getErrorMsg().getBytes(), 0, rawMessage, offset, this.getErrorMsg().length());
+
+        return offset;
+    }
+
+    private int calcMessageLength() {
+        return AtomicFlagEnum.withErrorMsg(getAtomicFlag()) ?
+                89 + this.getTargetDomain().toBytes().length + this.getPayload().length + 4 + this.getErrorMsg().length() :
+                89 + this.getTargetDomain().toBytes().length + this.getPayload().length;
     }
 }

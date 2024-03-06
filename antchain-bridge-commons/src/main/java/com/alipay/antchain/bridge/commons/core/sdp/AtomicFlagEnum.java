@@ -1,6 +1,7 @@
 package com.alipay.antchain.bridge.commons.core.sdp;
 
 import cn.hutool.core.util.ByteUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
 import lombok.Getter;
@@ -90,6 +91,10 @@ public enum AtomicFlagEnum {
                 CommonsErrorCodeEnum.SDP_MESSAGE_DECODE_ERROR,
                 "no sdp atomic flag found for " + ByteUtil.byteToUnsignedInt(value)
         );
+    }
+
+    public static boolean withErrorMsg(AtomicFlagEnum atomicFlag) {
+        return ObjectUtil.isNotNull(atomicFlag) && atomicFlag.value > ACK_SUCCESS.value;
     }
 
     AtomicFlagEnum(byte value) {
