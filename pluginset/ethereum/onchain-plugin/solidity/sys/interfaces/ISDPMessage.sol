@@ -60,7 +60,7 @@ interface ISDPMessage is ISubProtocol {
      *
      * @return the sequence of SDP packet sent.
      */
-    function sendMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (uint32);
+    function sendMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (bytes32);
 
     /**
      * @dev Smart contracts need to call this method to send orderly cross-chain messages in SDPv1.
@@ -87,7 +87,7 @@ interface ISDPMessage is ISubProtocol {
      * 
      * @return the nonce of SDP packet sent.
      */
-    function sendUnorderedMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (uint64);
+    function sendUnorderedMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (bytes32);
 
     /**
      * @dev Smart contracts call this method to send cross-chain messages out of order in SDPv1.

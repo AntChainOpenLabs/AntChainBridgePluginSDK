@@ -14,12 +14,14 @@ struct SDPMessage {
 
 struct SDPMessageV2 {
     uint32 version;
+    bytes32 messageId;
     string receiveDomain;
     bytes32 receiver;
     uint8 atomicFlag;
     uint64 nonce;
     uint32 sequence;
     bytes message;
+    string errorMsg;
 }
 
 library SDPLib {
@@ -41,7 +43,7 @@ library SDPLib {
     // @notice only for orderred msg
     uint64 constant MAX_NONCE = 0xffffffffffffffff;
 
-    function encodeSDPMessage(SDPMessage memory sdpMessage) pure internal returns (bytes memory) {
+    function encode(SDPMessage memory sdpMessage) pure internal returns (bytes memory) {
 
         uint256 len = SizeOf.sizeOfBytes(sdpMessage.message) + 4 + 32 + SizeOf.sizeOfString(sdpMessage.receiveDomain);
 
@@ -67,7 +69,7 @@ library SDPLib {
         return pkg;
     }
 
-    function decodeSDPMessage(SDPMessage memory sdpMessage, bytes memory rawMessage) pure internal {
+    function decode(SDPMessage memory sdpMessage, bytes memory rawMessage) pure internal {
         uint256 offset = rawMessage.length;
 
         uint32 dest_domain_len = BytesToTypes.bytesToUint32(offset, rawMessage) + 32;
@@ -96,15 +98,103 @@ library SDPLib {
         );
     }
 
-    function encodeSDPMessage(SDPMessageV2 memory sdpMessage) pure internal returns (bytes memory) {
+    function encode(SDPMessageV2 memory sdpMessage) pure internal returns (bytes memory) {
         require(
             sdpMessage.version == 2, 
             "encodeSDPMessage: wrong version"
         );
-        
         require(
             sdpMessage.message.length <= 0xFFFFFFFF,
             "encodeSDPMessage: body length overlimit"
+        );
+        require(
+            sdpMessage.messageId != bytes32(0),
+            "encodeSDPMessage: zero message id"
+        );
+
+        uint total_size;
+        bool withErrorMsg = sdpMessage.atomicFlag > SDP_V2_ATOMIC_FLAG_ACK_SUCCESS;
+        if (withErrorMsg) {
+            total_size = 89 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length + 4 + bytes(sdpMessage.errorMsg).length;
+        } else {
+            total_size = 89 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length;
+        }
+
+        bytes memory pkg = new bytes(total_size);
+        uint offset = total_size;
+
+        TypesToBytes.uintToBytes(offset, sdpMessage.version, pkg);
+        offset -= SizeOf.sizeOfInt(32);
+
+        TypesToBytes.bytes32ToBytes(offset, sdpMessage.messageId, pkg);
+        offset -= SizeOf.sizeOfBytes32();
+
+        TypesToBytes.varBytesToBytes(offset, bytes(sdpMessage.receiveDomain), pkg);
+        
+        TypesToBytes.bytes32ToBytes(offset, sdpMessage.receiver, pkg);
+        offset -= SizeOf.sizeOfBytes32();
+
+        TypesToBytes.byteToBytes(offset, sdpMessage.atomicFlag, pkg);
+        offset -= 1;
+
+        TypesToBytes.uint64ToBytes(offset, sdpMessage.nonce, pkg);
+        offset -= SizeOf.sizeOfInt(64);
+
+        TypesToBytes.uint32ToBytes(offset, sdpMessage.sequence, pkg);
+        offset -= SizeOf.sizeOfInt(32);
+
+        TypesToBytes.varBytesToBytes(offset, sdpMessage.message, pkg);
+
+        if (withErrorMsg) {
+            TypesToBytes.varBytesToBytes(offset, bytes(sdpMessage.errorMsg), pkg);
+        }
+
+        return pkg;
+    }
+
+    function decode(SDPMessageV2 memory sdpMessage, bytes memory rawMessage) internal pure {
+        uint256 offset = rawMessage.length;
+        bool withErrorMsg = sdpMessage.atomicFlag > SDP_V2_ATOMIC_FLAG_ACK_SUCCESS;
+
+        sdpMessage.version = BytesToTypes.bytesToUint32(offset, rawMessage);
+        offset -= SizeOf.sizeOfUint(32);
+
+        sdpMessage.messageId = BytesToTypes.bytesToBytes32(offset, rawMessage);
+        offset -= SizeOf.sizeOfBytes32();
+
+        sdpMessage.receiveDomain = string(BytesToTypes.bytesToVarBytes(offset, rawMessage));
+
+        sdpMessage.receiver = BytesToTypes.bytesToBytes32(offset, rawMessage);
+        offset -= SizeOf.sizeOfBytes32();
+
+        sdpMessage.atomicFlag = BytesToTypes.bytesToUint8(offset, rawMessage);
+        offset -= 1;
+
+        sdpMessage.nonce = BytesToTypes.bytesToUint64(offset, rawMessage);
+        offset -= 8;
+
+        sdpMessage.sequence = BytesToTypes.bytesToUint32(offset, rawMessage);
+        offset -= 4;
+
+        sdpMessage.message = BytesToTypes.bytesToVarBytes(offset, rawMessage);
+
+        if (withErrorMsg) {
+            sdpMessage.errorMsg = string(BytesToTypes.bytesToVarBytes(offset, rawMessage));
+        }
+    }
+
+    function calcMessageId(SDPMessageV2 memory sdpMessage) internal pure {
+        require(
+            sdpMessage.version == 2, 
+            "encodeSDPMessage: wrong version"
+        );
+        require(
+            sdpMessage.message.length <= 0xFFFFFFFF,
+            "encodeSDPMessage: body length overlimit"
+        );
+        require(
+            sdpMessage.messageId != bytes32(0),
+            "encodeSDPMessage: zero message id"
         );
 
         uint total_size = 57 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length;
@@ -122,7 +212,7 @@ library SDPLib {
         TypesToBytes.byteToBytes(offset, sdpMessage.atomicFlag, pkg);
         offset -= 1;
 
-        TypesToBytes.uint64ToBytes(offset, sdpMessage.atomicFlag, pkg);
+        TypesToBytes.uint64ToBytes(offset, sdpMessage.nonce, pkg);
         offset -= SizeOf.sizeOfInt(64);
 
         TypesToBytes.uint32ToBytes(offset, sdpMessage.sequence, pkg);
@@ -130,30 +220,7 @@ library SDPLib {
 
         TypesToBytes.varBytesToBytes(offset, sdpMessage.message, pkg);
 
-        return pkg;
-    }
-
-    function decodeSDPMessage(SDPMessageV2 memory sdpMessage, bytes memory rawMessage) internal pure {
-        uint256 offset = rawMessage.length;
-
-        sdpMessage.version = BytesToTypes.bytesToUint32(offset, rawMessage);
-        offset -= SizeOf.sizeOfUint(32);
-
-        sdpMessage.receiveDomain = string(BytesToTypes.bytesToVarBytes(offset, rawMessage));
-
-        sdpMessage.receiver = BytesToTypes.bytesToBytes32(offset, rawMessage);
-        offset -= SizeOf.sizeOfBytes32();
-
-        sdpMessage.atomicFlag = BytesToTypes.bytesToUint8(offset, rawMessage);
-        offset -= 1;
-
-        sdpMessage.nonce = BytesToTypes.bytesToUint64(offset, rawMessage);
-        offset -= 8;
-
-        sdpMessage.sequence = BytesToTypes.bytesToUint32(offset, rawMessage);
-        offset -= 4;
-
-        sdpMessage.message = BytesToTypes.bytesToVarBytes(offset, rawMessage);
+        sdpMessage.messageId = keccak256(pkg);
     }
 
     function getSendingSeqID(string memory receiveDomain, address sender, bytes32 receiver) pure internal returns (bytes32) {

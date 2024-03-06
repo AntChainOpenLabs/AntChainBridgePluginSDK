@@ -58,7 +58,7 @@ contract SDPMsg is ISDPMessage, Ownable {
             }
         );
 
-        bytes memory rawMsg = sdpMessage.encodeSDPMessage();
+        bytes memory rawMsg = sdpMessage.encode();
 
         IAuthMessage(amAddress).recvFromProtocol(msg.sender, rawMsg);
 
@@ -77,60 +77,66 @@ contract SDPMsg is ISDPMessage, Ownable {
             }
         );
 
-        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encodeSDPMessage());
+        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encode());
 
         _afterSendUnordered();
     }
 
-    function sendMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) override external returns (uint32) {
+    function sendMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) override external returns (bytes32) {
          _beforeSend(receiverDomain, receiverID, message);
 
         SDPMessageV2 memory sdpMessage = SDPMessageV2(
             {
                 version: 2,
+                messageId: bytes32(0),
                 receiveDomain: receiverDomain,
                 receiver: receiverID,
                 atomicFlag: atomic ? SDPLib.SDP_V2_ATOMIC_FLAG_ATOMIC_REQUEST : SDPLib.SDP_V2_ATOMIC_FLAG_NONE_ATOMIC,
                 nonce: SDPLib.MAX_NONCE,
                 sequence: _getAndUpdateSendSeq(receiverDomain, msg.sender, receiverID),
-                message: message
+                message: message,
+                errorMsg: ""
             }
         );
+        sdpMessage.calcMessageId();
 
-        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encodeSDPMessage());
+        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encode());
 
         _afterSend();
 
-        return sdpMessage.sequence;
+        return sdpMessage.messageId;
     }
 
-    function sendUnorderedMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (uint64) {
+    function sendUnorderedMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (bytes32) {
         _beforeSendUnordered(receiverDomain, receiverID, message);
 
         SDPMessageV2 memory sdpMessage = SDPMessageV2(
             {
                 version: 2,
+                messageId: bytes32(0),
                 receiveDomain: receiverDomain,
                 receiver: receiverID,
                 atomicFlag: atomic ? SDPLib.SDP_V2_ATOMIC_FLAG_ATOMIC_REQUEST : SDPLib.SDP_V2_ATOMIC_FLAG_NONE_ATOMIC,
                 nonce: _getAndUpdateSendNonce(receiverDomain, msg.sender, receiverID),
                 sequence: SDPLib.UNORDERED_SEQUENCE,
-                message: message
+                message: message,
+                errorMsg: ""
             }
         );
+        sdpMessage.calcMessageId();
 
-        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encodeSDPMessage());
+        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encode());
 
         _afterSendUnordered();
 
-        return sdpMessage.nonce;
+        return sdpMessage.messageId;
     }
 
     function recvMessage(string calldata senderDomain, bytes32 senderID, bytes calldata pkg) override external onlyAM {
         _beforeRecv(senderDomain, senderID, pkg);
 
         SDPMessage memory sdpMessage;
-        sdpMessage.decodeSDPMessage(pkg);
+        sdpMessage.decode(pkg);
 
         require(
             keccak256(abi.encodePacked(sdpMessage.receiveDomain)) == localDomainHash,
