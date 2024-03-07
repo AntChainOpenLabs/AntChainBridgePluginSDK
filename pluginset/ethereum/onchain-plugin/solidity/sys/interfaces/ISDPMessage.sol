@@ -37,14 +37,26 @@ interface ISDPMessage is ISubProtocol {
      *
      * @param senderDomain the domain name of the sending blockchain.
      * @param senderID the id of the sender.
+     * @param receiverDomain the domain name of the receiving blockchain.
      * @param receiverID the address of the receiver.
      * @param sequence the sequence number for this sdp msg
      * @param nonce the unique nonce number for unordered packet.
-     * @param atomic_flag the number identifies the type for this SDP packet
+     * @param atomicFlag the number identifies the type for this SDP packet
      * @param result result of receiver contract calling
-     * @param errMsg the error msg if calling failed, default null
+     * @param errMsg the error msg if calling failed, default empty
      */
-    event receiveMessageV2(string senderDomain, bytes32 senderID, address receiverID, uint32 sequence, uint64 nonce, uint8 atomic_flag, bool result, string errMsg);
+    event ReceiveMessageV2(
+        bytes32 messageId,
+        string senderDomain,
+        bytes32 senderID,
+        string receiverDomain,
+        address receiverID,
+        uint32 sequence,
+        uint64 nonce,
+        uint8 atomicFlag,
+        bool result,
+        string errMsg
+    );
 
     /**
      * @dev Smart contracts need to call this method to send orderly cross-chain messages in SDPv2.
@@ -56,9 +68,10 @@ interface ISDPMessage is ISubProtocol {
      *
      * @param receiverDomain the domain name of the receiving blockchain.
      * @param receiverID the address of the receiver.
+     * @param atomic if sending the atomic request.
      * @param message the raw message from DApp contracts
      *
-     * @return the sequence of SDP packet sent.
+     * @return the message id of SDP packet sent.
      */
     function sendMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (bytes32);
 
@@ -83,9 +96,10 @@ interface ISDPMessage is ISubProtocol {
      *
      * @param receiverDomain the domain name of the receiving blockchain.
      * @param receiverID the address of the receiver.
+     * @param atomic if sending the atomic request.
      * @param message the raw message from DApp contracts
      * 
-     * @return the nonce of SDP packet sent.
+     * @return the message id of SDP packet sent.
      */
     function sendUnorderedMessageV2(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message) external returns (bytes32);
 
