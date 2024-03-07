@@ -1,6 +1,5 @@
 package com.alipay.antchain.bridge.commons.core.sdp;
 
-import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -11,6 +10,8 @@ import lombok.Setter;
 
 @Setter
 public class SDPMessageId {
+
+    public static final SDPMessageId ZERO_MESSAGE_ID = new SDPMessageId(new byte[32]);
 
     public SDPMessageId(@NonNull String messageIdHex) {
         this(HexUtil.decodeHex(messageIdHex));

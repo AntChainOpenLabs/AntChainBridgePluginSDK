@@ -98,6 +98,12 @@ public interface ISDPMessage extends IMessage {
     int getVersion();
 
     /**
+     * Return the message id represents the sdp packet
+     * @return
+     */
+    SDPMessageId getMessageId();
+
+    /**
      * The nonce value for unordered packet.
      *
      * <p>

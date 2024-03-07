@@ -142,4 +142,9 @@ public class SDPMessageV1 extends AbstractSDPMessage {
     public long getNonce() {
         return -1;
     }
+
+    @Override
+    public SDPMessageId getMessageId() {
+        return SDPMessageId.ZERO_MESSAGE_ID;
+    }
 }
