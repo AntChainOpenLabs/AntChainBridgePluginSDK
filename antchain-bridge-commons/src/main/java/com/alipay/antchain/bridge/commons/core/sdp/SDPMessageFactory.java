@@ -63,7 +63,7 @@ public class SDPMessageFactory {
         return sdpMessage;
     }
 
-    private static ISDPMessage createSDPMessage(int version) {
+    public static ISDPMessage createSDPMessage(int version) {
         return createAbstractSDPMessage(version);
     }
 

@@ -66,4 +66,10 @@ public abstract class AbstractSDPMessage implements ISDPMessage {
     }
 
     abstract void setPayload(byte[] payload);
+
+    public abstract void setNonce(long nonce);
+
+    public abstract void setAtomicFlag(AtomicFlagEnum atomicFlag);
+
+    public abstract void setMessageId(SDPMessageId messageId);
 }

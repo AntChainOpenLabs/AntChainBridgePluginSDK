@@ -43,6 +43,26 @@ library SDPLib {
     // @notice only for orderred msg
     uint64 constant MAX_NONCE = 0xffffffffffffffff;
 
+    function getSDPVersionFrom(bytes memory pkg) pure internal returns (uint32) {
+        bytes1 firstByte;
+        uint l = pkg.length;
+        assembly {
+            firstByte := mload(add(add(pkg, 32), sub(l, 4)))
+        }
+
+        if (firstByte == 0xff) {
+            uint32 version;
+            bytes memory rawVersion = new bytes(4);
+            assembly {
+                mstore(add(rawVersion, 33), mload(add(pkg, add(32, sub(l, 3)))))
+                version := mload(add(rawVersion, 4))
+            }
+            return version;
+        }
+
+        return 1;
+    }
+
     function encode(SDPMessage memory sdpMessage) pure internal returns (bytes memory) {
 
         uint256 len = SizeOf.sizeOfBytes(sdpMessage.message) + 4 + 32 + SizeOf.sizeOfString(sdpMessage.receiveDomain);
@@ -236,5 +256,13 @@ library SDPLib {
         bytes memory rawId = new bytes(32);
         TypesToBytes.bytes32ToBytes(32, id, rawId);
         return BytesToTypes.bytesToAddress(32, rawId);
+    }
+
+    function getReceiverAddress(SDPMessageV2 memory sdpMessage) pure internal returns (address) {
+        return encodeCrossChainIDIntoAddress(sdpMessage.receiver);
+    }
+
+    function getReceiverAddress(SDPMessage memory sdpMessage) pure internal returns (address) {
+        return encodeCrossChainIDIntoAddress(sdpMessage.receiver);
     }
 }

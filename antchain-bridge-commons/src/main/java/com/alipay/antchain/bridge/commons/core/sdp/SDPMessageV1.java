@@ -147,4 +147,19 @@ public class SDPMessageV1 extends AbstractSDPMessage {
     public SDPMessageId getMessageId() {
         return SDPMessageId.ZERO_MESSAGE_ID;
     }
+
+    @Override
+    public void setNonce(long nonce) {
+
+    }
+
+    @Override
+    public void setAtomicFlag(AtomicFlagEnum atomicFlag) {
+
+    }
+
+    @Override
+    public void setMessageId(SDPMessageId messageId) {
+
+    }
 }

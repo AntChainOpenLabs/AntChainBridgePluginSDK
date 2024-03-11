@@ -44,7 +44,7 @@ library TypesToBytes {
             mstore(add(_output, _offset), x)
         }
     }
-
+0x010203ff000001
     function varBytesToBytes(uint _offset, bytes memory _input, bytes memory _output) internal pure {
         uint32 body_len = uint32(_input.length);
         TypesToBytes.uintToBytes(_offset, body_len, _output);

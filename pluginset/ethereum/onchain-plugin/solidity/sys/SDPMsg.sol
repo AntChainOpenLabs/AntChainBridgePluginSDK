@@ -135,18 +135,13 @@ contract SDPMsg is ISDPMessage, Ownable {
     function recvMessage(string calldata senderDomain, bytes32 senderID, bytes calldata pkg) override external onlyAM {
         _beforeRecv(senderDomain, senderID, pkg);
 
-        SDPMessage memory sdpMessage;
-        sdpMessage.decode(pkg);
-
-        require(
-            keccak256(abi.encodePacked(sdpMessage.receiveDomain)) == localDomainHash,
-            "SDPMsg: wrong receiving domain"
-        );
-
-        if (sdpMessage.sequence == SDPLib.UNORDERED_SEQUENCE) {
-            _routeUnorderedMessage(senderDomain, senderID, sdpMessage);
+        uint32 version = SDPLib.getSDPVersionFrom(pkg);
+        if (version == 1) {
+            _processSDPv1(senderDomain, senderID, pkg);
+        } else if (verison == 2) {
+            _processSDPv2(senderDomain, senderID, pkg);
         } else {
-            _routeOrderedMessage(senderDomain, senderID, sdpMessage);
+            revert("unsupport sdp version");
         }
 
         _afterRecv();
@@ -162,6 +157,22 @@ contract SDPMsg is ISDPMessage, Ownable {
         return seq;
     }
 
+    function _processSDPv1(string calldata senderDomain, bytes32 senderID, bytes memory pkg) internal {
+        SDPMessage memory sdpMessage;
+        sdpMessage.decode(pkg);
+
+        require(
+            keccak256(abi.encodePacked(sdpMessage.receiveDomain)) == localDomainHash,
+            "SDPMsg: wrong receiving domain"
+        );
+
+        if (sdpMessage.sequence == SDPLib.UNORDERED_SEQUENCE) {
+            _routeUnorderedMessage(senderDomain, senderID, sdpMessage);
+        } else {
+            _routeOrderedMessage(senderDomain, senderID, sdpMessage);
+        }
+    }
+
     function _routeOrderedMessage(string calldata senderDomain, bytes32 senderID, SDPMessage memory sdpMessage) internal {
         uint32 seqExpected = _getAndUpdateRecvSeq(senderDomain, senderID, sdpMessage.receiver);
         require(
@@ -171,7 +182,7 @@ contract SDPMsg is ISDPMessage, Ownable {
 
         bool res = false;
         string memory errMsg;
-        address receiver = SDPLib.encodeCrossChainIDIntoAddress(sdpMessage.receiver);
+        address receiver = sdpMessage.getReceiverAddress();
         try
             IContractUsingSDP(receiver).recvMessage(senderDomain, senderID, sdpMessage.message)
         {
@@ -188,8 +199,112 @@ contract SDPMsg is ISDPMessage, Ownable {
     }
 
     function _routeUnorderedMessage(string calldata senderDomain, bytes32 senderID, SDPMessage memory sdpMessage) internal {
-        IContractUsingSDP(SDPLib.encodeCrossChainIDIntoAddress(sdpMessage.receiver))
+        IContractUsingSDP(sdpMessage.getReceiverAddress())
                 .recvUnorderedMessage(senderDomain, senderID, sdpMessage.message);
+    }
+
+    function _processSDPv2(string calldata senderDomain, bytes32 senderID, bytes memory pkg) {
+        SDPMessageV2 memory sdpMessage;
+        sdpMessage.decode(pkg);
+
+        require(
+            keccak256(abi.encodePacked(sdpMessage.receiveDomain)) == localDomainHash,
+            "SDPMsg: wrong receiving domain"
+        );
+
+        if (
+            sdpMessage.atomicFlag == SDPLib.SDP_V2_ATOMIC_FLAG_NONE_ATOMIC 
+                || sdpMessage.atomicFlag == SDPLib.SDP_V2_ATOMIC_FLAG_ATOMIC_REQUEST
+        ) {
+            _processSDPv2Request(senderDomain, senderID, sdpMessage);
+        } else if (sdpMessage.atomicFlag == SDPLib.SDP_V2_ATOMIC_FLAG_ACK_SUCCESS) {
+            
+        } else {
+            revert("unexpected atomic flag");
+        }
+    }
+
+    function _processSDPv2Request(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) {
+        bool res;
+        string memory errMsg;
+        if (sdpMessage.sequence == SDPLib.UNORDERED_SEQUENCE) {
+            (res, errMsg) = _routeUnorderedMessageV2(senderDomain, senderID, sdpMessage);
+            if (sdpMessage.atomicFlag == SDPLib.SDP_V2_ATOMIC_FLAG_NONE_ATOMIC) {
+                require(res, errMsg);
+            }
+        } else {
+            (res, errMsg) = _routeOrderedMessageV2(senderDomain, senderID, sdpMessage);
+        }
+
+        emit ReceiveMessageV2(
+            sdpMessage.messageId, 
+            senderDomain,
+            senderID, 
+            sdpMessage.receiveDomain,
+            sdpMessage.getReceiverAddress(),
+            sdpMessage.sequence,
+            sdpMessage.nonce, 
+            sdpMessage.atomicFlag,
+            res, 
+            errMsg
+        );
+
+        if (sdpMessage.atomicFlag == SDPLib.SDP_V2_ATOMIC_FLAG_ATOMIC_REQUEST) {
+            ackSDPv2Request(sdpMessage, senderDomain, senderID, res, errMsg);
+        }
+    }
+
+    function _routeOrderedMessageV2(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) internal returns (bool, string memory) {
+        uint32 seqExpected = _getAndUpdateRecvSeq(senderDomain, senderID, sdpMessage.receiver);
+        if (sdpMessage.sequence != seqExpected) {
+            return (false, "SDPMsg: sequence not equal");
+        }
+        
+        bool res = false;
+        string memory errMsg;
+        address receiver = sdpMessage.getReceiverAddress();
+        try
+            IContractUsingSDP(receiver).recvMessage(senderDomain, senderID, sdpMessage.message)
+        {
+            res = true;
+        } catch Error(
+            string memory reason
+        ) {
+            errMsg = reason;
+        } catch (
+            bytes memory /*lowLevelData*/
+        ) {}
+
+        return (res, errMsg);
+    }
+
+    function _routeUnorderedMessageV2(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) internal returns (bool, string memory) {
+        bool res = false;
+        string memory errMsg;
+        try
+            IContractUsingSDP(sdpMessage.getReceiverAddress()).recvUnorderedMessage(senderDomain, senderID, sdpMessage.message)
+        {
+            res = true;
+        } catch Error(
+            string memory reason
+        ) {
+            errMsg = reason;
+        } catch (
+            bytes memory /*lowLevelData*/
+        ) {}
+        
+        return (res, errMsg);
+    }
+
+    function ackSDPv2Request(SDPMessageV2 memory sdpMessage, string calldata senderDomain, bytes32 senderID, bool res, string memory errMsg) internal {
+        address receiverAddr = sdpMessage.getReceiverAddress();
+
+        sdpMessage.receiveDomain = senderDomain;
+        sdpMessage.receiver = senderID;
+        sdpMessage.atomicFlag = res ? SDPLib.SDP_V2_ATOMIC_FLAG_ACK_SUCCESS : SDP_V2_ATOMIC_FLAG_ACK_ERROR;
+        sdpMessage.errorMsg = res ? "" : errMsg;
+
+        IAuthMessage(amAddress).recvFromProtocol(receiverAddr, sdpMessage.encode());
     }
 
     function _getAndUpdateSendSeq(string memory receiveDomain, address sender, bytes32 receiver) internal returns (uint32) {
