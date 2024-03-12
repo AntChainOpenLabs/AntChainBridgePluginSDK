@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./interfaces/ISDPMessage.sol";
 import "./interfaces/IAuthMessage.sol";
 import "./interfaces/IContractUsingSDP.sol";
+import "./interfaces/IContractWithAcks.sol";
 import "./lib/sdp/SDPLib.sol";
 import "./lib/utils/Ownable.sol";
 
@@ -138,7 +139,7 @@ contract SDPMsg is ISDPMessage, Ownable {
         uint32 version = SDPLib.getSDPVersionFrom(pkg);
         if (version == 1) {
             _processSDPv1(senderDomain, senderID, pkg);
-        } else if (verison == 2) {
+        } else if (version == 2) {
             _processSDPv2(senderDomain, senderID, pkg);
         } else {
             revert("unsupport sdp version");
@@ -203,7 +204,7 @@ contract SDPMsg is ISDPMessage, Ownable {
                 .recvUnorderedMessage(senderDomain, senderID, sdpMessage.message);
     }
 
-    function _processSDPv2(string calldata senderDomain, bytes32 senderID, bytes memory pkg) {
+    function _processSDPv2(string calldata senderDomain, bytes32 senderID, bytes memory pkg) internal {
         SDPMessageV2 memory sdpMessage;
         sdpMessage.decode(pkg);
 
@@ -218,13 +219,15 @@ contract SDPMsg is ISDPMessage, Ownable {
         ) {
             _processSDPv2Request(senderDomain, senderID, sdpMessage);
         } else if (sdpMessage.atomicFlag == SDPLib.SDP_V2_ATOMIC_FLAG_ACK_SUCCESS) {
-            
+            _processSDPv2AckSuccess(senderDomain, senderID, sdpMessage);
+        } else if (sdpMessage.atomicFlag == SDPLib.SDP_V2_ATOMIC_FLAG_ACK_ERROR) {
+           _processSDPv2AckError(senderDomain, senderID, sdpMessage);
         } else {
             revert("unexpected atomic flag");
         }
     }
 
-    function _processSDPv2Request(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) {
+    function _processSDPv2Request(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) internal {
         bool res;
         string memory errMsg;
         if (sdpMessage.sequence == SDPLib.UNORDERED_SEQUENCE) {
@@ -250,7 +253,7 @@ contract SDPMsg is ISDPMessage, Ownable {
         );
 
         if (sdpMessage.atomicFlag == SDPLib.SDP_V2_ATOMIC_FLAG_ATOMIC_REQUEST) {
-            ackSDPv2Request(sdpMessage, senderDomain, senderID, res, errMsg);
+            _ackSDPv2Request(sdpMessage, senderDomain, senderID, res, errMsg);
         }
     }
 
@@ -296,15 +299,62 @@ contract SDPMsg is ISDPMessage, Ownable {
         return (res, errMsg);
     }
 
-    function ackSDPv2Request(SDPMessageV2 memory sdpMessage, string calldata senderDomain, bytes32 senderID, bool res, string memory errMsg) internal {
+    function _ackSDPv2Request(SDPMessageV2 memory sdpMessage, string calldata senderDomain, bytes32 senderID, bool res, string memory errMsg) internal {
         address receiverAddr = sdpMessage.getReceiverAddress();
 
         sdpMessage.receiveDomain = senderDomain;
         sdpMessage.receiver = senderID;
-        sdpMessage.atomicFlag = res ? SDPLib.SDP_V2_ATOMIC_FLAG_ACK_SUCCESS : SDP_V2_ATOMIC_FLAG_ACK_ERROR;
+        sdpMessage.atomicFlag = res ? SDPLib.SDP_V2_ATOMIC_FLAG_ACK_SUCCESS : SDPLib.SDP_V2_ATOMIC_FLAG_ACK_ERROR;
         sdpMessage.errorMsg = res ? "" : errMsg;
 
         IAuthMessage(amAddress).recvFromProtocol(receiverAddr, sdpMessage.encode());
+    }
+
+    function _processSDPv2AckSuccess(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) internal {
+        IContractWithAcks(sdpMessage.getReceiverAddress()).ackOnSuccess(
+            sdpMessage.messageId,
+            senderDomain,
+            senderID,
+            sdpMessage.sequence, 
+            sdpMessage.nonce, 
+            sdpMessage.message
+        );
+        emit ReceiveMessageV2(
+            sdpMessage.messageId, 
+            senderDomain,
+            senderID, 
+            sdpMessage.receiveDomain,
+            sdpMessage.getReceiverAddress(),
+            sdpMessage.sequence,
+            sdpMessage.nonce, 
+            sdpMessage.atomicFlag,
+            true, 
+            "success"
+        );
+    }
+
+    function _processSDPv2AckError(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) internal {
+        IContractWithAcks(sdpMessage.getReceiverAddress()).ackOnError(
+            sdpMessage.messageId,
+            senderDomain,
+            senderID,
+            sdpMessage.sequence, 
+            sdpMessage.nonce, 
+            sdpMessage.message,
+            sdpMessage.errorMsg
+        );
+        emit ReceiveMessageV2(
+            sdpMessage.messageId, 
+            senderDomain,
+            senderID, 
+            sdpMessage.receiveDomain,
+            sdpMessage.getReceiverAddress(),
+            sdpMessage.sequence,
+            sdpMessage.nonce, 
+            sdpMessage.atomicFlag,
+            true, 
+            sdpMessage.errorMsg
+        );
     }
 
     function _getAndUpdateSendSeq(string memory receiveDomain, address sender, bytes32 receiver) internal returns (uint32) {
