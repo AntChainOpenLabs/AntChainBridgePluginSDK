@@ -99,7 +99,7 @@ contract SDPMsg is ISDPMessage, Ownable {
                 errorMsg: ""
             }
         );
-        sdpMessage.calcMessageId();
+        sdpMessage.calcMessageId(localDomainHash);
 
         IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encode());
 
@@ -124,7 +124,7 @@ contract SDPMsg is ISDPMessage, Ownable {
                 errorMsg: ""
             }
         );
-        sdpMessage.calcMessageId();
+        sdpMessage.calcMessageId(localDomainHash);
 
         IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encode());
 

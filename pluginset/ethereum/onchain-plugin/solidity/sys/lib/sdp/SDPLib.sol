@@ -203,7 +203,7 @@ library SDPLib {
         }
     }
 
-    function calcMessageId(SDPMessageV2 memory sdpMessage) internal pure {
+    function calcMessageId(SDPMessageV2 memory sdpMessage, bytes32 localDomainHash) internal view {
         require(
             sdpMessage.version == 2, 
             "encodeSDPMessage: wrong version"
@@ -211,10 +211,6 @@ library SDPLib {
         require(
             sdpMessage.message.length <= 0xFFFFFFFF,
             "encodeSDPMessage: body length overlimit"
-        );
-        require(
-            sdpMessage.messageId != bytes32(0),
-            "encodeSDPMessage: zero message id"
         );
 
         uint total_size = 57 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length;
@@ -240,6 +236,9 @@ library SDPLib {
 
         TypesToBytes.varBytesToBytes(offset, sdpMessage.message, pkg);
 
+        TypesToBytes.addressToBytes(offset, msg.sender, pkg);
+        TypesToBytes.bytes32ToBytes(offset, localDomainHash, pkg);
+        
         sdpMessage.messageId = keccak256(pkg);
     }
 
