@@ -259,9 +259,7 @@ contract SDPMsg is ISDPMessage, Ownable {
 
     function _routeOrderedMessageV2(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) internal returns (bool, string memory) {
         uint32 seqExpected = _getAndUpdateRecvSeq(senderDomain, senderID, sdpMessage.receiver);
-        if (sdpMessage.sequence != seqExpected) {
-            return (false, "SDPMsg: sequence not equal");
-        }
+        require(sdpMessage.sequence == seqExpected, "SDPMsg: sequence not equal");
         
         bool res = false;
         string memory errMsg;
