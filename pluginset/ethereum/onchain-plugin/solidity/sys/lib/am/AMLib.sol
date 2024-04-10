@@ -201,13 +201,13 @@ library AMLib {
         bytes memory pkg = new bytes(len);
         uint offset = len;
 
-        TypesToBytes.uintToBytes(offset, message.version, pkg);
+        TypesToBytes.uint32ToBytes(offset, message.version, pkg);
         offset -= SizeOf.sizeOfInt(32);
 
         TypesToBytes.bytes32ToBytes(offset, message.author, pkg);
         offset -= SizeOf.sizeOfBytes32();
 
-        TypesToBytes.uintToBytes(offset, message.protocolType, pkg);
+        TypesToBytes.uint32ToBytes(offset, message.protocolType, pkg);
         offset -= SizeOf.sizeOfInt(32);
 
         TypesToBytes.stringToBytes(offset, message.body, pkg);
@@ -232,13 +232,13 @@ library AMLib {
         bytes memory pkg = new bytes(len);
         uint offset = len;
 
-        TypesToBytes.uintToBytes(offset, message.version, pkg);
+        TypesToBytes.uint32ToBytes(offset, message.version, pkg);
         offset -= SizeOf.sizeOfInt(32);
 
         TypesToBytes.bytes32ToBytes(offset, message.author, pkg);
         offset -= SizeOf.sizeOfBytes32();
 
-        TypesToBytes.uintToBytes(offset, message.protocolType, pkg);
+        TypesToBytes.uint32ToBytes(offset, message.protocolType, pkg);
         offset -= SizeOf.sizeOfInt(32);
 
         TypesToBytes.varBytesToBytes(offset, message.body, pkg);

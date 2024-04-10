@@ -79,7 +79,7 @@ library SDPLib {
         offset -= SizeOf.sizeOfBytes32();
 
         // 填充sequence
-        TypesToBytes.uintToBytes(offset, sdpMessage.sequence, pkg);
+        TypesToBytes.uint32ToBytes(offset, sdpMessage.sequence, pkg);
         offset -= SizeOf.sizeOfUint(32);
 
         // 填充消息
@@ -108,14 +108,10 @@ library SDPLib {
         BytesToTypes.bytesToString(offset, rawMessage, message);
         offset -= SizeOf.sizeOfBytes(message);
 
-        sdpMessage = SDPMessage(
-            {
-                receiveDomain: string(dest_domain),
-                receiver: receiver,
-                message: message,
-                sequence: sequence
-            }
-        );
+        sdpMessage.receiveDomain = string(dest_domain);
+        sdpMessage.receiver = receiver;
+        sdpMessage.sequence = sequence;
+        sdpMessage.message = message;
     }
 
     function encode(SDPMessageV2 memory sdpMessage) pure internal returns (bytes memory) {
@@ -143,13 +139,15 @@ library SDPLib {
         bytes memory pkg = new bytes(total_size);
         uint offset = total_size;
 
-        TypesToBytes.uintToBytes(offset, sdpMessage.version, pkg);
+        TypesToBytes.uintToBytes(offset, sdpMessage.version + 0xff000000, pkg);
         offset -= SizeOf.sizeOfInt(32);
 
         TypesToBytes.bytes32ToBytes(offset, sdpMessage.messageId, pkg);
         offset -= SizeOf.sizeOfBytes32();
 
-        TypesToBytes.varBytesToBytes(offset, bytes(sdpMessage.receiveDomain), pkg);
+        bytes memory raw_recv_domain = bytes(sdpMessage.receiveDomain);
+        TypesToBytes.varBytesToBytes(offset, raw_recv_domain, pkg);
+        offset -= 4 + raw_recv_domain.length;
         
         TypesToBytes.bytes32ToBytes(offset, sdpMessage.receiver, pkg);
         offset -= SizeOf.sizeOfBytes32();
@@ -164,6 +162,7 @@ library SDPLib {
         offset -= SizeOf.sizeOfInt(32);
 
         TypesToBytes.varBytesToBytes(offset, sdpMessage.message, pkg);
+        offset -= 4 + sdpMessage.message.length;
 
         if (withErrorMsg) {
             TypesToBytes.varBytesToBytes(offset, bytes(sdpMessage.errorMsg), pkg);
@@ -174,15 +173,16 @@ library SDPLib {
 
     function decode(SDPMessageV2 memory sdpMessage, bytes memory rawMessage) internal pure {
         uint256 offset = rawMessage.length;
-        bool withErrorMsg = sdpMessage.atomicFlag > SDP_V2_ATOMIC_FLAG_ACK_SUCCESS;
 
-        sdpMessage.version = BytesToTypes.bytesToUint32(offset, rawMessage);
+        sdpMessage.version = getSDPVersionFrom(rawMessage);
         offset -= SizeOf.sizeOfUint(32);
 
         sdpMessage.messageId = BytesToTypes.bytesToBytes32(offset, rawMessage);
         offset -= SizeOf.sizeOfBytes32();
 
-        sdpMessage.receiveDomain = string(BytesToTypes.bytesToVarBytes(offset, rawMessage));
+        bytes memory raw_recv_domain = BytesToTypes.bytesToVarBytes(offset, rawMessage);
+        sdpMessage.receiveDomain = string(raw_recv_domain);
+        offset -= 4 + raw_recv_domain.length;
 
         sdpMessage.receiver = BytesToTypes.bytesToBytes32(offset, rawMessage);
         offset -= SizeOf.sizeOfBytes32();
@@ -197,8 +197,9 @@ library SDPLib {
         offset -= 4;
 
         sdpMessage.message = BytesToTypes.bytesToVarBytes(offset, rawMessage);
+        offset -= 4 + sdpMessage.message.length;
 
-        if (withErrorMsg) {
+        if (sdpMessage.atomicFlag > SDP_V2_ATOMIC_FLAG_ACK_SUCCESS) {
             sdpMessage.errorMsg = string(BytesToTypes.bytesToVarBytes(offset, rawMessage));
         }
     }
@@ -213,14 +214,16 @@ library SDPLib {
             "encodeSDPMessage: body length overlimit"
         );
 
-        uint total_size = 57 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length;
+        uint total_size = 121 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length;
         bytes memory pkg = new bytes(total_size);
         uint offset = total_size;
 
-        TypesToBytes.uintToBytes(offset, sdpMessage.version, pkg);
+        TypesToBytes.uintToBytes(offset, sdpMessage.version + 0xff000000, pkg);
         offset -= SizeOf.sizeOfInt(32);
 
-        TypesToBytes.varBytesToBytes(offset, bytes(sdpMessage.receiveDomain), pkg);
+        bytes memory raw_recv_domain = bytes(sdpMessage.receiveDomain);
+        TypesToBytes.varBytesToBytes(offset, raw_recv_domain, pkg);
+        offset -= 4 + raw_recv_domain.length;
         
         TypesToBytes.bytes32ToBytes(offset, sdpMessage.receiver, pkg);
         offset -= SizeOf.sizeOfBytes32();
@@ -235,6 +238,7 @@ library SDPLib {
         offset -= SizeOf.sizeOfInt(32);
 
         TypesToBytes.varBytesToBytes(offset, sdpMessage.message, pkg);
+        offset -= 4 + sdpMessage.message.length;
 
         TypesToBytes.addressToBytes(offset, msg.sender, pkg);
         TypesToBytes.bytes32ToBytes(offset, localDomainHash, pkg);

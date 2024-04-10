@@ -386,6 +386,10 @@ library Utils {
             src += 32;
         }
 
+        if (len == 0) {
+            return;
+        }
+        
         // uint mask = SafeMath.pwr(256, (32 - len)) - 1;
         uint mask = 256 ** (32 - len) - 1;
         assembly {

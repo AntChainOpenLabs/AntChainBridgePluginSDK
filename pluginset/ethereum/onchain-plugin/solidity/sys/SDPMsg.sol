@@ -184,17 +184,22 @@ contract SDPMsg is ISDPMessage, Ownable {
         bool res = false;
         string memory errMsg;
         address receiver = sdpMessage.getReceiverAddress();
-        try
-            IContractUsingSDP(receiver).recvMessage(senderDomain, senderID, sdpMessage.message)
-        {
-            res = true;
-        } catch Error(
-            string memory reason
-        ) {
-            errMsg = reason;
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {}
+        if (receiver.code.length == 0) {
+            res = false;
+            errMsg = "receiver has no code";
+        } else {
+            try
+                IContractUsingSDP(receiver).recvMessage(senderDomain, senderID, sdpMessage.message)
+            {
+                res = true;
+            } catch Error(
+                string memory reason
+            ) {
+                errMsg = reason;
+            } catch (
+                bytes memory /*lowLevelData*/
+            ) {}
+        }
 
         emit receiveMessage(senderDomain, senderID, receiver, seqExpected, res, errMsg);
     }
@@ -264,17 +269,22 @@ contract SDPMsg is ISDPMessage, Ownable {
         bool res = false;
         string memory errMsg;
         address receiver = sdpMessage.getReceiverAddress();
-        try
-            IContractUsingSDP(receiver).recvMessage(senderDomain, senderID, sdpMessage.message)
-        {
-            res = true;
-        } catch Error(
-            string memory reason
-        ) {
-            errMsg = reason;
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {}
+        if (receiver.code.length == 0) {
+            res = false;
+            errMsg = "receiver has no code";
+        } else {
+            try
+                IContractUsingSDP(receiver).recvMessage(senderDomain, senderID, sdpMessage.message)
+            {
+                res = true;
+            } catch Error(
+                string memory reason
+            ) {
+                errMsg = reason;
+            } catch (
+                bytes memory /*lowLevelData*/
+            ) {}
+        }
 
         return (res, errMsg);
     }
@@ -282,17 +292,22 @@ contract SDPMsg is ISDPMessage, Ownable {
     function _routeUnorderedMessageV2(string calldata senderDomain, bytes32 senderID, SDPMessageV2 memory sdpMessage) internal returns (bool, string memory) {
         bool res = false;
         string memory errMsg;
-        try
-            IContractUsingSDP(sdpMessage.getReceiverAddress()).recvUnorderedMessage(senderDomain, senderID, sdpMessage.message)
-        {
-            res = true;
-        } catch Error(
-            string memory reason
-        ) {
-            errMsg = reason;
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {}
+        if (sdpMessage.getReceiverAddress().code.length == 0) {
+            res = false;
+            errMsg = "receiver has no code";
+        } else {
+            try
+                IContractUsingSDP(sdpMessage.getReceiverAddress()).recvUnorderedMessage(senderDomain, senderID, sdpMessage.message)
+            {
+                res = true;
+            } catch Error(
+                string memory reason
+            ) {
+                errMsg = reason;
+            } catch (
+                bytes memory /*lowLevelData*/
+            ) {}
+        }
         
         return (res, errMsg);
     }
