@@ -41,13 +41,6 @@ library BytesToTypes {
         }
     }
 
-    function getStringSizeFromUint32(uint _offset, bytes memory _input) internal pure returns(uint size) {
-
-        assembly {
-            size := shr(224, mload(add(_input,_offset)))
-        }
-    }
-
     function bytesToString(uint _offset, bytes memory _input, bytes memory _output) internal pure {
 
         uint size = 32;
@@ -74,7 +67,7 @@ library BytesToTypes {
 
     function bytesToVarBytes(uint _offset, bytes memory _input) internal pure returns (bytes memory) {
 
-        uint len = getStringSizeFromUint32(_offset, _input);
+        uint len = bytesToUint32(_offset, _input);
         _offset -= 4;
         require(
             len <= _offset,

@@ -25,12 +25,20 @@ import org.pf4j.ClassLoadingStrategy;
 import org.pf4j.PluginClassLoader;
 import org.pf4j.PluginDescriptor;
 import org.pf4j.PluginManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PrefixBannedPluginClassloader extends PluginClassLoader {
+
+    private static final Logger log = LoggerFactory.getLogger(PrefixBannedPluginClassloader.class);
 
     private static final String JAVA_PACKAGE_PREFIX = "java.";
 
     private static final String PLUGIN_PACKAGE_PREFIX = "org.pf4j.";
+
+    private static final String ACB_SPI_PACKAGE_PREFIX = "com.alipay.antchain.bridge.plugins.spi";
+
+    private static final String ACB_COMMONS_PACKAGE_PREFIX = "com.alipay.antchain.bridge.plugins.commons";
 
     /**
      * Banned the dependency with the prefix path to read the resource
@@ -133,5 +141,62 @@ public class PrefixBannedPluginClassloader extends PluginClassLoader {
         }
 
         return Collections.enumeration(resources);
+    }
+
+    @Override
+    public Class<?> loadClass(String className) throws ClassNotFoundException {
+        synchronized (getClassLoadingLock(className)) {
+            // first check whether it's a system class, delegate to the system loader
+            if (className.startsWith(JAVA_PACKAGE_PREFIX)) {
+                return findSystemClass(className);
+            }
+
+            // if the class is part of the plugin engine use parent class loader
+            if (
+                    (className.startsWith(PLUGIN_PACKAGE_PREFIX) && !className.startsWith("org.pf4j.demo") && !className.startsWith("org.pf4j.test")) ||
+                            className.startsWith(ACB_SPI_PACKAGE_PREFIX) ||
+                            className.startsWith(ACB_COMMONS_PACKAGE_PREFIX) ||
+                            className.startsWith("org.slf4j.")
+            ) {
+//                log.trace("Delegate the loading of PF4J class '{}' to parent", className);
+                return getParent().loadClass(className);
+            }
+
+            log.trace("Received request to load class '{}'", className);
+
+            // second check whether it's already been loaded
+            Class<?> loadedClass = findLoadedClass(className);
+            if (loadedClass != null) {
+                log.trace("Found loaded class '{}'", className);
+                return loadedClass;
+            }
+
+            for (ClassLoadingStrategy.Source classLoadingSource : classLoadingStrategy.getSources()) {
+                Class<?> c = null;
+                try {
+                    switch (classLoadingSource) {
+                        case APPLICATION:
+                            c = super.loadClass(className);
+                            break;
+                        case PLUGIN:
+                            c = findClass(className);
+                            break;
+                        case DEPENDENCIES:
+                            c = loadClassFromDependencies(className);
+                            break;
+                    }
+                } catch (ClassNotFoundException ignored) {
+                }
+
+                if (c != null) {
+                    log.trace("Found class '{}' in {} classpath", className, classLoadingSource);
+                    return c;
+                } else {
+                    log.trace("Couldn't find class '{}' in {} classpath", className, classLoadingSource);
+                }
+            }
+
+            throw new ClassNotFoundException(className);
+        }
     }
 }

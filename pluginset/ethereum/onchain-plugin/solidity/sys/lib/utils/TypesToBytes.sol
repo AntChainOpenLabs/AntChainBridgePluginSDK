@@ -31,6 +31,18 @@ library TypesToBytes {
         }
     }
 
+    function byteToBytes(uint _offset, uint8 _input, bytes memory _output) internal pure {
+
+        assembly {
+            let my_pos := add(_output, _offset)
+            let prev_word_pos := sub(my_pos, 1)
+            let prev_word := mload(prev_word_pos)
+
+            mstore(my_pos, _input)
+            mstore(prev_word_pos, prev_word)
+        }
+    }
+
     function boolToBytes(uint _offset, bool _input, bytes memory _output) internal pure {
         uint8 x = _input == false ? 0 : 1;
         assembly {
@@ -40,7 +52,7 @@ library TypesToBytes {
 
     function varBytesToBytes(uint _offset, bytes memory _input, bytes memory _output) internal pure {
         uint32 body_len = uint32(_input.length);
-        TypesToBytes.uintToBytes(_offset, body_len, _output);
+        TypesToBytes.uint32ToBytes(_offset, body_len, _output);
         _offset -= 4;
 
         require(
@@ -140,11 +152,11 @@ library TypesToBytes {
     function uint16ToBytes(uint _offset, uint16 _input, bytes memory _output) internal pure {
 
         assembly {
-            let prev_word_pos := add(_output, _offset)
+            let my_pos := add(_output, _offset)
+            let prev_word_pos := sub(my_pos, 2)
             let prev_word := mload(prev_word_pos)
 
-            mstore(add(prev_word_pos, 2), _input)
-
+            mstore(my_pos, _input)
             mstore(prev_word_pos, prev_word)
         }
     }
@@ -152,11 +164,23 @@ library TypesToBytes {
     function uint32ToBytes(uint _offset, uint32 _input, bytes memory _output) internal pure {
 
         assembly {
-            let prev_word_pos := add(_output, _offset)
+            let my_pos := add(_output, _offset)
+            let prev_word_pos := sub(my_pos, 4)
             let prev_word := mload(prev_word_pos)
 
-            mstore(add(prev_word_pos, 4), _input)
+            mstore(my_pos, _input)
+            mstore(prev_word_pos, prev_word)
+        }
+    }
 
+    function uint64ToBytes(uint _offset, uint64 _input, bytes memory _output) internal pure {
+
+        assembly {
+            let my_pos := add(_output, _offset)
+            let prev_word_pos := sub(my_pos, 8)
+            let prev_word := mload(prev_word_pos)
+
+            mstore(my_pos, _input)
             mstore(prev_word_pos, prev_word)
         }
     }
