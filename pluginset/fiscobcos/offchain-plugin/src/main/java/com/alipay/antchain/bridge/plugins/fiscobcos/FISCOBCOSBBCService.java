@@ -56,6 +56,7 @@ import org.fisco.bcos.sdk.v3.transaction.model.dto.TransactionResponse;
 import org.fisco.bcos.sdk.v3.codec.abi.tools.TopicTools;
 import org.fisco.bcos.sdk.v3.codec.datatypes.DynamicBytes;
 import org.fisco.bcos.sdk.v3.transaction.tools.ContractLoader;
+import org.web3j.tx.gas.StaticGasProvider;
 
 import static com.alipay.antchain.bridge.plugins.fiscobcos.abi.AuthMsg.SENDAUTHMESSAGE_EVENT;
 
@@ -553,23 +554,29 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
         }
 
         // 2. deploy contract
-        TransactionResponse response;
+//        TransactionResponse response;
+//        try {
+//            response = transactionProcessor.deployByContractLoader("AuthMsg", new ArrayList<>());
+//        } catch (Exception e) {
+//            throw new RuntimeException("failed to deploy authMsg", e);
+//        }
+        AuthMsg authMsg;
         try {
-            response = transactionProcessor.deployByContractLoader("AuthMsg", new ArrayList<>());
+            authMsg = AuthMsg.deploy(client,keyPair);
         } catch (Exception e) {
             throw new RuntimeException("failed to deploy authMsg", e);
         }
 
         // 3. get tx receipt
-        TransactionReceipt transactionReceipt = response.getTransactionReceipt();
+        TransactionReceipt transactionReceipt = authMsg.getDeployReceipt();
 
         // 4. check whether the deployment is successful
         if (!ObjectUtil.isNull(transactionReceipt) && transactionReceipt.getStatus() == 0) {
             AuthMessageContract authMessageContract = new AuthMessageContract();
-            authMessageContract.setContractAddress(response.getContractAddress());
+            authMessageContract.setContractAddress(authMsg.getContractAddress());
             authMessageContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
             bbcContext.setAuthMessageContract(authMessageContract);
-            getBBCLogger().info("setup am contract successful: {}", response.getContractAddress());
+            getBBCLogger().info("setup am contract successful: {}", authMsg.getContractAddress());
         } else {
             throw new RuntimeException("failed to get deploy authMsg tx receipt");
         }
@@ -589,23 +596,29 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
         }
 
         // 2. deploy contract
-        TransactionResponse response;
+//        TransactionResponse response;
+//        try {
+//            response = transactionProcessor.deployByContractLoader("SDPMsg", new ArrayList<>());
+//        } catch (Exception e) {
+//            throw new RuntimeException("failed to deploy sdpMsg", e);
+//        }
+        SDPMsg sdpMsg;
         try {
-            response = transactionProcessor.deployByContractLoader("SDPMsg", new ArrayList<>());
+            sdpMsg = SDPMsg.deploy(client,keyPair);
         } catch (Exception e) {
             throw new RuntimeException("failed to deploy sdpMsg", e);
         }
 
         // 3. get tx receipt
-        TransactionReceipt transactionReceipt = response.getTransactionReceipt();
+        TransactionReceipt transactionReceipt = sdpMsg.getDeployReceipt();
 
         // 4. check whether the deployment is successful
         if (!ObjectUtil.isNull(transactionReceipt) && transactionReceipt.getStatus() == 0) {
             SDPContract sdpContract = new SDPContract();
-            sdpContract.setContractAddress(response.getContractAddress());
+            sdpContract.setContractAddress(sdpMsg.getContractAddress());
             sdpContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
             bbcContext.setSdpContract(sdpContract);
-            getBBCLogger().info("setup sdp contract successful: {}", response.getContractAddress());
+            getBBCLogger().info("setup sdp contract successful: {}", sdpMsg.getContractAddress());
         } else {
             throw new RuntimeException("failed to get deploy sdpMsg tx receipt");
         }
