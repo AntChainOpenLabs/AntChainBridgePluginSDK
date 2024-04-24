@@ -16,7 +16,46 @@
 
 package com.alipay.antchain.bridge.plugins.fiscobcos;
 
+import cn.hutool.core.util.ByteUtil;
+import cn.hutool.core.util.HexUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.digest.DigestUtil;
+import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
+import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
+import com.alipay.antchain.bridge.commons.bbc.syscontract.AuthMessageContract;
+import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
+import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
+import com.alipay.antchain.bridge.commons.core.am.AuthMessageFactory;
+import com.alipay.antchain.bridge.commons.core.am.IAuthMessage;
+import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
+import com.alipay.antchain.bridge.commons.core.sdp.ISDPMessage;
+import com.alipay.antchain.bridge.commons.core.sdp.SDPMessageFactory;
+import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
+import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
+import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import com.alipay.antchain.bridge.plugins.fiscobcos.abi.AppContract;
+import com.alipay.antchain.bridge.plugins.fiscobcos.abi.AuthMsg;
+import com.alipay.antchain.bridge.plugins.fiscobcos.abi.SDPMsg;
+import lombok.Getter;
+import lombok.Setter;
+import org.fisco.bcos.sdk.v3.BcosSDK;
+import org.fisco.bcos.sdk.v3.client.Client;
+import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.transaction.manager.AssembleTransactionProcessor;
+import org.fisco.bcos.sdk.v3.transaction.manager.TransactionProcessorFactory;
+import org.fisco.bcos.sdk.v3.transaction.model.dto.TransactionResponse;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+
 
 public class FISCOBCOSBBCServiceTest {
     private static final String VALID_FILENAME = "config.toml";
@@ -29,10 +68,436 @@ public class FISCOBCOSBBCServiceTest {
 
     private static FISCOBCOSBBCService fiscobcosBBCService;
 
+    private static AppContract appContract;
 
     @Before
     public void init() throws Exception{
+        fiscobcosBBCService = new FISCOBCOSBBCService();
 
+        BcosSDK sdk = BcosSDK.build(FISCOBCOSBBCService.class.getClassLoader().getResource(VALID_FILENAME).getPath());
+        Client client = sdk.getClient(VALID_GROUPID);
+
+        appContract = AppContract.deploy(client, client.getCryptoSuite().getCryptoKeyPair());
     }
 
+    @Test
+    public void testStart(){
+        fiscobcosBBCService.start();
+    }
+
+    @Test
+    public void testStartup(){
+        // start up success
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+        Assert.assertEquals(null, fiscobcosBBCService.getBbcContext().getAuthMessageContract());
+        Assert.assertEquals(null, fiscobcosBBCService.getBbcContext().getSdpContract());
+        // start up failed
+        AbstractBBCContext mockInvalidCtx = mockInvalidCtx();
+        try {
+            fiscobcosBBCService.startup(mockInvalidCtx);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testStartupWithDeployedContract(){
+        // start up a tmp
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        FISCOBCOSBBCService fiscobcosBBCServiceTmp = new FISCOBCOSBBCService();
+        fiscobcosBBCServiceTmp.startup(mockValidCtx);
+
+        // set up am and sdp
+        fiscobcosBBCServiceTmp.setupAuthMessageContract();
+        fiscobcosBBCServiceTmp.setupSDPMessageContract();
+        String amAddr = fiscobcosBBCServiceTmp.getContext().getAuthMessageContract().getContractAddress();
+        String sdpAddr = fiscobcosBBCServiceTmp.getContext().getSdpContract().getContractAddress();
+
+        // start up success
+        AbstractBBCContext ctx = mockValidCtxWithPreDeployedContracts(amAddr, sdpAddr);
+        fiscobcosBBCService.startup(ctx);
+        Assert.assertEquals(amAddr, fiscobcosBBCService.getBbcContext().getAuthMessageContract().getContractAddress());
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, fiscobcosBBCService.getBbcContext().getAuthMessageContract().getStatus());
+        Assert.assertEquals(sdpAddr, fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, fiscobcosBBCService.getBbcContext().getSdpContract().getStatus());
+    }
+
+    @Test
+    public void testStartupWithReadyContract(){
+        // start up a tmp fiscobcosBBCService to set up contract
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        FISCOBCOSBBCService fiscobcosBBCServiceTmp = new FISCOBCOSBBCService();
+        fiscobcosBBCServiceTmp.startup(mockValidCtx);
+
+        // set up am and sdp
+        fiscobcosBBCServiceTmp.setupAuthMessageContract();
+        fiscobcosBBCServiceTmp.setupSDPMessageContract();
+        String amAddr = fiscobcosBBCServiceTmp.getContext().getAuthMessageContract().getContractAddress();
+        String sdpAddr = fiscobcosBBCServiceTmp.getContext().getSdpContract().getContractAddress();
+
+        // start up success
+        AbstractBBCContext ctx = mockValidCtxWithPreReadyContracts(amAddr, sdpAddr);
+        fiscobcosBBCService.startup(ctx);
+        Assert.assertEquals(amAddr, fiscobcosBBCService.getBbcContext().getAuthMessageContract().getContractAddress());
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_READY, fiscobcosBBCService.getBbcContext().getAuthMessageContract().getStatus());
+        Assert.assertEquals(sdpAddr, fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_READY, fiscobcosBBCService.getBbcContext().getSdpContract().getStatus());
+    }
+
+    @Test
+    public void testShutdown(){
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+        fiscobcosBBCService.shutdown();
+    }
+
+    @Test
+    public void testGetContext(){
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+        AbstractBBCContext ctx = fiscobcosBBCService.getContext();
+        Assert.assertNotNull(ctx);
+        Assert.assertEquals(null, ctx.getAuthMessageContract());
+    }
+    @Test
+    public void testQueryLatestHeight(){
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+        Assert.assertNotNull(fiscobcosBBCService.queryLatestHeight());
+    }
+    @Test
+    public void testSetupAuthMessageContract(){
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+
+        // set up am
+        fiscobcosBBCService.setupAuthMessageContract();
+
+        // get context
+        AbstractBBCContext ctx = fiscobcosBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getAuthMessageContract().getStatus());
+    }
+
+    @Test
+    public void testSetupSDPMessageContract(){
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+
+        // set up sdp
+        fiscobcosBBCService.setupSDPMessageContract();
+
+        // get context
+        AbstractBBCContext ctx = fiscobcosBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getSdpContract().getStatus());
+    }
+
+    @Test
+    public void testQuerySDPMessageSeq(){
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+
+        // set up sdp
+        fiscobcosBBCService.setupSDPMessageContract();
+
+        // set the domain
+        fiscobcosBBCService.setLocalDomain("receiverDomain");
+
+        // query seq
+        long seq = fiscobcosBBCService.querySDPMessageSeq(
+                "senderDomain",
+                DigestUtil.sha256Hex("senderID"),
+                "receiverDomain",
+                DigestUtil.sha256Hex("receiverID")
+        );
+        Assert.assertEquals(0L, seq);
+    }
+
+    @Test
+    public void testSetProtocol() throws Exception {
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+        AbstractBBCContext ctx;
+
+        // set up am
+        fiscobcosBBCService.setupAuthMessageContract();
+
+        // set up sdp
+        fiscobcosBBCService.setupSDPMessageContract();
+
+        // get context
+        ctx = fiscobcosBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getAuthMessageContract().getStatus());
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getSdpContract().getStatus());
+
+        // set protocol to am (sdp type: 0)
+        fiscobcosBBCService.setProtocol(
+                ctx.getSdpContract().getContractAddress(),
+                "0");
+
+        String addr = AuthMsg.load(
+                fiscobcosBBCService.getBbcContext().getAuthMessageContract().getContractAddress(),
+                fiscobcosBBCService.getClient(),
+                fiscobcosBBCService.getKeyPair()
+        ).getProtocol(BigInteger.ZERO);
+        System.out.printf("protocol: %s\n", addr);
+
+        // check am status
+        ctx = fiscobcosBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_READY, ctx.getAuthMessageContract().getStatus());
+    }
+
+    @Test
+    public void testSetAmContractAndLocalDomain() throws Exception {
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+
+        // set up am
+        fiscobcosBBCService.setupAuthMessageContract();
+
+        // set up sdp
+        fiscobcosBBCService.setupSDPMessageContract();
+
+        // get context
+        AbstractBBCContext ctx = fiscobcosBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getAuthMessageContract().getStatus());
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getSdpContract().getStatus());
+
+        // set am to sdp
+        fiscobcosBBCService.setAmContract(ctx.getAuthMessageContract().getContractAddress());
+
+        String amAddr = SDPMsg.load(
+                fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress(),
+                fiscobcosBBCService.getClient(),
+                fiscobcosBBCService.getKeyPair()
+        ).getAmAddress();
+        System.out.printf("amAddr: %s\n", amAddr);
+
+        // check contract status
+        ctx = fiscobcosBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getSdpContract().getStatus());
+
+        // set the domain
+        fiscobcosBBCService.setLocalDomain("receiverDomain");
+
+        byte[] rawDomain = SDPMsg.load(
+                fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress(),
+                fiscobcosBBCService.getClient(),
+                fiscobcosBBCService.getKeyPair()
+        ).getLocalDomain();
+        System.out.printf("domain: %s\n", HexUtil.encodeHexStr(rawDomain));
+
+        // check contract status
+        ctx = fiscobcosBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_READY, ctx.getSdpContract().getStatus());
+    }
+
+    @Test
+    public void testRelayAuthMessage() throws Exception {
+        relayAmPrepare();
+
+        // relay am msg
+        CrossChainMessageReceipt receipt = fiscobcosBBCService.relayAuthMessage(getRawMsgFromRelayer());
+        System.out.println(receipt.getErrorMsg());
+        System.out.println(receipt.isSuccessful());
+//        Assert.assertTrue(receipt.isSuccessful());
+//
+//        System.out.println("sleep 15s for tx to be packaged...");
+//        Thread.sleep(WAIT_TIME);
+//
+//        TransactionReceipt transactionReceipt = fiscobcosBBCService.getClient().getTransactionReceipt(receipt.getTxhash(), false).getTransactionReceipt();
+//        Assert.assertNotNull(transactionReceipt);
+//        Assert.assertTrue(transactionReceipt.isStatusOK());
+    }
+
+    @Test
+    public void testReadCrossChainMessageReceipt() throws IOException, InterruptedException {
+        relayAmPrepare();
+
+        // relay am msg
+        CrossChainMessageReceipt crossChainMessageReceipt = fiscobcosBBCService.relayAuthMessage(getRawMsgFromRelayer());
+
+        System.out.println("sleep 15s for tx to be packaged...");
+        Thread.sleep(WAIT_TIME);
+
+        // read receipt by txHash
+        CrossChainMessageReceipt crossChainMessageReceipt1 = fiscobcosBBCService.readCrossChainMessageReceipt(crossChainMessageReceipt.getTxhash());
+        Assert.assertTrue(crossChainMessageReceipt1.isConfirmed());
+        Assert.assertEquals(crossChainMessageReceipt.isSuccessful(), crossChainMessageReceipt1.isSuccessful());
+    }
+
+    private void relayAmPrepare(){
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        fiscobcosBBCService.startup(mockValidCtx);
+
+        // set up am
+        fiscobcosBBCService.setupAuthMessageContract();
+
+        // set up sdp
+        fiscobcosBBCService.setupSDPMessageContract();
+
+        // set protocol to am (sdp type: 0)
+        fiscobcosBBCService.setProtocol(
+                mockValidCtx.getSdpContract().getContractAddress(),
+                "0");
+        System.out.println("sdp address:"+mockValidCtx.getSdpContract().getContractAddress());
+        System.out.println("am address:"+mockValidCtx.getAuthMessageContract().getContractAddress());
+
+        // set am to sdp
+        fiscobcosBBCService.setAmContract(mockValidCtx.getAuthMessageContract().getContractAddress());
+
+        // set local domain to sdp
+        fiscobcosBBCService.setLocalDomain("receiverDomain");
+
+        // check contract ready
+        AbstractBBCContext ctxCheck = fiscobcosBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_READY, ctxCheck.getAuthMessageContract().getStatus());
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_READY, ctxCheck.getSdpContract().getStatus());
+    }
+
+
+
+    private AbstractBBCContext mockValidCtx(){
+        FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
+        mockConf.setFileName(VALID_FILENAME);
+        mockConf.setGroupID(VALID_GROUPID);
+        AbstractBBCContext mockCtx = new DefaultBBCContext();
+        mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
+        return mockCtx;
+    }
+    private AbstractBBCContext mockInvalidCtx(){
+        FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
+        mockConf.setFileName(INVALID_FILENAME);
+        mockConf.setGroupID(VALID_GROUPID);
+        AbstractBBCContext mockCtx = new DefaultBBCContext();
+        mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
+        return mockCtx;
+    }
+
+    private AbstractBBCContext mockValidCtxWithPreDeployedContracts(String amAddr, String sdpAddr){
+        FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
+        mockConf.setFileName(VALID_FILENAME);
+        mockConf.setGroupID(VALID_GROUPID);
+        mockConf.setAmContractAddressDeployed(amAddr);
+        mockConf.setSdpContractAddressDeployed(sdpAddr);
+        AbstractBBCContext mockCtx = new DefaultBBCContext();
+        mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
+        return mockCtx;
+    }
+
+    private AbstractBBCContext mockValidCtxWithPreReadyContracts(String amAddr, String sdpAddr){
+        FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
+        mockConf.setFileName(VALID_FILENAME);
+        mockConf.setGroupID(VALID_GROUPID);
+        mockConf.setAmContractAddressDeployed(amAddr);
+        mockConf.setSdpContractAddressDeployed(sdpAddr);
+        AbstractBBCContext mockCtx = new DefaultBBCContext();
+        mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
+
+        AuthMessageContract authMessageContract = new AuthMessageContract();
+        authMessageContract.setContractAddress(amAddr);
+        authMessageContract.setStatus(ContractStatusEnum.CONTRACT_READY);
+        mockCtx.setAuthMessageContract(authMessageContract);
+
+        SDPContract sdpContract = new SDPContract();
+        sdpContract.setContractAddress(sdpAddr);
+        sdpContract.setStatus(ContractStatusEnum.CONTRACT_READY);
+        mockCtx.setSdpContract(sdpContract);
+
+        return mockCtx;
+    }
+
+    private byte[] getRawMsgFromRelayer() throws IOException {
+        ISDPMessage sdpMessage = SDPMessageFactory.createSDPMessage(
+                1,
+                "receiverDomain",
+                HexUtil.decodeHex(
+                        String.format("000000000000000000000000%s", HexUtil.encodeHexStr(RandomUtil.randomBytes(20)))
+                ),
+                -1,
+                "awesome antchain-bridge".getBytes()
+        );
+
+        IAuthMessage am = AuthMessageFactory.createAuthMessage(
+                1,
+                DigestUtil.sha256("senderID"),
+                0,
+                sdpMessage.encode()
+        );
+
+        MockResp resp = new MockResp();
+        resp.setRawResponse(am.encode());
+
+        MockProof proof = new MockProof();
+        proof.setResp(resp);
+        proof.setDomain("senderDomain");
+
+        byte[] rawProof = TLVUtils.encode(proof);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        stream.write(new byte[]{0, 0, 0, 0});
+
+        int len = rawProof.length;
+        stream.write((len >>> 24) & 0xFF);
+        stream.write((len >>> 16) & 0xFF);
+        stream.write((len >>> 8) & 0xFF);
+        stream.write((len) & 0xFF);
+
+        stream.write(rawProof);
+
+        return stream.toByteArray();
+    }
+
+    /**
+     * Get the sdp message payload from the raw bytes
+     * which is the input for {@link com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService#relayAuthMessage(byte[])}
+     *
+     * @param raw the input for {@link com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService#relayAuthMessage(byte[])}
+     * @return {@code byte[]} sdp payload
+     */
+    private static byte[] getSDPPayloadFromRawMsg(byte[] raw) {
+        ByteArrayInputStream stream = new ByteArrayInputStream(raw);
+
+        byte[] zeros = new byte[4];
+        stream.read(zeros, 0, 4);
+
+        byte[] rawLen = new byte[4];
+        stream.read(rawLen, 0, 4);
+
+        int len = ByteUtil.bytesToInt(rawLen, ByteOrder.BIG_ENDIAN);
+
+        byte[] rawProof = new byte[len];
+        stream.read(rawProof, 0, len);
+
+        MockProof proof = TLVUtils.decode(rawProof, MockProof.class);
+        IAuthMessage authMessage = AuthMessageFactory.createAuthMessage(proof.getResp().getRawResponse());
+        ISDPMessage sdpMessage = SDPMessageFactory.createSDPMessage(authMessage.getPayload());
+
+        return sdpMessage.getPayload();
+    }
+
+    @Getter
+    @Setter
+    public static class MockProof {
+
+        @TLVField(tag = 5, type = TLVTypeEnum.BYTES)
+        private MockResp resp;
+
+        @TLVField(tag = 9, type = TLVTypeEnum.STRING)
+        private String domain;
+    }
+
+    @Getter
+    @Setter
+    public static class MockResp {
+
+        @TLVField(tag = 0, type = TLVTypeEnum.BYTES)
+        private byte[] rawResponse;
+    }
 }
