@@ -40,12 +40,44 @@ public class FISCOBCOSConfig {
         return JSON.parseObject(jsonString, FISCOBCOSConfig.class);
     }
 
+    // [cryptoMaterial]
     @JSONField
-    private String fileName;
+    private String disableSsl = "false";
 
+    @JSONField
+    private String useSMCrypto = "false";
+
+    @JSONField
+    private String caCert;
+
+    @JSONField
+    private String sslCert;
+
+    @JSONField
+    private String sslKey;
+
+    // [network]
+    @JSONField
+    private String messageTimeout = "10000";
+
+    @JSONField
+    private String defaultGroup = "group0";
+
+    @JSONField
+    private String connectPeer = "127.0.0.1:20200";
+
+    // [account]
+    @JSONField
+    private String keyStoreDir = "account";
+
+    @JSONField
+    private String accountFileFormat = "pem";
+
+    // client
     @JSONField
     private String groupID;
 
+    // address
     @JSONField
     private String amContractAddressDeployed;
 

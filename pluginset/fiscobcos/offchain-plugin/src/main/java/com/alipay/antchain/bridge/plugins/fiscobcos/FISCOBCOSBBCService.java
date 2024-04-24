@@ -15,12 +15,19 @@
  */
 package com.alipay.antchain.bridge.plugins.fiscobcos;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -38,6 +45,8 @@ import org.fisco.bcos.sdk.v3.BcosSDK;
 import org.fisco.bcos.sdk.v3.client.Client;
 import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
 import org.fisco.bcos.sdk.v3.codec.ContractCodecException;
+import org.fisco.bcos.sdk.v3.config.ConfigOption;
+import org.fisco.bcos.sdk.v3.config.model.*;
 import org.fisco.bcos.sdk.v3.crypto.keypair.CryptoKeyPair;
 import com.alipay.antchain.bridge.plugins.fiscobcos.abi.AuthMsg;
 import com.alipay.antchain.bridge.plugins.fiscobcos.abi.SDPMsg;
@@ -67,8 +76,9 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
     public static final String binFile = FISCOBCOSBBCService.class.getClassLoader().getResource("bin").getPath();
 
     public void start() {
-        System.out.println(FISCOBCOSBBCService.class.getClassLoader().getResource("config.toml").getPath());
+
     }
+
     @Override
     public void startup(AbstractBBCContext abstractBBCContext) {
         getBBCLogger().info("FISCO-BCOS BBCService startup with context: {}", new String(abstractBBCContext.getConfForBlockchainClient()));
@@ -87,8 +97,20 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
             throw new RuntimeException(e);
         }
 
-        if(StrUtil.isEmpty(config.getFileName())){
-            throw new RuntimeException("filename for configuration file is empty");
+        if(StrUtil.isEmpty(config.getCaCert())){
+            throw new RuntimeException("CA certification is empty");
+        }
+
+        if(StrUtil.isEmpty(config.getSslCert())){
+            throw new RuntimeException("SSL certification is empty");
+        }
+
+        if(StrUtil.isEmpty(config.getSslKey())){
+            throw new RuntimeException("SSL key is empty");
+        }
+
+        if(StrUtil.isEmpty(config.getConnectPeer())){
+            throw new RuntimeException("Address of peer to connect is empty");
         }
 
         if(StrUtil.isEmpty(config.getGroupID())){
@@ -97,13 +119,46 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
 
         // 2. connect to the FISCO-BCOS network
         try{
+            ConfigProperty configProperty = new ConfigProperty();
+
+            // 实例化 cryptoMaterial
+            Map<String, Object> cryptoMaterial = new HashMap<>();
+            cryptoMaterial.put("useSMCrypto", config.getUseSMCrypto());
+            cryptoMaterial.put("disableSsl", config.getDisableSsl());
+            configProperty.cryptoMaterial = cryptoMaterial;
+
+            // 实例化 network
+            Map<String, Object> network = new HashMap<>();
+            network.put("messageTimeout", config.getMessageTimeout());
+            network.put("defaultGroup", config.getDefaultGroup());
+            network.put("peers", new ArrayList<>(Collections.singletonList(config.getConnectPeer())));
+            configProperty.network = network;
+
+            // 实例化 account
+            Map<String, Object> account = new HashMap<>();
+            account.put("keyStoreDir", config.getKeyStoreDir());
+            account.put("accountFileFormat", config.getAccountFileFormat());
+            configProperty.account = account;
+
+            // 实例化 threadPool
+            Map<String, Object> threadPool = new HashMap<>();
+            configProperty.threadPool = threadPool;
+
+            // 实例化 amop
+            List<AmopTopic> amop = new ArrayList<>();
+            configProperty.amop = amop;
+            ConfigOption configOption = new ConfigOption(configProperty);
+            configOption.getCryptoMaterialConfig().setCaCert(config.getCaCert());
+            configOption.getCryptoMaterialConfig().setSdkCert(config.getSslCert());
+            configOption.getCryptoMaterialConfig().setSdkPrivateKey(config.getSslKey());
+
             // Initialize BcosSDK
-            sdk = BcosSDK.build(FISCOBCOSBBCService.class.getClassLoader().getResource(config.getFileName()).getPath());
+            sdk = new BcosSDK(configOption);
             // Initialize the client for the group
             client = sdk.getClient(config.getGroupID());
 
         }catch (Exception e){
-            throw new RuntimeException(String.format("failed to connect fisco-bcos with %s to %s", config.getFileName(), config.getGroupID()), e);
+            throw new RuntimeException(String.format("failed to connect fisco-bcos to peer:%s, group:%s", config.getConnectPeer(), config.getGroupID()), e);
         }
 
         // 3. initialize keypair and create transaction processor

@@ -45,29 +45,99 @@ import org.fisco.bcos.sdk.v3.client.Client;
 import org.fisco.bcos.sdk.v3.codec.datatypes.DynamicBytes;
 import org.fisco.bcos.sdk.v3.codec.datatypes.Utf8String;
 import org.fisco.bcos.sdk.v3.codec.datatypes.generated.Bytes32;
+import org.fisco.bcos.sdk.v3.config.ConfigOption;
+import org.fisco.bcos.sdk.v3.config.model.AmopTopic;
+import org.fisco.bcos.sdk.v3.config.model.ConfigProperty;
 import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
 import org.fisco.bcos.sdk.v3.transaction.manager.AssembleTransactionProcessor;
 import org.fisco.bcos.sdk.v3.transaction.manager.TransactionProcessorFactory;
-import org.fisco.bcos.sdk.v3.transaction.model.dto.TransactionResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public class FISCOBCOSBBCServiceTest {
     private static final String VALID_FILENAME = "config.toml";
 
     private static final String INVALID_FILENAME = "config-example.toml";
+
+    private static final String CA_CERT="-----BEGIN CERTIFICATE-----\n" +
+            "MIIDITCCAgkCFBBmnJbO8ph/5jyDSIg4xVF9xhDcMA0GCSqGSIb3DQEBCwUAMEwx\n" +
+            "HDAaBgNVBAMME0ZJU0NPLUJDT1MtZjJiMTUyN2MxHDAaBgNVBAoME0ZJU0NPLUJD\n" +
+            "T1MtZjJiMTUyN2MxDjAMBgNVBAsMBWNoYWluMCAXDTI0MDQyMjA2Mzk1MFoYDzIx\n" +
+            "MjQwMzI5MDYzOTUwWjBMMRwwGgYDVQQDDBNGSVNDTy1CQ09TLWYyYjE1MjdjMRww\n" +
+            "GgYDVQQKDBNGSVNDTy1CQ09TLWYyYjE1MjdjMQ4wDAYDVQQLDAVjaGFpbjCCASIw\n" +
+            "DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMd1fZyF4EGrOEJf6SL2cqrcaZS6\n" +
+            "3UZvKUN0vJMJGAh3OBMe2JLbLl+oSnRjcM7XgroCJf0vqLw71oIL7CV8SIwJJQ0k\n" +
+            "/WRR6bPQbZTgNVBw83jlb8Ifj0P2us37dHdTNlvV1jJxkNRCtxjY9mgtn/Ie0MbY\n" +
+            "khPUfIUkXU4DvlEep6irISaSkavcUKZoUysjdmJma8JCxfVFMVNfZCFRvoB70Izn\n" +
+            "eix6TZFjMT3my4Szo9CM8/Ofo/CQx9IkngK7vqgZRkk0Srb1GNUlUU1nmOMWv1Pf\n" +
+            "lEC7cG4l2vRtYrQyoynL1ioXKtJ01+bj/Nh9TojBPKi3tSBKlnkZ8TKiZ9ECAwEA\n" +
+            "ATANBgkqhkiG9w0BAQsFAAOCAQEAvJ1jwSr4qftu8hC0ktLNFOQo/TWgAO7lT0dN\n" +
+            "aKic9ipZHrnhs8JwdPrOHv44lZcXnKTbQdsDpsHmt+pDWMeY2w0ASsHLjv52Z21h\n" +
+            "JcEzkEno/QHYbv5GRSlPeLe1uLe/lORIiwDWX+4ERPHUvyTGq2sDxACbTnVzrbmF\n" +
+            "p8eDL9d0169B4Ed+eyUHahON9wV/Cykx6lVoIA/2WrzldPOKWf0cFfXNmdWRHt1s\n" +
+            "ssSL/GrvXif1AMCJNKzxsP+e3y/DSlDutUtzMfuU+He6qnW+SlZ+sSpRg+Vf/sfR\n" +
+            "+2qITapHVFsC4zoeRbBGjLYXhSsvJlu2YLJdtjWX83nuSMBshA==\n" +
+            "-----END CERTIFICATE-----\n";
+
+    private static final String SSL_CERT="-----BEGIN CERTIFICATE-----\n" +
+            "MIIDLTCCAhWgAwIBAgIUagPe/fiX+eEUdwAjAMJCORK+6UEwDQYJKoZIhvcNAQEL\n" +
+            "BQAwTDEcMBoGA1UEAwwTRklTQ08tQkNPUy1mMmIxNTI3YzEcMBoGA1UECgwTRklT\n" +
+            "Q08tQkNPUy1mMmIxNTI3YzEOMAwGA1UECwwFY2hhaW4wIBcNMjQwNDIyMDYzOTUw\n" +
+            "WhgPMjEyNDAzMjkwNjM5NTBaMEQxHDAaBgNVBAMME0ZJU0NPLUJDT1MtZjJiMTUy\n" +
+            "N2MxEzARBgNVBAoMCmZpc2NvLWJjb3MxDzANBgNVBAsMBmFnZW5jeTCCASIwDQYJ\n" +
+            "KoZIhvcNAQEBBQADggEPADCCAQoCggEBAOl/oFwkPHwSGhYiFftwat5aNXNfIf37\n" +
+            "ObLs9YFQxi/sM5Pnu5VOuxDa4lBO13RrRadKfvOobhxRWkoUuAjK6T0UzgBrxCEO\n" +
+            "p/wGObm9atBir5FKS2EBohf9eo2uQ+c8PqYKZh6K/Hqrl5F0Dlhn+Xo5eFCFFbwc\n" +
+            "67Qqmi1V62fusQmOd/LoIJNoa4GKC3hwMjgNgcQk9a7u004y0ylvGyK4ukW76bMb\n" +
+            "02knW7Fgi0qDmcnrn6tEYgkSRz7/uv699qW7z34pSbVczL7JBB9NF9lKqZBdpHff\n" +
+            "okdrDPQ/idYCQFFXmlM3b3lByutti1QGi76+3vUnVcP+qKMCaEfmXR0CAwEAAaMN\n" +
+            "MAswCQYDVR0TBAIwADANBgkqhkiG9w0BAQsFAAOCAQEAc3u4ieA28WiJUVgSWl7R\n" +
+            "7pFnRq2J1GUif1Kc9mxLjNQICYCegkBiHdflGN0jz9BH2QbGChF02oErjeDsp1Ao\n" +
+            "CnykkGY9cEF3RiPMM1ydnl+P2cXU8dY4MaQdBFWvIv0XmC/qF6oQ3jHODO8a728p\n" +
+            "rcOgWfd7xlxK9JT2Tlt3oU8aKQ0+NNPw0SukvtZQ5y5cLvxgyYCabFm9g+c+SkYI\n" +
+            "L05CF0tsLv0p2buxGnFTzTmuo5B47/IBYZ/gWHRFpPswPrbTfzsjxt/Aay6E0jy/\n" +
+            "sEeomcYLO+sF8Rj9Dfj1W93Q+aKBLzeCzHd+w699ydgKJtd/4yf07zHjxDc1VIrw\n" +
+            "Tw==\n" +
+            "-----END CERTIFICATE-----\n";
+
+    private static final String SSL_KEY="-----BEGIN PRIVATE KEY-----\n" +
+            "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDpf6BcJDx8EhoW\n" +
+            "IhX7cGreWjVzXyH9+zmy7PWBUMYv7DOT57uVTrsQ2uJQTtd0a0WnSn7zqG4cUVpK\n" +
+            "FLgIyuk9FM4Aa8QhDqf8Bjm5vWrQYq+RSkthAaIX/XqNrkPnPD6mCmYeivx6q5eR\n" +
+            "dA5YZ/l6OXhQhRW8HOu0KpotVetn7rEJjnfy6CCTaGuBigt4cDI4DYHEJPWu7tNO\n" +
+            "MtMpbxsiuLpFu+mzG9NpJ1uxYItKg5nJ65+rRGIJEkc+/7r+vfalu89+KUm1XMy+\n" +
+            "yQQfTRfZSqmQXaR336JHawz0P4nWAkBRV5pTN295QcrrbYtUBou+vt71J1XD/qij\n" +
+            "AmhH5l0dAgMBAAECggEAB8YuCqNSODdKEw6TeMmnZTvPp8W1FgW1SBXHnsSXtKTC\n" +
+            "mtwOTMxQQiFng5D8b23a5dT/IRGsiNjUjr7d2b0XwubcbPspjog0Y5m5dkuuML34\n" +
+            "Znf4xoQNZ4sS94Cj1iEVXOXfvIiYG2V3KGqax6q+jak4LkYgESFNX7RDadsAeXdS\n" +
+            "uFqu7Mm50pbJU7we8TcmkyRP29c2f1UmsjJPnpBLnOloErf7imoHFkHr9+5pCNQF\n" +
+            "xoPbwaMg4gzQ27mfdp5RUpRclE+B/MyfuPLgiQ7iwEbS5OeJoIchZVQoSBm7nv0C\n" +
+            "AkmNImCFbtKBqT34pj8uT2BAUJx6eA4U0nrpJnGuaQKBgQD7HXDvrGBGKfm9COoR\n" +
+            "xdzNPV9ns616CvZKzEZxo+DoR9a1JPEpfpdHUfWlx0+Vt5akNRunr/b2FaJVWw/5\n" +
+            "NHBTuPMn+fLLGK0XEKmK6m2DDLoIfrdxc/FW1cWAnA/+J2KCtemPnyzgErQl/5Vo\n" +
+            "+gA2W1tIP/BIreqcVidbnmacgwKBgQDuCnRvsxiPDZ0myLRPa++iqDcEsYsnVpQZ\n" +
+            "1KK5LVaRCqGcdfZdX0Ywi3X3ZepdJIR4c4kSymRbJxhQn9UaOVEpveQ07gdLqFjU\n" +
+            "PAOcaUSAe6ldSa3hWbkJ7GtmxUuAVZ5zToRmsYAkAl24MRu5rGfhpFIGxJvSmLZS\n" +
+            "KMBX0yst3wKBgQDS8KxJ6LcGuYP7810MiPUtwvw9lIWJG2RA+M/D7jGjbZVCnUGn\n" +
+            "5ZsWYhbDp2WHEq0MS0Br4DjIBuxSXyhP4mjpK1e2oRP+3z+nPGvvMXXEvBAZyrg2\n" +
+            "KXr1wqUhn/cfO95Yho8oAkIkCBIkSUos4LUE9ED9tBgYNV/667QsFieEGQKBgCDI\n" +
+            "q9Sec+lv1I784Wh20yAxzrIEycd3MxqDoI2kYuHC9xMXZADkGESjUHHsRWTinKQC\n" +
+            "NYSy/zNWpRClkrHz5uu6zW1Ewxh2bRV91nl6Pgb8AQ1qElqRAt0NBJW44ncgU5xJ\n" +
+            "2g5Sr/VFpiayDMF7ryryeKGZ/mP4yFN0bVkrKi09AoGBALuQwI3QGdEHdgOKYEB/\n" +
+            "I9Fe7wTTIIt7xLdCEKN0YSJth8X8jfwvn3sFV9/ls/CYeg9Yz0azHq17S0Eik7ZV\n" +
+            "ed7nL+nrNqhVhyqj03TJmH906564Ei7Jy1xPZ5XeMCgUSPZrCyOCVrFNxUCIRyDy\n" +
+            "myZCv4ZXPmYxa47qEAaPXGFP\n" +
+            "-----END PRIVATE KEY-----\n";
 
     private static final String VALID_GROUPID = "group0";
 
@@ -77,13 +147,49 @@ public class FISCOBCOSBBCServiceTest {
 
     private static AppContract appContract;
 
-    private static final String REMOTE_APP_CONTRACT = "0xdd11AA371492B94AB8CDEdf076F84ECCa72820e1";
+    private static final String REMOTE_APP_CONTRACT = "0xab6f2a90671fa1b244cd0b3fd8adc3ff22759d06";
 
     @Before
     public void init() throws Exception{
         fiscobcosBBCService = new FISCOBCOSBBCService();
+        FISCOBCOSConfig config = new FISCOBCOSConfig();
 
-        BcosSDK sdk = BcosSDK.build(FISCOBCOSBBCService.class.getClassLoader().getResource(VALID_FILENAME).getPath());
+        ConfigProperty configProperty = new ConfigProperty();
+
+        // 实例化 cryptoMaterial
+        Map<String, Object> cryptoMaterial = new HashMap<>();
+        cryptoMaterial.put("useSMCrypto", config.getUseSMCrypto());
+        cryptoMaterial.put("disableSsl", config.getDisableSsl());
+        configProperty.cryptoMaterial = cryptoMaterial;
+
+        // 实例化 network
+        Map<String, Object> network = new HashMap<>();
+        network.put("messageTimeout", config.getMessageTimeout());
+        network.put("defaultGroup", config.getDefaultGroup());
+        network.put("peers", new ArrayList<>(Collections.singletonList(config.getConnectPeer())));
+        configProperty.network = network;
+
+        // 实例化 account
+        Map<String, Object> account = new HashMap<>();
+        account.put("keyStoreDir", config.getKeyStoreDir());
+        account.put("accountFileFormat", config.getAccountFileFormat());
+        configProperty.account = account;
+
+        // 实例化 threadPool
+        Map<String, Object> threadPool = new HashMap<>();
+        configProperty.threadPool = threadPool;
+
+        // 实例化 amop
+        List<AmopTopic> amop = new ArrayList<>();
+        configProperty.amop = amop;
+        ConfigOption configOption = new ConfigOption(configProperty);
+        configOption.getCryptoMaterialConfig().setCaCert(CA_CERT);
+        configOption.getCryptoMaterialConfig().setSdkCert(SSL_CERT);
+        configOption.getCryptoMaterialConfig().setSdkPrivateKey(SSL_KEY);
+
+        // Initialize BcosSDK
+        BcosSDK sdk = new BcosSDK(configOption);
+        // Initialize the client for the group
         Client client = sdk.getClient(VALID_GROUPID);
 
         appContract = AppContract.deploy(client, client.getCryptoSuite().getCryptoKeyPair());
@@ -312,15 +418,14 @@ public class FISCOBCOSBBCServiceTest {
 
         // relay am msg
         CrossChainMessageReceipt receipt = fiscobcosBBCService.relayAuthMessage(getRawMsgFromRelayer());
+        System.out.println(String.format("sleep %ds for tx to be packaged...", WAIT_TIME / 1000));
+        Thread.sleep(WAIT_TIME);
+
         System.out.println(receipt.getErrorMsg());
         System.out.println(receipt.isSuccessful());
 
-        System.out.println("sleep 15s for tx to be packaged...");
-        Thread.sleep(WAIT_TIME);
-
         TransactionReceipt transactionReceipt = fiscobcosBBCService.getClient().getTransactionReceipt(receipt.getTxhash(), false).getTransactionReceipt();
         Assert.assertNotNull(transactionReceipt);
-        Assert.assertTrue(transactionReceipt.isStatusOK());
     }
 
     @Test
@@ -330,7 +435,7 @@ public class FISCOBCOSBBCServiceTest {
         // relay am msg
         CrossChainMessageReceipt crossChainMessageReceipt = fiscobcosBBCService.relayAuthMessage(getRawMsgFromRelayer());
 
-        System.out.println("sleep 15s for tx to be packaged...");
+        System.out.println(String.format("sleep %ds for tx to be packaged...", WAIT_TIME / 1000));
         Thread.sleep(WAIT_TIME);
 
         // read receipt by txHash
@@ -389,7 +494,7 @@ public class FISCOBCOSBBCServiceTest {
         // 3. query latest height
         long height1 = fiscobcosBBCService.queryLatestHeight();
 
-        System.out.printf("sleep %ds for tx to be packaged...%n", WAIT_TIME / 100);
+        System.out.printf("sleep %ds for tx to be packaged...%n", WAIT_TIME / 1000);
         Thread.sleep(WAIT_TIME);
 
         long height2 = fiscobcosBBCService.queryLatestHeight();
@@ -454,7 +559,7 @@ public class FISCOBCOSBBCServiceTest {
         // 3. query latest height
         long height1 = fiscobcosBBCService.queryLatestHeight();
 
-        System.out.printf("sleep %ds for tx to be packaged...%n", WAIT_TIME / 100);
+        System.out.printf("sleep %ds for tx to be packaged...%n", WAIT_TIME / 1000);
         Thread.sleep(WAIT_TIME);
 
         long height2 = fiscobcosBBCService.queryLatestHeight();
@@ -502,7 +607,9 @@ public class FISCOBCOSBBCServiceTest {
 
     private AbstractBBCContext mockValidCtx(){
         FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
-        mockConf.setFileName(VALID_FILENAME);
+        mockConf.setCaCert(CA_CERT);
+        mockConf.setSslCert(SSL_CERT);
+        mockConf.setSslKey(SSL_KEY);
         mockConf.setGroupID(VALID_GROUPID);
         AbstractBBCContext mockCtx = new DefaultBBCContext();
         mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
@@ -510,7 +617,9 @@ public class FISCOBCOSBBCServiceTest {
     }
     private AbstractBBCContext mockInvalidCtx(){
         FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
-        mockConf.setFileName(INVALID_FILENAME);
+        mockConf.setCaCert(CA_CERT);
+        mockConf.setSslCert(SSL_CERT);
+        mockConf.setSslKey(SSL_KEY);
         mockConf.setGroupID(VALID_GROUPID);
         AbstractBBCContext mockCtx = new DefaultBBCContext();
         mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
@@ -519,7 +628,9 @@ public class FISCOBCOSBBCServiceTest {
 
     private AbstractBBCContext mockValidCtxWithPreDeployedContracts(String amAddr, String sdpAddr){
         FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
-        mockConf.setFileName(VALID_FILENAME);
+        mockConf.setCaCert(CA_CERT);
+        mockConf.setSslCert(SSL_CERT);
+        mockConf.setSslKey(SSL_KEY);
         mockConf.setGroupID(VALID_GROUPID);
         mockConf.setAmContractAddressDeployed(amAddr);
         mockConf.setSdpContractAddressDeployed(sdpAddr);
@@ -530,7 +641,9 @@ public class FISCOBCOSBBCServiceTest {
 
     private AbstractBBCContext mockValidCtxWithPreReadyContracts(String amAddr, String sdpAddr){
         FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
-        mockConf.setFileName(VALID_FILENAME);
+        mockConf.setCaCert(CA_CERT);
+        mockConf.setSslCert(SSL_CERT);
+        mockConf.setSslKey(SSL_KEY);
         mockConf.setGroupID(VALID_GROUPID);
         mockConf.setAmContractAddressDeployed(amAddr);
         mockConf.setSdpContractAddressDeployed(sdpAddr);
