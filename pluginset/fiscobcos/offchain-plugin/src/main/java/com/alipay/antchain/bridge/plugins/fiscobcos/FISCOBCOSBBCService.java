@@ -260,8 +260,6 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
                                 } catch (ContractCodecException e) {
                                     throw new RuntimeException(e);
                                 }
-                                String blockHash = "0xdc5ff81438ad9086c113d462914288ef072d48925668c76e6e675174bbc7e178";
-                                String txHashFake = "0x645bcd7db813e22b214cf15c21559fda0a295699ecfae0d0728ef0919aa34cce";
                                 return events.getOrDefault("SendAuthMessage", Collections.emptyList()).stream()
                                         .map(event -> {
                                             // 2.4 create crosschain msg
@@ -481,12 +479,6 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
         }
 
         // 2. deploy contract
-//        TransactionResponse response;
-//        try {
-//            response = transactionProcessor.deployByContractLoader("AuthMsg", new ArrayList<>());
-//        } catch (Exception e) {
-//            throw new RuntimeException("failed to deploy authMsg", e);
-//        }
         AuthMsg authMsg;
         try {
             authMsg = AuthMsg.deploy(client,keyPair);
@@ -639,9 +631,6 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
                         this.bbcContext.getSdpContract().getContractAddress(),
                         receipt.getTransactionHash()
                 );
-                System.out.println("domain: " + domain);
-                System.out.println("sdp: " + this.bbcContext.getSdpContract().getContractAddress());
-                System.out.println("tx: " + receipt.getTransactionHash());
             } else{
                 getBBCLogger().info(
                         "set domain failed, receipt status code: {}",

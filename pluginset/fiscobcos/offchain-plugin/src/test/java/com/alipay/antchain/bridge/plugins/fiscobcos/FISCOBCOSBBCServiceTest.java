@@ -16,6 +16,7 @@
 
 package com.alipay.antchain.bridge.plugins.fiscobcos;
 
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ByteUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.RandomUtil;
@@ -27,6 +28,7 @@ import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
 import com.alipay.antchain.bridge.commons.core.am.AuthMessageFactory;
 import com.alipay.antchain.bridge.commons.core.am.IAuthMessage;
+import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
 import com.alipay.antchain.bridge.commons.core.sdp.ISDPMessage;
 import com.alipay.antchain.bridge.commons.core.sdp.SDPMessageFactory;
@@ -40,7 +42,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.fisco.bcos.sdk.v3.BcosSDK;
 import org.fisco.bcos.sdk.v3.client.Client;
+import org.fisco.bcos.sdk.v3.codec.datatypes.DynamicBytes;
+import org.fisco.bcos.sdk.v3.codec.datatypes.Utf8String;
+import org.fisco.bcos.sdk.v3.codec.datatypes.generated.Bytes32;
 import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
+import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
 import org.fisco.bcos.sdk.v3.transaction.manager.AssembleTransactionProcessor;
 import org.fisco.bcos.sdk.v3.transaction.manager.TransactionProcessorFactory;
 import org.fisco.bcos.sdk.v3.transaction.model.dto.TransactionResponse;
@@ -55,6 +61,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class FISCOBCOSBBCServiceTest {
@@ -64,11 +71,13 @@ public class FISCOBCOSBBCServiceTest {
 
     private static final String VALID_GROUPID = "group0";
 
-    private static final long WAIT_TIME = 15000;
+    private static final long WAIT_TIME = 5000;
 
     private static FISCOBCOSBBCService fiscobcosBBCService;
 
     private static AppContract appContract;
+
+    private static final String REMOTE_APP_CONTRACT = "0xdd11AA371492B94AB8CDEdf076F84ECCa72820e1";
 
     @Before
     public void init() throws Exception{
@@ -305,14 +314,13 @@ public class FISCOBCOSBBCServiceTest {
         CrossChainMessageReceipt receipt = fiscobcosBBCService.relayAuthMessage(getRawMsgFromRelayer());
         System.out.println(receipt.getErrorMsg());
         System.out.println(receipt.isSuccessful());
-//        Assert.assertTrue(receipt.isSuccessful());
-//
-//        System.out.println("sleep 15s for tx to be packaged...");
-//        Thread.sleep(WAIT_TIME);
-//
-//        TransactionReceipt transactionReceipt = fiscobcosBBCService.getClient().getTransactionReceipt(receipt.getTxhash(), false).getTransactionReceipt();
-//        Assert.assertNotNull(transactionReceipt);
-//        Assert.assertTrue(transactionReceipt.isStatusOK());
+
+        System.out.println("sleep 15s for tx to be packaged...");
+        Thread.sleep(WAIT_TIME);
+
+        TransactionReceipt transactionReceipt = fiscobcosBBCService.getClient().getTransactionReceipt(receipt.getTxhash(), false).getTransactionReceipt();
+        Assert.assertNotNull(transactionReceipt);
+        Assert.assertTrue(transactionReceipt.isStatusOK());
     }
 
     @Test
@@ -328,7 +336,136 @@ public class FISCOBCOSBBCServiceTest {
         // read receipt by txHash
         CrossChainMessageReceipt crossChainMessageReceipt1 = fiscobcosBBCService.readCrossChainMessageReceipt(crossChainMessageReceipt.getTxhash());
         Assert.assertTrue(crossChainMessageReceipt1.isConfirmed());
-        Assert.assertEquals(crossChainMessageReceipt.isSuccessful(), crossChainMessageReceipt1.isSuccessful());
+    }
+
+    @Test
+    public void testReadCrossChainMessagesByHeight_sendUnordered() throws Exception {
+        relayAmPrepare();
+
+        // 1. set sdp addr
+        TransactionReceipt receipt = appContract.setProtocol(fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
+        if (receipt.isStatusOK()){
+            System.out.printf("set protocol(%s) to app contract(%s) \n",
+                    appContract.getContractAddress(),
+                    fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
+        } else {
+            throw new Exception(String.format("failed to set protocol(%s) to app contract(%s)",
+                    appContract.getContractAddress(),
+                    fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress()));
+        }
+
+        // 2. send msg
+        try {
+            // 2.1 create inputParameters
+            List<Object> inputParameters = new ArrayList<>();
+            inputParameters.add(new Utf8String("remoteDomain"));
+            inputParameters.add(new Bytes32(DigestUtil.sha256(REMOTE_APP_CONTRACT)));
+            inputParameters.add(new DynamicBytes("UnorderedCrossChainMessage".getBytes()));
+
+            // 2.2 async send tx
+            AssembleTransactionProcessor transactionProcessor = TransactionProcessorFactory.createAssembleTransactionProcessor(
+                    fiscobcosBBCService.getClient(),
+                    fiscobcosBBCService.getKeyPair(),
+                    fiscobcosBBCService.abiFile,
+                    fiscobcosBBCService.binFile
+            );
+            transactionProcessor.sendTransactionAndGetReceiptByContractLoaderAsync(
+                    "AppContract", // contract name
+                    appContract.getContractAddress(),  // contract address
+                    AppContract.FUNC_SENDUNORDEREDMESSAGE, // function name
+                    inputParameters, // input
+                    new TransactionCallback() { // callback
+                        @Override
+                        public void onResponse(TransactionReceipt receipt) {
+                            System.out.printf("send unordered msg tx %s\n", receipt.getTransactionHash());
+                        }
+                    });
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "failed to send unordered msg", e
+            );
+        }
+
+        // 3. query latest height
+        long height1 = fiscobcosBBCService.queryLatestHeight();
+
+        System.out.printf("sleep %ds for tx to be packaged...%n", WAIT_TIME / 100);
+        Thread.sleep(WAIT_TIME);
+
+        long height2 = fiscobcosBBCService.queryLatestHeight();
+
+        // 4. read cc msg
+        List<CrossChainMessage> messageList = ListUtil.toList();
+        for(long i = height1; i <= height2; i++){
+            messageList.addAll(fiscobcosBBCService.readCrossChainMessagesByHeight(i));
+        }
+        Assert.assertEquals(1, messageList.size());
+        Assert.assertEquals(CrossChainMessage.CrossChainMessageType.AUTH_MSG, messageList.get(0).getType());
+    }
+
+    @Test
+    public void testReadCrossChainMessagesByHeight_sendOrdered() throws Exception {
+        relayAmPrepare();
+
+        // 1. set sdp addr
+        TransactionReceipt receipt = appContract.setProtocol(fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
+        if (receipt.isStatusOK()){
+            System.out.printf("set protocol(%s) to app contract(%s) \n",
+                    appContract.getContractAddress(),
+                    fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
+        } else {
+            throw new Exception(String.format("failed to set protocol(%s) to app contract(%s)",
+                    appContract.getContractAddress(),
+                    fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress()));
+        }
+
+        // 2. send msg
+        try {
+            // 2.1 create inputParameters
+            List<Object> inputParameters = new ArrayList<>();
+            inputParameters.add(new Utf8String("remoteDomain"));
+            inputParameters.add(new Bytes32(DigestUtil.sha256(REMOTE_APP_CONTRACT)));
+            inputParameters.add(new DynamicBytes("UnorderedCrossChainMessage".getBytes()));
+
+            // 2.2 async send tx
+            AssembleTransactionProcessor transactionProcessor = TransactionProcessorFactory.createAssembleTransactionProcessor(
+                    fiscobcosBBCService.getClient(),
+                    fiscobcosBBCService.getKeyPair(),
+                    fiscobcosBBCService.abiFile,
+                    fiscobcosBBCService.binFile
+            );
+            transactionProcessor.sendTransactionAndGetReceiptByContractLoaderAsync(
+                    "AppContract", // contract name
+                    appContract.getContractAddress(),  // contract address
+                    AppContract.FUNC_SENDMESSAGE, // function name
+                    inputParameters, // input
+                    new TransactionCallback() { // callback
+                        @Override
+                        public void onResponse(TransactionReceipt receipt) {
+                            System.out.printf("send ordered msg tx %s\n", receipt.getTransactionHash());
+                        }
+                    });
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "failed to send ordered msg", e
+            );
+        }
+
+        // 3. query latest height
+        long height1 = fiscobcosBBCService.queryLatestHeight();
+
+        System.out.printf("sleep %ds for tx to be packaged...%n", WAIT_TIME / 100);
+        Thread.sleep(WAIT_TIME);
+
+        long height2 = fiscobcosBBCService.queryLatestHeight();
+
+        // 4. read cc msg
+        List<CrossChainMessage> messageList = ListUtil.toList();
+        for(long i = height1; i <= height2; i++){
+            messageList.addAll(fiscobcosBBCService.readCrossChainMessagesByHeight(i));
+        }
+        Assert.assertEquals(1, messageList.size());
+        Assert.assertEquals(CrossChainMessage.CrossChainMessageType.AUTH_MSG, messageList.get(0).getType());
     }
 
     private void relayAmPrepare(){
