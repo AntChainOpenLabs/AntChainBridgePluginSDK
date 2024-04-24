@@ -31,33 +31,24 @@ import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
-import com.alipay.antchain.bridge.plugins.fiscobcos.abi.AuthMsgShow;
 import com.alipay.antchain.bridge.plugins.lib.BBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import lombok.Getter;
 import org.fisco.bcos.sdk.v3.BcosSDK;
 import org.fisco.bcos.sdk.v3.client.Client;
 import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
-import org.fisco.bcos.sdk.v3.client.protocol.response.BcosTransactionReceipt;
-import org.fisco.bcos.sdk.v3.client.protocol.response.BlockNumber;
 import org.fisco.bcos.sdk.v3.codec.ContractCodecException;
 import org.fisco.bcos.sdk.v3.crypto.keypair.CryptoKeyPair;
 import com.alipay.antchain.bridge.plugins.fiscobcos.abi.AuthMsg;
 import com.alipay.antchain.bridge.plugins.fiscobcos.abi.SDPMsg;
-import org.fisco.bcos.sdk.v3.eventsub.EventSubParams;
-import org.fisco.bcos.sdk.v3.eventsub.EventSubscribe;
 import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
 import org.fisco.bcos.sdk.v3.transaction.codec.decode.TransactionDecoderInterface;
 import org.fisco.bcos.sdk.v3.transaction.codec.decode.TransactionDecoderService;
 import org.fisco.bcos.sdk.v3.transaction.manager.AssembleTransactionProcessor;
 import org.fisco.bcos.sdk.v3.transaction.manager.TransactionProcessorFactory;
-import org.fisco.bcos.sdk.v3.transaction.model.dto.CallResponse;
-import org.fisco.bcos.sdk.v3.transaction.model.dto.TransactionResponse;
-import org.fisco.bcos.sdk.v3.codec.abi.tools.TopicTools;
 import org.fisco.bcos.sdk.v3.codec.datatypes.DynamicBytes;
 import org.fisco.bcos.sdk.v3.transaction.tools.ContractLoader;
-import org.web3j.tx.gas.StaticGasProvider;
 
 import static com.alipay.antchain.bridge.plugins.fiscobcos.abi.AuthMsg.SENDAUTHMESSAGE_EVENT;
 
@@ -72,58 +63,11 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
     private AssembleTransactionProcessor transactionProcessor;
 
     private AbstractBBCContext bbcContext;
-    private static final String abiFile = FISCOBCOSBBCService.class.getClassLoader().getResource("abi").getPath();
-    private static final String binFile = FISCOBCOSBBCService.class.getClassLoader().getResource("bin").getPath();
+    public static final String abiFile = FISCOBCOSBBCService.class.getClassLoader().getResource("abi").getPath();
+    public static final String binFile = FISCOBCOSBBCService.class.getClassLoader().getResource("bin").getPath();
 
     public void start() {
-        // 获取配置文件路径
-        String configFile = FISCOBCOSBBCService.class.getClassLoader().getResource("config.toml").getPath();
-        // 连接fisco-bcos
-        try {
-            sdk = BcosSDK.build(configFile);
-            // 为群组group初始化client
-            client = sdk.getClient("group0");
-            // test getBlockNumber
-            BlockNumber blockNumber = client.getBlockNumber();
-            System.out.println("blocknumber is:" + blockNumber.getBlockNumber());
-
-            // 构造TransactionDecoderService实例，传入是否密钥类型参数。并且传入是否使用scale解码
-
-//            TransactionReceipt transactionReceipt =
-//                    manager.sendTransactionAndGetReceiptByContractLoader(
-//                            contractName,
-//                            contractAddress,
-//                            "incrementUint256",
-//                            Collections.singletonList(BigInteger.ONE));
-//            TransactionResponse transactionResponseWithoutValues =
-//                    decoder.decodeReceiptWithoutValues(abi, transactionReceipt);
-//            Map<String, List<List<Object>>> events =
-//                    decoder.decodeEvents(abi, transactionReceipt.getLogEntries());
-//            System.out.println(events);
-
-            TransactionDecoderInterface decoder =
-                    new TransactionDecoderService(client.getCryptoSuite(), false);
-            ContractLoader contractLoader = new ContractLoader(abiFile, binFile);
-            String abi = contractLoader.getABIByContractName("AuthMsg");
-
-            for(int i=0;i<45;i++){
-                BcosBlock block = client.getBlockByNumber(BigInteger.valueOf(i), false,true);
-                List<BcosBlock.TransactionHash> txHashes = block.getBlock().getTransactionHashes();
-                if(!txHashes.isEmpty()){
-                    for(BcosBlock.TransactionHash txHash:txHashes){
-                        TransactionReceipt transactionReceipt = client.getTransactionReceipt(txHash.get(),false).getTransactionReceipt();
-                        System.out.println("---");
-                        Map<String, List<List<Object>>> events = decoder.decodeEvents(abi, transactionReceipt.getLogEntries());
-                        System.out.println(events);
-                        System.out.println(events.get("SendAuthMessage"));
-                        System.out.println(events.get("LogIncrement"));
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException(String.format("failed to connect fisco-bcos (url: %s)", "todo--"), e);
-        }
+        System.out.println(FISCOBCOSBBCService.class.getClassLoader().getResource("config.toml").getPath());
     }
     @Override
     public void startup(AbstractBBCContext abstractBBCContext) {
@@ -316,7 +260,8 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
                                 } catch (ContractCodecException e) {
                                     throw new RuntimeException(e);
                                 }
-
+                                String blockHash = "0xdc5ff81438ad9086c113d462914288ef072d48925668c76e6e675174bbc7e178";
+                                String txHashFake = "0x645bcd7db813e22b214cf15c21559fda0a295699ecfae0d0728ef0919aa34cce";
                                 return events.getOrDefault("SendAuthMessage", Collections.emptyList()).stream()
                                         .map(event -> {
                                             // 2.4 create crosschain msg
@@ -332,7 +277,7 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
                                                     // todo: put ledger data, for SPV or other attestations
                                                     // this time we need no verify. it's ok to set it with empty bytes
                                                     "".getBytes(),
-                                                    HexUtil.decodeHex(txHash.toString().replaceFirst("^0x", ""))
+                                                    HexUtil.decodeHex(txHash.get().replaceFirst("^0x", ""))
                                             );
                                         }).collect(Collectors.toList());
                             })
@@ -493,30 +438,11 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
         // 2. creat Transaction
         CrossChainMessageReceipt crossChainMessageReceipt = new CrossChainMessageReceipt();
         try{
-            // 2.1 pre-execute before commit tx
-            try {
-                CallResponse call =
-                        transactionProcessor.sendCallByContractLoader(
-                                "AuthMsgShow", // contract name
-                                this.bbcContext.getAuthMessageContract().getContractAddress(),  // contract address
-                                AuthMsgShow.FUNC_RECVPKGFROMRELAYER, // function name
-                                Collections.singletonList(new DynamicBytes(rawMessage)) // input
-                        );
-
-            } catch (Exception e) {
-                // failed
-                // set `confirmed` and `successful` to false if reverted
-                crossChainMessageReceipt.setSuccessful(false);
-                crossChainMessageReceipt.setConfirmed(false);
-                crossChainMessageReceipt.setErrorMsg(e.getMessage());
-                return crossChainMessageReceipt;
-            }
-
-            // 2.2 async send tx
+            // 2.1 async send tx
             transactionProcessor.sendTransactionAndGetReceiptByContractLoaderAsync(
-                    "AuthMsgShow", // contract name
+                    "AuthMsg", // contract name
                     this.bbcContext.getAuthMessageContract().getContractAddress(),  // contract address
-                    AuthMsgShow.FUNC_RECVPKGFROMRELAYER, // function name
+                    AuthMsg.FUNC_RECVPKGFROMRELAYER, // function name
                     Collections.singletonList(new DynamicBytes(rawMessage)), // input
                     new TransactionCallback() { // callback
                         @Override
@@ -530,7 +456,7 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
                             getBBCLogger().info("relay tx {}", receipt.getTransactionHash());
                         }
                     });
-            // 2.3 return crossChainMessageReceipt
+            // 2.2 return crossChainMessageReceipt
             return crossChainMessageReceipt;
         }catch (Exception e){
             throw new RuntimeException(
@@ -561,9 +487,9 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
 //        } catch (Exception e) {
 //            throw new RuntimeException("failed to deploy authMsg", e);
 //        }
-        AuthMsgShow authMsg;
+        AuthMsg authMsg;
         try {
-            authMsg = AuthMsgShow.deploy(client,keyPair);
+            authMsg = AuthMsg.deploy(client,keyPair);
         } catch (Exception e) {
             throw new RuntimeException("failed to deploy authMsg", e);
         }
@@ -597,12 +523,6 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
         }
 
         // 2. deploy contract
-//        TransactionResponse response;
-//        try {
-//            response = transactionProcessor.deployByContractLoader("SDPMsg", new ArrayList<>());
-//        } catch (Exception e) {
-//            throw new RuntimeException("failed to deploy sdpMsg", e);
-//        }
         SDPMsg sdpMsg;
         try {
             sdpMsg = SDPMsg.deploy(client,keyPair);
@@ -719,6 +639,9 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
                         this.bbcContext.getSdpContract().getContractAddress(),
                         receipt.getTransactionHash()
                 );
+                System.out.println("domain: " + domain);
+                System.out.println("sdp: " + this.bbcContext.getSdpContract().getContractAddress());
+                System.out.println("tx: " + receipt.getTransactionHash());
             } else{
                 getBBCLogger().info(
                         "set domain failed, receipt status code: {}",
