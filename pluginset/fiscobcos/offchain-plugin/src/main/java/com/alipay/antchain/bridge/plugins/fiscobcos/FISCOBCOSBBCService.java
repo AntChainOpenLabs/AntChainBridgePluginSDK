@@ -31,6 +31,7 @@ import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
+import com.alipay.antchain.bridge.plugins.fiscobcos.abi.AuthMsgShow;
 import com.alipay.antchain.bridge.plugins.lib.BBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import lombok.Getter;
@@ -496,9 +497,9 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
             try {
                 CallResponse call =
                         transactionProcessor.sendCallByContractLoader(
-                                "AuthMsg", // contract name
+                                "AuthMsgShow", // contract name
                                 this.bbcContext.getAuthMessageContract().getContractAddress(),  // contract address
-                                AuthMsg.FUNC_RECVPKGFROMRELAYER, // function name
+                                AuthMsgShow.FUNC_RECVPKGFROMRELAYER, // function name
                                 Collections.singletonList(new DynamicBytes(rawMessage)) // input
                         );
 
@@ -513,9 +514,9 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
 
             // 2.2 async send tx
             transactionProcessor.sendTransactionAndGetReceiptByContractLoaderAsync(
-                    "AuthMsg", // contract name
+                    "AuthMsgShow", // contract name
                     this.bbcContext.getAuthMessageContract().getContractAddress(),  // contract address
-                    AuthMsg.FUNC_RECVPKGFROMRELAYER, // function name
+                    AuthMsgShow.FUNC_RECVPKGFROMRELAYER, // function name
                     Collections.singletonList(new DynamicBytes(rawMessage)), // input
                     new TransactionCallback() { // callback
                         @Override
@@ -560,9 +561,9 @@ public class FISCOBCOSBBCService extends AbstractBBCService{
 //        } catch (Exception e) {
 //            throw new RuntimeException("failed to deploy authMsg", e);
 //        }
-        AuthMsg authMsg;
+        AuthMsgShow authMsg;
         try {
-            authMsg = AuthMsg.deploy(client,keyPair);
+            authMsg = AuthMsgShow.deploy(client,keyPair);
         } catch (Exception e) {
             throw new RuntimeException("failed to deploy authMsg", e);
         }
