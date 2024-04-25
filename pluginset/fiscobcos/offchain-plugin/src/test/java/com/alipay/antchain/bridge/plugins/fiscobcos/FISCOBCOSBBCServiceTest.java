@@ -535,7 +535,7 @@ public class FISCOBCOSBBCServiceTest {
             List<Object> inputParameters = new ArrayList<>();
             inputParameters.add(new Utf8String("remoteDomain"));
             inputParameters.add(new Bytes32(DigestUtil.sha256(REMOTE_APP_CONTRACT)));
-            inputParameters.add(new DynamicBytes("UnorderedCrossChainMessage".getBytes()));
+            inputParameters.add(new DynamicBytes("CrossChainMessage".getBytes()));
 
             // 2.2 async send tx
             AssembleTransactionProcessor transactionProcessor = TransactionProcessorFactory.createAssembleTransactionProcessor(
