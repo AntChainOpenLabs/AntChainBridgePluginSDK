@@ -69,7 +69,10 @@ public class FISCOBCOSBBCServiceTest {
 
     private static final String INVALID_FILENAME = "config-example.toml";
 
-    private static final String CA_CERT="-----BEGIN CERTIFICATE-----\n" +
+    public static final String abiFile = FISCOBCOSBBCService.class.getClassLoader().getResource("abi").getPath();
+    public static final String binFile = FISCOBCOSBBCService.class.getClassLoader().getResource("bin").getPath();
+
+    private static final String CA_CERT = "-----BEGIN CERTIFICATE-----\n" +
             "MIIDITCCAgkCFBBmnJbO8ph/5jyDSIg4xVF9xhDcMA0GCSqGSIb3DQEBCwUAMEwx\n" +
             "HDAaBgNVBAMME0ZJU0NPLUJDT1MtZjJiMTUyN2MxHDAaBgNVBAoME0ZJU0NPLUJD\n" +
             "T1MtZjJiMTUyN2MxDjAMBgNVBAsMBWNoYWluMCAXDTI0MDQyMjA2Mzk1MFoYDzIx\n" +
@@ -89,7 +92,7 @@ public class FISCOBCOSBBCServiceTest {
             "+2qITapHVFsC4zoeRbBGjLYXhSsvJlu2YLJdtjWX83nuSMBshA==\n" +
             "-----END CERTIFICATE-----\n";
 
-    private static final String SSL_CERT="-----BEGIN CERTIFICATE-----\n" +
+    private static final String SSL_CERT = "-----BEGIN CERTIFICATE-----\n" +
             "MIIDLTCCAhWgAwIBAgIUagPe/fiX+eEUdwAjAMJCORK+6UEwDQYJKoZIhvcNAQEL\n" +
             "BQAwTDEcMBoGA1UEAwwTRklTQ08tQkNPUy1mMmIxNTI3YzEcMBoGA1UECgwTRklT\n" +
             "Q08tQkNPUy1mMmIxNTI3YzEOMAwGA1UECwwFY2hhaW4wIBcNMjQwNDIyMDYzOTUw\n" +
@@ -110,7 +113,7 @@ public class FISCOBCOSBBCServiceTest {
             "Tw==\n" +
             "-----END CERTIFICATE-----\n";
 
-    private static final String SSL_KEY="-----BEGIN PRIVATE KEY-----\n" +
+    private static final String SSL_KEY = "-----BEGIN PRIVATE KEY-----\n" +
             "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDpf6BcJDx8EhoW\n" +
             "IhX7cGreWjVzXyH9+zmy7PWBUMYv7DOT57uVTrsQ2uJQTtd0a0WnSn7zqG4cUVpK\n" +
             "FLgIyuk9FM4Aa8QhDqf8Bjm5vWrQYq+RSkthAaIX/XqNrkPnPD6mCmYeivx6q5eR\n" +
@@ -150,7 +153,7 @@ public class FISCOBCOSBBCServiceTest {
     private static final String REMOTE_APP_CONTRACT = "0xab6f2a90671fa1b244cd0b3fd8adc3ff22759d06";
 
     @Before
-    public void init() throws Exception{
+    public void init() throws Exception {
         fiscobcosBBCService = new FISCOBCOSBBCService();
         FISCOBCOSConfig config = new FISCOBCOSConfig();
 
@@ -196,12 +199,12 @@ public class FISCOBCOSBBCServiceTest {
     }
 
     @Test
-    public void testStart(){
+    public void testStart() {
         fiscobcosBBCService.start();
     }
 
     @Test
-    public void testStartup(){
+    public void testStartup() {
         // start up success
         AbstractBBCContext mockValidCtx = mockValidCtx();
         fiscobcosBBCService.startup(mockValidCtx);
@@ -211,13 +214,13 @@ public class FISCOBCOSBBCServiceTest {
         AbstractBBCContext mockInvalidCtx = mockInvalidCtx();
         try {
             fiscobcosBBCService.startup(mockInvalidCtx);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    public void testStartupWithDeployedContract(){
+    public void testStartupWithDeployedContract() {
         // start up a tmp
         AbstractBBCContext mockValidCtx = mockValidCtx();
         FISCOBCOSBBCService fiscobcosBBCServiceTmp = new FISCOBCOSBBCService();
@@ -239,7 +242,7 @@ public class FISCOBCOSBBCServiceTest {
     }
 
     @Test
-    public void testStartupWithReadyContract(){
+    public void testStartupWithReadyContract() {
         // start up a tmp fiscobcosBBCService to set up contract
         AbstractBBCContext mockValidCtx = mockValidCtx();
         FISCOBCOSBBCService fiscobcosBBCServiceTmp = new FISCOBCOSBBCService();
@@ -261,28 +264,30 @@ public class FISCOBCOSBBCServiceTest {
     }
 
     @Test
-    public void testShutdown(){
+    public void testShutdown() {
         AbstractBBCContext mockValidCtx = mockValidCtx();
         fiscobcosBBCService.startup(mockValidCtx);
         fiscobcosBBCService.shutdown();
     }
 
     @Test
-    public void testGetContext(){
+    public void testGetContext() {
         AbstractBBCContext mockValidCtx = mockValidCtx();
         fiscobcosBBCService.startup(mockValidCtx);
         AbstractBBCContext ctx = fiscobcosBBCService.getContext();
         Assert.assertNotNull(ctx);
         Assert.assertEquals(null, ctx.getAuthMessageContract());
     }
+
     @Test
-    public void testQueryLatestHeight(){
+    public void testQueryLatestHeight() {
         AbstractBBCContext mockValidCtx = mockValidCtx();
         fiscobcosBBCService.startup(mockValidCtx);
         Assert.assertNotNull(fiscobcosBBCService.queryLatestHeight());
     }
+
     @Test
-    public void testSetupAuthMessageContract(){
+    public void testSetupAuthMessageContract() {
         // start up
         AbstractBBCContext mockValidCtx = mockValidCtx();
         fiscobcosBBCService.startup(mockValidCtx);
@@ -296,7 +301,7 @@ public class FISCOBCOSBBCServiceTest {
     }
 
     @Test
-    public void testSetupSDPMessageContract(){
+    public void testSetupSDPMessageContract() {
         // start up
         AbstractBBCContext mockValidCtx = mockValidCtx();
         fiscobcosBBCService.startup(mockValidCtx);
@@ -310,7 +315,7 @@ public class FISCOBCOSBBCServiceTest {
     }
 
     @Test
-    public void testQuerySDPMessageSeq(){
+    public void testQuerySDPMessageSeq() {
         // start up
         AbstractBBCContext mockValidCtx = mockValidCtx();
         fiscobcosBBCService.startup(mockValidCtx);
@@ -449,7 +454,7 @@ public class FISCOBCOSBBCServiceTest {
 
         // 1. set sdp addr
         TransactionReceipt receipt = appContract.setProtocol(fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
-        if (receipt.isStatusOK()){
+        if (receipt.isStatusOK()) {
             System.out.printf("set protocol(%s) to app contract(%s) \n",
                     appContract.getContractAddress(),
                     fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
@@ -471,8 +476,8 @@ public class FISCOBCOSBBCServiceTest {
             AssembleTransactionProcessor transactionProcessor = TransactionProcessorFactory.createAssembleTransactionProcessor(
                     fiscobcosBBCService.getClient(),
                     fiscobcosBBCService.getKeyPair(),
-                    fiscobcosBBCService.abiFile,
-                    fiscobcosBBCService.binFile
+                    this.abiFile,
+                    this.binFile
             );
             transactionProcessor.sendTransactionAndGetReceiptByContractLoaderAsync(
                     "AppContract", // contract name
@@ -501,7 +506,7 @@ public class FISCOBCOSBBCServiceTest {
 
         // 4. read cc msg
         List<CrossChainMessage> messageList = ListUtil.toList();
-        for(long i = height1; i <= height2; i++){
+        for (long i = height1; i <= height2; i++) {
             messageList.addAll(fiscobcosBBCService.readCrossChainMessagesByHeight(i));
         }
         Assert.assertEquals(1, messageList.size());
@@ -514,7 +519,7 @@ public class FISCOBCOSBBCServiceTest {
 
         // 1. set sdp addr
         TransactionReceipt receipt = appContract.setProtocol(fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
-        if (receipt.isStatusOK()){
+        if (receipt.isStatusOK()) {
             System.out.printf("set protocol(%s) to app contract(%s) \n",
                     appContract.getContractAddress(),
                     fiscobcosBBCService.getBbcContext().getSdpContract().getContractAddress());
@@ -536,8 +541,8 @@ public class FISCOBCOSBBCServiceTest {
             AssembleTransactionProcessor transactionProcessor = TransactionProcessorFactory.createAssembleTransactionProcessor(
                     fiscobcosBBCService.getClient(),
                     fiscobcosBBCService.getKeyPair(),
-                    fiscobcosBBCService.abiFile,
-                    fiscobcosBBCService.binFile
+                    this.abiFile,
+                    this.binFile
             );
             transactionProcessor.sendTransactionAndGetReceiptByContractLoaderAsync(
                     "AppContract", // contract name
@@ -566,14 +571,14 @@ public class FISCOBCOSBBCServiceTest {
 
         // 4. read cc msg
         List<CrossChainMessage> messageList = ListUtil.toList();
-        for(long i = height1; i <= height2; i++){
+        for (long i = height1; i <= height2; i++) {
             messageList.addAll(fiscobcosBBCService.readCrossChainMessagesByHeight(i));
         }
         Assert.assertEquals(1, messageList.size());
         Assert.assertEquals(CrossChainMessage.CrossChainMessageType.AUTH_MSG, messageList.get(0).getType());
     }
 
-    private void relayAmPrepare(){
+    private void relayAmPrepare() {
         // start up
         AbstractBBCContext mockValidCtx = mockValidCtx();
         fiscobcosBBCService.startup(mockValidCtx);
@@ -588,8 +593,8 @@ public class FISCOBCOSBBCServiceTest {
         fiscobcosBBCService.setProtocol(
                 mockValidCtx.getSdpContract().getContractAddress(),
                 "0");
-        System.out.println("sdp address:"+mockValidCtx.getSdpContract().getContractAddress());
-        System.out.println("am address:"+mockValidCtx.getAuthMessageContract().getContractAddress());
+        System.out.println("sdp address:" + mockValidCtx.getSdpContract().getContractAddress());
+        System.out.println("am address:" + mockValidCtx.getAuthMessageContract().getContractAddress());
 
         // set am to sdp
         fiscobcosBBCService.setAmContract(mockValidCtx.getAuthMessageContract().getContractAddress());
@@ -604,18 +609,7 @@ public class FISCOBCOSBBCServiceTest {
     }
 
 
-
-    private AbstractBBCContext mockValidCtx(){
-        FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
-        mockConf.setCaCert(CA_CERT);
-        mockConf.setSslCert(SSL_CERT);
-        mockConf.setSslKey(SSL_KEY);
-        mockConf.setGroupID(VALID_GROUPID);
-        AbstractBBCContext mockCtx = new DefaultBBCContext();
-        mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
-        return mockCtx;
-    }
-    private AbstractBBCContext mockInvalidCtx(){
+    private AbstractBBCContext mockValidCtx() {
         FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
         mockConf.setCaCert(CA_CERT);
         mockConf.setSslCert(SSL_CERT);
@@ -626,7 +620,18 @@ public class FISCOBCOSBBCServiceTest {
         return mockCtx;
     }
 
-    private AbstractBBCContext mockValidCtxWithPreDeployedContracts(String amAddr, String sdpAddr){
+    private AbstractBBCContext mockInvalidCtx() {
+        FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
+        mockConf.setCaCert(CA_CERT);
+        mockConf.setSslCert(SSL_CERT);
+        mockConf.setSslKey(SSL_KEY);
+        mockConf.setGroupID(VALID_GROUPID);
+        AbstractBBCContext mockCtx = new DefaultBBCContext();
+        mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
+        return mockCtx;
+    }
+
+    private AbstractBBCContext mockValidCtxWithPreDeployedContracts(String amAddr, String sdpAddr) {
         FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
         mockConf.setCaCert(CA_CERT);
         mockConf.setSslCert(SSL_CERT);
@@ -639,7 +644,7 @@ public class FISCOBCOSBBCServiceTest {
         return mockCtx;
     }
 
-    private AbstractBBCContext mockValidCtxWithPreReadyContracts(String amAddr, String sdpAddr){
+    private AbstractBBCContext mockValidCtxWithPreReadyContracts(String amAddr, String sdpAddr) {
         FISCOBCOSConfig mockConf = new FISCOBCOSConfig();
         mockConf.setCaCert(CA_CERT);
         mockConf.setSslCert(SSL_CERT);
