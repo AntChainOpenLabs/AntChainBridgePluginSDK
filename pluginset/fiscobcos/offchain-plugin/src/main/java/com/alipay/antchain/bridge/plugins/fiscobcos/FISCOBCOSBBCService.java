@@ -144,10 +144,22 @@ public class FISCOBCOSBBCService extends AbstractBBCService {
             // 实例化 amop
             List<AmopTopic> amop = new ArrayList<>();
             configProperty.amop = amop;
-            ConfigOption configOption = new ConfigOption(configProperty);
-            configOption.getCryptoMaterialConfig().setCaCert(config.getCaCert());
-            configOption.getCryptoMaterialConfig().setSdkCert(config.getSslCert());
-            configOption.getCryptoMaterialConfig().setSdkPrivateKey(config.getSslKey());
+
+            ConfigOption configOption = new ConfigOption();
+
+            CryptoMaterialConfig cryptoMaterialConfig = new CryptoMaterialConfig();
+            cryptoMaterialConfig.setCaCert(config.getCaCert());
+            cryptoMaterialConfig.setSdkCert(config.getSslCert());
+            cryptoMaterialConfig.setSdkPrivateKey(config.getSslKey());
+            configOption.setCryptoMaterialConfig(cryptoMaterialConfig);
+
+            configOption.setAccountConfig(new AccountConfig(configProperty));
+            configOption.setAmopConfig(new AmopConfig(configProperty));
+            configOption.setNetworkConfig(new NetworkConfig(configProperty));
+            configOption.setThreadPoolConfig(new ThreadPoolConfig(configProperty));
+
+            configOption.setJniConfig(configOption.generateJniConfig());
+            configOption.setConfigProperty(configProperty);
 
             // Initialize BcosSDK
             sdk = new BcosSDK(configOption);

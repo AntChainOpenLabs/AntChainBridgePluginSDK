@@ -46,8 +46,7 @@ import org.fisco.bcos.sdk.v3.codec.datatypes.DynamicBytes;
 import org.fisco.bcos.sdk.v3.codec.datatypes.Utf8String;
 import org.fisco.bcos.sdk.v3.codec.datatypes.generated.Bytes32;
 import org.fisco.bcos.sdk.v3.config.ConfigOption;
-import org.fisco.bcos.sdk.v3.config.model.AmopTopic;
-import org.fisco.bcos.sdk.v3.config.model.ConfigProperty;
+import org.fisco.bcos.sdk.v3.config.model.*;
 import org.fisco.bcos.sdk.v3.model.TransactionReceipt;
 import org.fisco.bcos.sdk.v3.model.callback.TransactionCallback;
 import org.fisco.bcos.sdk.v3.transaction.manager.AssembleTransactionProcessor;
@@ -185,10 +184,22 @@ public class FISCOBCOSBBCServiceTest {
         // 实例化 amop
         List<AmopTopic> amop = new ArrayList<>();
         configProperty.amop = amop;
-        ConfigOption configOption = new ConfigOption(configProperty);
-        configOption.getCryptoMaterialConfig().setCaCert(CA_CERT);
-        configOption.getCryptoMaterialConfig().setSdkCert(SSL_CERT);
-        configOption.getCryptoMaterialConfig().setSdkPrivateKey(SSL_KEY);
+
+        ConfigOption configOption = new ConfigOption();
+
+        CryptoMaterialConfig cryptoMaterialConfig = new CryptoMaterialConfig();
+        cryptoMaterialConfig.setCaCert(CA_CERT);
+        cryptoMaterialConfig.setSdkCert(SSL_CERT);
+        cryptoMaterialConfig.setSdkPrivateKey(SSL_KEY);
+        configOption.setCryptoMaterialConfig(cryptoMaterialConfig);
+
+        configOption.setAccountConfig(new AccountConfig(configProperty));
+        configOption.setAmopConfig(new AmopConfig(configProperty));
+        configOption.setNetworkConfig(new NetworkConfig(configProperty));
+        configOption.setThreadPoolConfig(new ThreadPoolConfig(configProperty));
+
+        configOption.setJniConfig(configOption.generateJniConfig());
+        configOption.setConfigProperty(configProperty);
 
         // Initialize BcosSDK
         BcosSDK sdk = new BcosSDK(configOption);
