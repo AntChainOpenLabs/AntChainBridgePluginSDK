@@ -36,6 +36,16 @@
             <artifactId>antchain-bridge-spi</artifactId>
             <version>0.2.2</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>cn.bitfactory</groupId>
+                    <artifactId>bif-chain-sdk</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk18on</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -46,6 +56,10 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk15on</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -82,6 +96,16 @@
             <groupId>org.chainmaker</groupId>
             <artifactId>chainmaker-sdk-java</artifactId>
             <version>2.3.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-jdk18on</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-jdk15on</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -141,6 +165,7 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>
             <version>1.75</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-pool2 -->
