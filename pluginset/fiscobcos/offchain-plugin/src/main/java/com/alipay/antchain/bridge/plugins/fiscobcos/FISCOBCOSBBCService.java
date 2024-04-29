@@ -18,9 +18,11 @@ package com.alipay.antchain.bridge.plugins.fiscobcos;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -33,7 +35,9 @@ import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
 import com.alipay.antchain.bridge.plugins.lib.BBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
+import com.webank.wedpr.crypto.NativeInterface;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.fisco.bcos.sdk.v3.BcosSDK;
 import org.fisco.bcos.sdk.v3.client.Client;
 import org.fisco.bcos.sdk.v3.client.protocol.response.BcosBlock;
@@ -77,8 +81,15 @@ public class FISCOBCOSBBCService extends AbstractBBCService {
     }
 
     @Override
+    @SneakyThrows
     public void startup(AbstractBBCContext abstractBBCContext) {
         getBBCLogger().info("FISCO-BCOS BBCService startup with context: {}", new String(abstractBBCContext.getConfForBlockchainClient()));
+
+        Future<?> future = ThreadUtil.execAsync(() -> {
+            Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+            NativeInterface.secp256k1GenKeyPair();
+        });
+        future.get();
 
         if (ObjectUtil.isNull(abstractBBCContext)) {
             throw new RuntimeException("null bbc context");
