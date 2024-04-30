@@ -43,6 +43,143 @@ cp -r ~/fisco/console/contracts/sdk/java/com/alipay/antchain/bridge/plugins/fisc
 2. Then execute the compile command in the plugin project directory 
    to get the jar for use as a plugin
 
-```agsl
+```shell
 mvn clean package -Dmaven.test.skip=true
 ```
+
+# Run Demo
+
+## Prepare contracts
+
+### Create file for contracts code
+
+```sh
+cd ~/fisco/console
+touch contracts/solidity/SenderContract.sol
+touch contracts/solidity/ReceiverContract.sol
+```
+
+```sol
+pragma solidity ^0.8.0;
+
+interface ProtocolInterface {
+    function sendMessage(
+        string calldata _destination_domain,
+        bytes32 _receiver,
+        bytes calldata _message
+    ) external;
+
+    function sendUnorderedMessage(
+        string calldata _destination_domain,
+        bytes32 _receiver,
+        bytes calldata _message
+    ) external;
+}
+
+contract SenderContract {
+    address sdp_address;
+
+    function setSdpMSGAddress(address _sdp_address) public {
+        sdp_address = _sdp_address;
+    }
+
+    function send(
+        bytes32 receiver,
+        string memory domain,
+        bytes memory _msg
+    ) public {
+        ProtocolInterface sdp = ProtocolInterface(sdp_address);
+        sdp.sendMessage(domain, receiver, _msg);
+    }
+
+    function sendUnordered(
+        bytes32 receiver,
+        string memory domain,
+        bytes memory _msg
+    ) public {
+        ProtocolInterface sdp = ProtocolInterface(sdp_address);
+        sdp.sendUnorderedMessage(domain, receiver, _msg);
+    }
+}
+```
+
+```sh
+pragma solidity ^0.8.0;
+
+contract ReceiverContract {
+    bytes last_msg;
+    bytes last_uo_msg;
+
+    event amNotify(string key, bytes32 value, string enterprise);
+
+    function recvMessage(
+        string memory domain_name,
+        bytes32 author,
+        bytes memory message
+    ) public {
+        require(message.length != 32, "32B");
+        last_msg = message;
+        emit amNotify(domain_name, author, string(message));
+    }
+
+    function getLastMsg() public view returns (bytes memory) {
+        return last_msg;
+    }
+
+    function recvUnorderedMessage(
+        string memory domain_name,
+        bytes32 author,
+        bytes memory message
+    ) public {
+        require(message.length != 32, "32B");
+        last_uo_msg = message;
+        emit amNotify(domain_name, author, string(message));
+    }
+
+    function getLastUnorderedMsg() public view returns (bytes memory) {
+        return last_uo_msg;
+    }
+}
+```
+
+### Start  console
+
+```sh
+./start.sh
+```
+
+### Deploy contracts
+
+```sh
+deploy SenderContract
+deploy ReceiverContract
+```
+
+### Set SDP address
+
+```sh
+call SenderContract {SenderContractAddress} setSdpMSGAddress "{SDPContractAddress}"
+```
+
+
+
+## Configure  authorization on relayer
+
+```sh
+relayer:> add-cross-chain-msg-acl --grantDomain {domain1} --grantIdentity {SenderContractAddress} --ownerDomain {domain2} --ownerIdentity {ReceiverContractAddress}
+```
+
+## Send and receive msg 
+
+### Send
+
+```sh
+call SenderContract {SenderContractAddress} sendUnordered "0x000000000000000000000000{ReceiverContractAddress}" "{domain2}" "{Msg}"
+```
+
+### Receive
+
+```sh
+call ReceiverContract {ReceiverContractAddress} getLastUnorderedMsg
+```
+
