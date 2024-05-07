@@ -64,10 +64,6 @@ import java.util.*;
 
 
 public class FISCOBCOSBBCServiceTest {
-    private static final String VALID_FILENAME = "config.toml";
-
-    private static final String INVALID_FILENAME = "config-example.toml";
-
     public static final String abiFile = FISCOBCOSBBCService.class.getClassLoader().getResource("abi").getPath();
     public static final String binFile = FISCOBCOSBBCService.class.getClassLoader().getResource("bin").getPath();
 
@@ -143,6 +139,8 @@ public class FISCOBCOSBBCServiceTest {
 
     private static final String VALID_GROUPID = "group0";
 
+    private static final String INVALID_GROUPID = "group5";
+
     private static final long WAIT_TIME = 5000;
 
     private static FISCOBCOSBBCService fiscobcosBBCService;
@@ -207,11 +205,6 @@ public class FISCOBCOSBBCServiceTest {
         Client client = sdk.getClient(VALID_GROUPID);
 
         appContract = AppContract.deploy(client, client.getCryptoSuite().getCryptoKeyPair());
-    }
-
-    @Test
-    public void testStart() {
-        fiscobcosBBCService.start();
     }
 
     @Test
@@ -439,6 +432,7 @@ public class FISCOBCOSBBCServiceTest {
 
         System.out.println(receipt.getErrorMsg());
         System.out.println(receipt.isSuccessful());
+        Thread.sleep(WAIT_TIME);
 
         TransactionReceipt transactionReceipt = fiscobcosBBCService.getClient().getTransactionReceipt(receipt.getTxhash(), false).getTransactionReceipt();
         Assert.assertNotNull(transactionReceipt);
@@ -636,7 +630,7 @@ public class FISCOBCOSBBCServiceTest {
         mockConf.setCaCert(CA_CERT);
         mockConf.setSslCert(SSL_CERT);
         mockConf.setSslKey(SSL_KEY);
-        mockConf.setGroupID(VALID_GROUPID);
+        mockConf.setGroupID(INVALID_GROUPID);
         AbstractBBCContext mockCtx = new DefaultBBCContext();
         mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
         return mockCtx;

@@ -49,6 +49,35 @@ mvn clean package -Dmaven.test.skip=true
 
 # Run Demo
 
+## Generate configuration file
+
+Change directory to blockchain certificate path like  `~/fisco/127.0.0.1/sdk`
+
+Run generate.sh
+
+```sh
+#!/bin/bash
+
+# Read the contents of certificate files and store them as variables
+CA_CERT=$(awk '{printf "%s\\n", $0}' ca.crt)
+SSL_CERT=$(awk '{printf "%s\\n", $0}' sdk.crt)
+SDK_KEY=$(awk '{printf "%s\\n", $0}' sdk.key)
+
+# Create fiscobcos.json
+cat > fiscobcos.json << EOF
+{
+  "caCert": "$CA_CERT",
+  "sslCert": "$SSL_CERT",
+  "sslKey": "$SDK_KEY",
+  "connectPeer": "your_IP:your_port",
+  "groupID": "your_group"
+}
+EOF
+
+```
+
+Copy fiscobcos.json to relayer server
+
 ## Prepare contracts
 
 ### Create file for contracts code
@@ -169,7 +198,7 @@ call SenderContract {SenderContractAddress} setSdpMSGAddress "{SDPContractAddres
 relayer:> add-cross-chain-msg-acl --grantDomain {domain1} --grantIdentity {SenderContractAddress} --ownerDomain {domain2} --ownerIdentity {ReceiverContractAddress}
 ```
 
-## Send and receive msg 
+## Send and receive msg
 
 ### Send
 
