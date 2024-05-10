@@ -31,6 +31,7 @@
         <module>antchain-bridge-plugin-lib</module>
         <module>antchain-bridge-plugin-manager</module>
         <module>antchain-bridge-bcdns</module>
+        <module>pluginset/fiscobcos/offchain-plugin</module>
     </modules>
 
     <properties>

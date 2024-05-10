@@ -129,6 +129,7 @@
                 </os>
             </activation>
             <dependencies>
+
                 <dependency>
                     <groupId>io.netty</groupId>
                     <artifactId>netty-tcnative-boringssl-static</artifactId>
