@@ -52,10 +52,10 @@ import lombok.Getter;
 public class BifBCDNSClient implements IBlockChainDomainNameService {
 
     private static final String DOMAIN_CALL_GET_CERT_BY_NAME_TEMPLATE
-            = "{\"function\":\"getCertByName(string)\",\"args\":\"'{}'\",\"return\":\"returns(string)\"}";
+            = "{\"function\":\"getCertByName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
 
     private static final String PTC_CALL_GET_CERT_BY_ID_TEMPLATE
-            = "{\"function\":\"getCertById(string)\",\"args\":\"'{}'\",\"return\":\"returns(string)\"}";
+            = "{\"function\":\"getCertById(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
 
     private static final String RELAY_CALL_BINDING_DOMAIN_NAME_WITH_RELAY_TEMPLATE
             = "{\"function\":\"bindingDomainNameWithRelay(string,string,bytes)\",\"args\":\"'{}','{}','{}'\"}";
@@ -64,13 +64,13 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
             = "{\"function\":\"bindingDomainNameWithTPBTA(string,bytes)\",\"args\":\"'{}','{}'\"}";
 
     private static final String RELAY_CALL_GET_TPBTA_BY_DOMAIN_NAME_TEMPLATE
-            = "{\"function\":\"getTPBTAByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(string)\"}";
+            = "{\"function\":\"getTPBTAByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
 
     private static final String RELAY_CALL_GET_CERT_BY_ID_TEMPLATE
-            = "{\"function\":\"getCertById(string)\",\"args\":\"'{}'\",\"return\":\"returns(string)\"}";
+            = "{\"function\":\"getCertById(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes)\"}";
 
     private static final String RELAY_CALL_GET_RELAY_BY_DOMAIN_NAME_TEMPLATE
-            = "{\"function\":\"getRelayByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(string,string)\"}";
+            = "{\"function\":\"getRelayByDomainName(string)\",\"args\":\"'{}'\",\"return\":\"returns(bytes,bytes)\"}";
 
     public static BifBCDNSClient generateFrom(byte[] rawConf) {
         BifBCNDSConfig config = JSON.parseObject(rawConf, BifBCNDSConfig.class);
@@ -169,6 +169,11 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                             request.getRelayerCertId()
                     )
             );
+            // BIF test net has some problems about gas calculation
+            // So we just set gas manually here.
+            // would delete it in the future.
+            bifContractCallRequest.setGasPrice(1L);
+
             BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
             if (0 != response.getErrorCode()) {
                 throw new AntChainBridgeBCDNSException(
@@ -184,7 +189,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
             boolean exist = StrUtil.isNotEmpty(res);
             return new QueryRelayerCertificateResponse(
                     exist,
-                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(Base64.decode(res)) : null
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(HexUtil.decodeHex(res)) : null
             );
         } catch (AntChainBridgeBCDNSException e) {
             throw e;
@@ -211,6 +216,11 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                             request.getPtcCertId()
                     )
             );
+            // BIF test net has some problems about gas calculation
+            // So we just set gas manually here.
+            // would delete it in the future.
+            bifContractCallRequest.setGasPrice(1L);
+
             BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
             if (0 != response.getErrorCode()) {
                 throw new AntChainBridgeBCDNSException(
@@ -226,7 +236,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
             boolean exist = StrUtil.isNotEmpty(res);
             return new QueryPTCCertificateResponse(
                     exist,
-                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(Base64.decode(res)) : null
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(HexUtil.decodeHex(res)) : null
             );
         } catch (AntChainBridgeBCDNSException e) {
             throw e;
@@ -253,6 +263,11 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                             request.getDomain().getDomain()
                     )
             );
+            // BIF test net has some problems about gas calculation
+            // So we just set gas manually here.
+            // would delete it in the future.
+            bifContractCallRequest.setGasPrice(1L);
+
             BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
             if (0 != response.getErrorCode()) {
                 throw new AntChainBridgeBCDNSException(
@@ -268,7 +283,7 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
             boolean exist = StrUtil.isNotEmpty(res);
             return new QueryDomainNameCertificateResponse(
                     exist,
-                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(Base64.decode(res)) : null
+                    exist ? CrossChainCertificateFactory.createCrossChainCertificate(HexUtil.decodeHex(res)) : null
             );
         } catch (AntChainBridgeBCDNSException e) {
             throw e;
@@ -381,6 +396,11 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                             request.getDestDomain().getDomain()
                     )
             );
+            // BIF test net has some problems about gas calculation
+            // So we just set gas manually here.
+            // would delete it in the future.
+            bifContractCallRequest.setGasPrice(1L);
+
             BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
             if (0 != response.getErrorCode() || ObjectUtil.isNull(response.getResult())) {
                 throw new RuntimeException(StrUtil.format("call BIF chain failed: ( err_code: {}, err_msg: {} )",
@@ -391,9 +411,9 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                 return null;
             }
             AbstractCrossChainCertificate relayerCert = CrossChainCertificateFactory.createCrossChainCertificate(
-                    Base64.decode(res.get(0))
+                    HexUtil.decodeHex(res.get(0))
             );
-            List<String> netAddresses = StrUtil.split(res.get(1), "^")
+            List<String> netAddresses = StrUtil.split(HexUtil.decodeHexStr(StrUtil.removePrefix(res.get(1), "0x")), "^")
                     .stream().map(HexUtil::decodeHexStr).collect(Collectors.toList());
             return new DomainRouter(
                     request.getDestDomain(),
@@ -428,6 +448,11 @@ public class BifBCDNSClient implements IBlockChainDomainNameService {
                             request.getDomain().getDomain()
                     )
             );
+            // BIF test net has some problems about gas calculation
+            // So we just set gas manually here.
+            // would delete it in the future.
+            bifContractCallRequest.setGasPrice(1L);
+
             BIFContractCallResponse response = bifsdk.getBIFContractService().contractQuery(bifContractCallRequest);
             if (0 != response.getErrorCode()) {
                 throw new AntChainBridgeBCDNSException(

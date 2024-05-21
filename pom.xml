@@ -23,7 +23,7 @@
     <packaging>pom</packaging>
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-sdk</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.3</version>
 
     <modules>
         <module>antchain-bridge-commons</module>
