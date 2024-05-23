@@ -35,19 +35,19 @@ public class AuthMsg extends Contract {
 
     public static final Event OWNERSHIPTRANSFERRED_EVENT = new Event("OwnershipTransferred", 
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<Address>(true) {}));
-    ;
+
 
     public static final Event SENDAUTHMESSAGE_EVENT = new Event("SendAuthMessage", 
             Arrays.<TypeReference<?>>asList(new TypeReference<DynamicBytes>() {}));
-    ;
+
 
     public static final Event SUBPROTOCOLUPDATE_EVENT = new Event("SubProtocolUpdate", 
             Arrays.<TypeReference<?>>asList(new TypeReference<Long>(true) {}, new TypeReference<Address>() {}));
-    ;
+
 
     public static final Event RECVAUTHMESSAGE_EVENT = new Event("recvAuthMessage", 
             Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<DynamicBytes>() {}));
-    ;
+
 
     public static OwnershipTransferredEventResponse getOwnershipTransferredEventFromLog(Log log) {
         EventValuesWithLog eventValues = staticExtractEventParametersWithLog(OWNERSHIPTRANSFERRED_EVENT, log);

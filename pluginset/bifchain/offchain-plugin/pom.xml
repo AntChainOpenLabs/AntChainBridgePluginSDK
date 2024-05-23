@@ -74,7 +74,7 @@
                     </descriptorRefs>
                     <finalName>${project.artifactId}-${project.version}-plugin</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
-                    <attach>false</attach>
+                    <attach>true</attach>
                     <archive>
                         <manifest>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
@@ -82,15 +82,6 @@
                         </manifest>
                         <manifestEntries>
                             <Plugin-Class>com.alipay.antchain.bridge.plugins.lib.pf4j.DefaultPlugin</Plugin-Class>
-
-                            <!--                            &lt;!&ndash; #### Your plugin information #### &ndash;&gt;-->
-                            <!--                            <Plugin-Id>testchain_bbcservice</Plugin-Id>-->
-                            <!--                            <Plugin-Version>0.0.1</Plugin-Version>-->
-                            <!--                            <Plugin-Description>plugin testchain to AntChainBridge</Plugin-Description>-->
-                            <!--                            <Plugin-Provider>zouxyan</Plugin-Provider>-->
-                            <!--                            <Plugin-License>Apache License 2.0</Plugin-License>-->
-                            <!--                            &lt;!&ndash; ####            END          #### &ndash;&gt;-->
-
                         </manifestEntries>
                     </archive>
                 </configuration>

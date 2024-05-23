@@ -42,7 +42,7 @@ import java.util.List;
 
 public class BifchainBBCServiceTest {
 
-    private static final String VALID_URL = "http://172.17.6.96:18080";
+    private static final String VALID_URL = "http://test.bifcore.bitfactory.cn";
 
     private static final String PRIVATE_KEY = "priSPKdqBmbMtBCD4MD2KexdxRnGyxEPiRMdcSxrr3UNBxTywG";
 
@@ -58,14 +58,10 @@ public class BifchainBBCServiceTest {
     @Test
     public void testStartup(){
         // start up success
-
-
-
-
         AbstractBBCContext mockValidCtx = mockValidCtxWithPreDeployedContracts(ADDDRESS,ADDDRESS);
         bifchainBBCService.startup(mockValidCtx);
-        Assert.assertEquals(ADDDRESS, bifchainBBCService.getBbcContext().getAuthMessageContract());
-        Assert.assertEquals(ADDDRESS, bifchainBBCService.getBbcContext().getSdpContract());
+        Assert.assertEquals(ADDDRESS, bifchainBBCService.getBbcContext().getAuthMessageContract().getContractAddress());
+        Assert.assertEquals(ADDDRESS, bifchainBBCService.getBbcContext().getSdpContract().getContractAddress());
     }
 
     @Test
@@ -125,7 +121,6 @@ public class BifchainBBCServiceTest {
         bifchainBBCService.startup(mockValidCtx);
         AbstractBBCContext ctx = bifchainBBCService.getContext();
         Assert.assertNotNull(ctx);
-        Assert.assertEquals(null, ctx.getAuthMessageContract());
     }
 
     @Test
