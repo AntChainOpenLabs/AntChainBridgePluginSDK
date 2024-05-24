@@ -15,3 +15,7 @@ scripts/*.tar.gz
 .vscode
 pluginset/eos/**.wasm
 pluginset/eos/**.abi
+/conf-cloud/
+/conf-local/
+config_cloud.toml
+config_local.toml
