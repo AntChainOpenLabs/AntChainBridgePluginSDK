@@ -12,6 +12,12 @@
 # Build
 
 1. Run the following command to generate contracts abi code:
+
+>The solidity contract used by the current demo is exactly the same as
+> the solidity contract source file of the Ethereum demo,
+> but the java code generation method is different.
+> The contract generation method of FISCO-BCOS is as follows.
+
 - Get console tool for FISCO-BCOS
 ```shell
 mkdir -p ~/fisco && cd ~/fisco
