@@ -40,7 +40,6 @@ import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import lombok.Getter;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.DynamicBytes;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.crypto.Credentials;
@@ -188,6 +187,15 @@ public class EthereumBBCService extends AbstractBBCService {
             return crossChainMessageReceipt;
         }
 
+        BigInteger currHeight = queryLatestBlockHeight();
+        if (transactionReceipt.getBlockNumber().compareTo(currHeight) > 0) {
+            crossChainMessageReceipt.setConfirmed(false);
+            crossChainMessageReceipt.setSuccessful(true);
+            crossChainMessageReceipt.setTxhash(transactionReceipt.getTransactionHash());
+            crossChainMessageReceipt.setErrorMsg("");
+            return crossChainMessageReceipt;
+        }
+
         List<SDPMsg.ReceiveMessageEventResponse> receiveMessageEventResponses = SDPMsg.getReceiveMessageEvents(transactionReceipt);
         if (ObjectUtil.isNotEmpty(receiveMessageEventResponses)) {
             SDPMsg.ReceiveMessageEventResponse response = receiveMessageEventResponses.get(0);
@@ -292,14 +300,21 @@ public class EthereumBBCService extends AbstractBBCService {
 
     @Override
     public Long queryLatestHeight() {
-        Long l;
+        Long l = queryLatestBlockHeight().longValue();
+        getBBCLogger().debug("latest height: {}", l);
+        return l;
+    }
+
+    private BigInteger queryLatestBlockHeight() {
+        BigInteger l;
         try {
-            l = web3j.ethBlockNumber().send().getBlockNumber().longValue();
+            l = web3j.ethGetBlockByNumber(config.getBlockHeightPolicy().getDefaultBlockParameterName(), false)
+                    .send()
+                    .getBlock()
+                    .getNumber();
         } catch (IOException e) {
             throw new RuntimeException("failed to query latest height", e);
         }
-
-        getBBCLogger().debug("latest height: {}", l);
         return l;
     }
 
