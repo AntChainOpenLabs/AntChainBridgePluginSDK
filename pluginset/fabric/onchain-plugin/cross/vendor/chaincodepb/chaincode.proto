@@ -1,0 +1,264 @@
+syntax = "proto3";
+package chaincodepb;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.stable_marshaler_all) = true;
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+// ---------------------------------- Oracle ------------------------------------------
+//
+// Oracle basic info
+message OracleBasicInfo {
+    bytes oracle_hash_id = 1; // result of sha256(oracle_biz_id)
+    string oracle_biz_id = 2;
+    string oracle_name = 3;
+    string oracle_desc = 4;
+    uint32 total_node_num = 5;
+    bool if_exists =6; // TODO: check if need?
+}
+
+// SGX trust root, trusted setup by contract admin
+message SGXTrustRoot {
+    // ias desc
+    string ias_desc = 1;
+    // ias public key
+    string ias_pub_key = 2;
+    // ias root ca
+    string root_ca = 3;
+    // Oracle SGX's mrenclave
+    bytes mr_enclave = 4;
+    // if psw module support
+    bool if_psw_support = 5;
+
+    bool if_exists = 6; // TODO: check if needed?
+}
+
+// Oracle node entity basic info
+message OracleNodeBasicInfo {
+    bytes node_hash_id = 1;
+    string node_biz_id = 2;
+    string node_name = 3;
+    string node_desc = 4;
+
+    // oracle node master keys
+    bytes rsa_pub_key = 5;
+    bytes ecdsa_pub_key = 6;
+
+    // if monotonic counter support
+    uint32 counter_flag = 7;
+    bytes counter_id_hash = 8;
+    uint32 counter_value = 9;
+
+    uint32 verify_timestamp = 10; // TODO: check uint64?
+    bool if_exists = 11;
+}
+
+message SGXProof {
+    string AVR = 1;
+    string AVR_sig = 2;
+    string ias_cert_chain = 3;
+    string ra_data = 4;
+}
+
+// TODO: removed
+//message UDNSBasicInfo {
+//    bytes udns_ca_pub_key = 1;
+//    uint32 total_domain_num = 2;
+//}
+
+// UDNSDomainInfo represents unds for an specified domain
+message UDNSDomainInfo {
+    // domain basic info
+    bytes domain_hash_id = 1;
+    string domain_name = 2;
+
+    // udns domain cert
+    bytes udns_cert = 3;
+    bytes domain_cert = 4;
+
+    // udns domain public keys
+    bytes udns_rsa_pub_key = 5;
+    bytes udns_ecdsa_pub_key = 6;
+
+    // tlv data {version|domain_cert|udns_cert|domain_name|pk}
+    bytes signing_body = 7;
+    // oracle master key hash
+    bytes pub_key_hash = 8; // TODO: ?
+    // signature by oracle master key
+    bytes sig = 9;
+
+    uint32 verify_timestamp = 10;
+    bool if_exists = 11;
+}
+
+// UDNSInfo represents all udns registered in an oracle node
+message UDNSInfo {
+    // basic info
+    bytes udns_ca_pub_key = 1;
+    uint32 total_domain_num = 2;
+
+    repeated string domain_id_list = 3;
+
+    // proof of udns domains, verified by udns ca
+    map<string, UDNSDomainInfo> udns_domains = 4; // keyed by domain name
+}
+
+// SGX oracle node represents an oracle node entity
+message SGXOracleNode {
+    // node basic info
+    OracleNodeBasicInfo oracle_node_basic_info = 1;
+
+    // proof of sgx machine identity, verified by oracle's sgx trust root
+    SGXProof sgx_proof = 2;
+
+    // udns info registered in this sgx oracle node
+    UDNSInfo udns_info = 3;
+}
+
+message UDNSDomainPKHashInfo {
+    string node_biz_id = 1;
+    string domain_name = 2;
+}
+
+// SGXOracleCluster represents an oracle cluster along with some oracle node entities
+message SGXOracleCluster {
+    OracleBasicInfo oracle_basic_info = 1;
+
+    SGXTrustRoot sgx_trust_root = 2;
+
+    repeated string node_biz_id_list = 3;
+
+    map<string, SGXOracleNode> oracle_nodes = 4; // keyed by sgx oracle node biz_id
+}
+
+// NOTE: just a wrapper for list of SGXOracleCluster
+message SGXOracleClusters {
+    map<string, SGXOracleCluster> clusters = 1; // keyed by oracle cluster biz id
+}
+
+message Counters {
+    map<string, uint32> counters = 1; // keyed by counter id hash
+}
+
+message OracleNodePks {
+    map<string, string> pks = 1; // keyed by pubkey hash string with value is node biz id
+}
+
+// ---------------------------------- Service ------------------------------------------
+//
+message OracleService {
+    OracleServiceBasicInfo oracle_service_basic_info = 1;
+
+    map<string, bool> permission_whitelist = 2; // keyed by user identity
+
+    map<string, bool> permission_blacklist = 3; // keyed by user identity
+}
+
+message OracleServiceBasicInfo {
+    string service_biz_id = 1;
+    string service_name = 2;
+    string service_desc = 3;
+
+    string oracle_biz_id = 4;
+
+    string service_status = 5; // "OPEN" | "CLOSE"
+    string data_source = 6; // "HTTPS" | "UDAG"
+    string permission_policy = 7; // "WHITELIST" | "BLACKLIST"
+}
+
+// NOTE: just a wrapper for list of OracleService
+message OracleServices {
+    map<string, OracleService> services = 1; // keyed by oracle service biz id
+}
+
+// ---------------------------------- Request ------------------------------------------
+//
+
+message Request {
+    string id = 1;
+    string biz_id = 2;
+    string body = 3;
+
+    string service_biz_id = 4;
+    string data_source = 5;
+
+    bool if_callback = 6;
+    string call_identity = 7;
+    string callback_identity = 8;
+    uint64 delay_time = 9;
+
+    bool if_success = 10;
+}
+
+message Requests {
+    map<string, Request> reqs = 1;
+}
+
+message Response {
+    string req_id = 1;
+    string service_id = 2;
+    bytes req_body = 3;
+    bytes res_header = 4;
+    bytes res_body = 5;
+
+    // tlv data {request|error_code|error_msg|response_body}
+    bytes signing_body = 6;
+    uint32 sig_type = 7;
+    bytes sig = 8;
+    string pub_key_hash = 9;
+
+    uint32 error_code = 10;
+    string error_msg = 11;
+    uint32 http_status = 12;
+
+    string domain = 13;
+    uint32 version = 14;
+}
+
+message Responses {
+    map<string, Response> resps = 1;
+}
+
+
+// ---------------------------------- AuthMsg ------------------------------------------
+message TransProtocol {
+    // recv msg routing: type -> protocoal chaincode mapping
+    map<uint64, string> protocols = 1;
+
+    // out msg type: protocoal chaincode -> type
+    map<string, uint64> allowtypes = 2;
+}
+
+message OracleContract {
+    string chaincode = 1;
+    bytes  serviceid = 2;
+}
+
+message DomainParser {
+    // key -> domain, value -> parser chaincode
+    map<string, string> parsers = 1;
+}
+
+message MsgNounce {
+    uint32 seqno = 1;
+}
+
+// message SendSequence {
+// key是 hex(sha3.keccak256(remote domain | receiverIdentity))
+//    remote domain是字符串
+//    receiverIdentity是长度为32字节的byte数组
+// map<string, MsgNounce> seq_no = 1;
+// 直接使用state_key来存储
+
+// message RecvSequence {
+// key是 hex(sha3.keccak256(remote domain | senderIdentity))
+//    remote domain是字符串
+//    senderIdentity是长度为32字节的byte数组
+//map<string, MsgNounce> seq_no = 1;
+// }
+// 直接使用state_key来存储
+
+message DomainPks {
+    map<string, UDNSDomainPKHashInfo> domain_pks = 1; // keyed by domain pub key hash
+}
