@@ -5,11 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>chainmaker-bbc</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.0</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <antchain-bridge.sdk.version>0.2.2</antchain-bridge.sdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -24,17 +25,16 @@
     </repositories>
 
     <dependencies>
-
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-plugin-lib</artifactId>
-            <version>0.2.2</version>
+            <version>${antchain-bridge.sdk.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.alipay.antchain.bridge</groupId>
             <artifactId>antchain-bridge-spi</artifactId>
-            <version>0.2.2</version>
+            <version>${antchain-bridge.sdk.version}</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -118,6 +118,7 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
             <version>4.1.53.Final</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
@@ -128,6 +129,7 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty</artifactId>
             <version>1.53.0</version>
+            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <groupId>io.netty</groupId>
@@ -183,6 +185,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.0</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -210,35 +213,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>org.web3j</groupId>
-                <artifactId>web3j-maven-plugin</artifactId>
-                <version>4.9.4</version>
-                <configuration>
-                    <packageName>com.alipay.antchain.bridge.plugins.chainmaker.abi</packageName>
-                    <sourceDestination>src/main/java</sourceDestination>
-                    <nativeJavaType>true</nativeJavaType>
-                    <outputFormat>java</outputFormat>
-                    <soliditySourceFiles>
-                        <directory>${project.basedir}/../onchain-plugin/solidity/sys</directory>
-                        <includes>
-                            <include>**/*.sol</include>
-                        </includes>
-                    </soliditySourceFiles>
-                    <contract>
-                        <includes>
-                            <include>AuthMsg</include>
-                            <include>SDPMsg</include>
-                            <include>AppContract</include>
-                        </includes>
-                    </contract>
-                    <pathPrefixes>
-                        <pathPrefix>dep=../dependencies</pathPrefix>
-                    </pathPrefixes>
-                </configuration>
-            </plugin>
-
         </plugins>
     </build>
 </project>

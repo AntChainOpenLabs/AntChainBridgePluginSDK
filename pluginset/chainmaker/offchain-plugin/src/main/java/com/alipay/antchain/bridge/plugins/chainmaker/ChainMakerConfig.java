@@ -16,14 +16,14 @@
 
 package com.alipay.antchain.bridge.plugins.chainmaker;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -46,6 +46,11 @@ public class ChainMakerConfig {
     private String amContractAddressDeployed;
     @JSONField
     private String sdpContractAddressDeployed;
+    @JSONField
+    private String amContractName;
+    @JSONField
+    private String sdpContractName;
+
 
     // json string to java object
     public static ChainMakerConfig fromJsonString(String jsonString) throws IOException {
