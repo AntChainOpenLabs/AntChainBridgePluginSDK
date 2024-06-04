@@ -5,12 +5,6 @@ import lombok.Getter;
 @Getter
 public enum MychainContractBinaryVersionEnum {
 
-    V1_4_0(
-            "v1.4.0",
-            "/contract/1.4.0_ALPHA/auth_message.wasc", "/contract/1.1.0_BETA/am_client_mychain010_0_0_1.bin", "/contract/1.4.0_ALPHA/auth_message_tee.wasc",
-            "/contract/1.4.0_ALPHA/p2p_message.wasc", "/contract/1.1.0_BETA/am_p2p_msg_mychain010_0_0_1.bin", "/contract/1.4.0_ALPHA/p2p_message.wasc"
-    ),
-
     V1_5_0(
             "v1.5.0",
             "/contract/1.5.0/wasm/auth_message.wasc", "/contract/1.5.0/solidity/am_client_mychain010_0_0_1.bin", "/contract/1.5.0/wasm/auth_message_tee.wasc",
@@ -20,8 +14,6 @@ public enum MychainContractBinaryVersionEnum {
 
     public static MychainContractBinaryVersionEnum selectBinaryByVersion(String version) {
         switch (version.toLowerCase()) {
-            case "v1.4.0":
-                return V1_4_0;
             case "v1.5.0":
             default:
                 return V1_5_0;
