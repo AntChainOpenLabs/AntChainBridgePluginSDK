@@ -31,8 +31,6 @@ import com.alipay.mychain.sdk.errorcode.ErrorCode;
 import com.alipay.mychain.sdk.message.transaction.TransactionReceiptResponse;
 import com.alipay.mychain.sdk.vm.EVMOutput;
 import com.alipay.mychain.sdk.vm.WASMOutput;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @BBCService(products = "mychain010", pluginId = "plugin-mychain010")
 public class Mychain010BBCService extends AbstractBBCService {

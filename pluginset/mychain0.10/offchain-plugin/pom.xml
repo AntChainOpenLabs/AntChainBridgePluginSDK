@@ -6,7 +6,7 @@
 
     <groupId>org.mychain</groupId>
     <artifactId>mychain010-bbc</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -129,7 +129,6 @@
                 </os>
             </activation>
             <dependencies>
-
                 <dependency>
                     <groupId>io.netty</groupId>
                     <artifactId>netty-tcnative-boringssl-static</artifactId>
