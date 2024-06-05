@@ -1,0 +1,28 @@
+{
+  "adminCertPaths": [
+    "LS0tLS1C...LS0tCg==",
+    "LS0tLS1C...LS0tLS0K",
+    "LS0tLS1C...LS0tLS0K"
+  ],
+  "adminKeyPaths": [
+    "LS0tLS1C...LS0tLQo=",
+    "LS0tLS1C...LS0tLQo=",
+    "LS0tLS1C...LS0tLQo="
+  ],
+  "adminTlsCertPaths": [
+    "LS0tLS1C...LS0tLS0K",
+    "LS0tLS1C...LS0tLS0K",
+    "LS0tLS1C...LS0tLS0K"
+  ],
+  "adminTlsKeyPaths": [
+    "LS0tLS1C...LS0tLQo=",
+    "LS0tLS1C...LS0tLQo=",
+    "LS0tLS1C...LS0tLQo="
+  ],
+  "orgIds": [
+    "wx-org1.chainmaker.org",
+    "wx-org2.chainmaker.org",
+    "wx-org3.chainmaker.org"
+  ],
+  "sdkConfig": "{\"chainClient\":{\"chainId\":\"chain1\",\"orgId\":\"wx-org1.chainmaker.org\",\"userKeyFilePath\":\"src/main/resources/crypto-config/wx-org1.chainmaker.org/user/client1/client1.tls.key\",\"userCrtFilePath\":\"src/main/resources/crypto-config/wx-org1.chainmaker.org/user/client1/client1.tls.crt\",\"userSignKeyFilePath\":\"src/main/resources/crypto-config/wx-org1.chainmaker.org/user/client1/client1.sign.key\",\"userSignCrtFilePath\":\"src/main/resources/crypto-config/wx-org1.chainmaker.org/user/client1/client1.sign.crt\",\"userKeyBytes\":[45,45,45,45,45,66,69,71,...,69,89,45,45,45,45,45,10],\"userCrtBytes\":[45,45,45,45,45,66,69,71,...,84,69,45,45,45,45,45,10],\"userSignKeyBytes\":[45,45,45,45,45,66,69,71,...,69,89,45,45,45,45,45,10],\"userSignCrtBytes\":[45,45,45,45,45,66,69,71,...,84,69,45,45,45,45,45,10],\"authType\":\"permissionedWithcert\",\"retryLimit\":10,\"retryInterval\":500,\"nodes\":[{\"nodeAddr\":\"127.0.0.1:12301\",\"connCnt\":10,\"enableTls\":true,\"trustRootPaths\":[\"src/main/resources/crypto-config/wx-org1.chainmaker.org/ca\"],\"trustRootBytes\":[[45,45,45,45,45,66,69,71,...,84,69,45,45,45,45,45,10]],\"tlsHostName\":\"chainmaker.org\"}],\"rpcClient\":{\"maxReceiveMessageSize\":100},\"archiveCenterQueryFirst\":false,\"pkcs11\":{\"enabled\":false},\"enableTxResultDispatcher\":true}}"
+}
