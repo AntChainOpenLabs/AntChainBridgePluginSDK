@@ -60,6 +60,9 @@ public class EthereumConfig {
     @JSONField
     private String sdpContractAddressDeployed;
 
+    @JSONField
+    private BlockHeightPolicyEnum blockHeightPolicy = BlockHeightPolicyEnum.LATEST;
+
     /**
      * json序列化为字符串
      */
