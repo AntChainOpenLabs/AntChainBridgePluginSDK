@@ -138,7 +138,7 @@
                     <groupId>com.alipay.mychainx</groupId>
                     <artifactId>mychainx-sdk-java-sm</artifactId>
                     <version>0.10.2.25</version>
-                    <classifier>linux-x86_64</classifier>
+                    <classifier>linux-aarch_64</classifier>
                     <exclusions>
                         <exclusion>
                             <groupId>io.netty</groupId>
