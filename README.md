@@ -468,7 +468,7 @@ AntChain Bridge 欢迎您以任何形式参与社区建设。
 
 - 钉钉
 
-![scan dingding](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/dingding.png)
+![scan dingding2024](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/dingding2024.png?x-oss-process=image/resize,w_400/quality,Q_100)
 
 - 邮件
 
