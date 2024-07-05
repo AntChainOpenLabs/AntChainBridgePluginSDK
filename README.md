@@ -30,7 +30,7 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 在当前的工程实现中，BBC链下部分是以插件的形式实现的。AntChain Bridge实现了一套SDK，通过实现SDK中规定的接口（SPI），经过简单的编译，即可生成插件包。插件服务（PluginServer, PS）可以加载BBC链下插件，详情可以参考插件服务的介绍[文档](https://github.com/AntChainOpenLab/AntChainBridgePluginServer/blob/main/README.md)。
 
-区块链域名服务（BlockChain Domain Name Service, BCDNS）为AntChain Bridge跨链网络提供身份、路由、信任管理等服务，在v0.2.0版本之后，加入了BCDNS模块以及其他数据结构，比如区块链域名证书等类型和工具，并在`antchain-bridge-bcdns`中增加了基于[星火链网](https://bitfactory.cn/)的BCDNS服务的客户端实现，该BCDNS服务由[中国信息通信研究院](http://www.caict.ac.cn/)开发支持，详情请[见](https://git.xinghuo.space/xinghuo-open-source/DLT/bcdns)。
+区块链域名服务（BlockChain Domain Name Service, BCDNS）为AntChain Bridge跨链网络提供身份、路由、信任管理等服务，在v0.2.0版本之后，加入了BCDNS模块以及其他数据结构，比如区块链域名证书等类型和工具，并在`antchain-bridge-bcdns`中增加了基于[星火链网](https://bitfactory.cn/)的BCDNS服务的客户端实现，该BCDNS服务由[中国信息通信研究院](http://www.caict.ac.cn/)开发支持，详情请[见](https://github.com/caict-4iot-dev/BCDNS)。
 
 在SDK中抽象了BCDNS服务的接口[IBlockChainDomainNameService](antchain-bridge-bcdns/src/main/java/com/alipay/antchain/bridge/bcdns/service/IBlockChainDomainNameService.java)，描述了BCDNS应该提供的功能，目前仅支持官方实现的BCDNS，支持的类型可[见](antchain-bridge-bcdns/src/main/java/com/alipay/antchain/bridge/bcdns/service/BCDNSTypeEnum.java)。
 
@@ -454,7 +454,7 @@ IV4AUtT9d+Y8gRK/kmNySzlJ32Shw3FNj8Uvy3yjBxjO6vKOWH5Jhu936zMWOgk=
 - bifChainRpcUrl：星火链网节点的RPC地址。
 - bifChainRpcPort：星火链网节点的PRC端口，如果不需要则可以不填。
 - clientPrivateKeyPem：星火链网账户的私钥，这里需要使用Relayer的私钥`clientPrivateKeyPem`来生成该地址，可以参考[代码](https://github.com/AntChainOpenLabs/AntChainBridgeRelayer/blob/6658dfa599b73b1aa4f3cf156e1fc1d72c5cb7c6/r-cli/src/main/java/com/alipay/antchain/bridge/relayer/cli/command/UtilsCommands.java#L203C20-L203C42)。
-- domainGovernContract：域名管理合约，参考[星火链网BCDNS](https://git.xinghuo.space/xinghuo-open-source/DLT/bcdns)，依赖的星火链网BCDNS应当有唯一一本域名管理合约。
+- domainGovernContract：域名管理合约，参考[星火链网BCDNS](https://github.com/caict-4iot-dev/BCDNS)，依赖的星火链网BCDNS应当有唯一一本域名管理合约。
 - ptcGovernContract：PTC身份管理合约，依赖的星火链网BCDNS应当有唯一一本PTC身份管理合约。
 - relayerGovernContract：Relayer身份管理合约，依赖的星火链网BCDNS应当有唯一一本Relayer身份管理合约。
 
