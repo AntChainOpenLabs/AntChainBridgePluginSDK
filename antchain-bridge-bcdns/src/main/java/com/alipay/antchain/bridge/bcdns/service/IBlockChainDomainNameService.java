@@ -30,7 +30,7 @@ public interface IBlockChainDomainNameService {
 
     ApplicationResult queryRelayerCertificateApplicationResult(String applyReceipt);
 
-    //
+
     ApplyPTCCertificateResponse applyPTCCertificate(AbstractCrossChainCertificate certSigningRequest);
 
     ApplicationResult queryPTCCertificateApplicationResult(String applyReceipt);

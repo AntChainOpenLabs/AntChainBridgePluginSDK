@@ -50,5 +50,23 @@ fi
 log_info "deploy antchain-bridge-bcdns successfully"
 cd - > /dev/null 2>&1
 
+cd ${CURR_DIR}/../bcdns-services/embedded-bcdns/embedded-bcdns-core
+mvn deploy -s $GITHUB_WORKSPACE/settings.xml
+if [ $? -ne 0 ]; then
+    log_error "failed to deploy embedded-bcdns-core"
+    exit 1
+fi
+log_info "deploy embedded-bcdns-core successfully"
+cd - > /dev/null 2>&1
+
+cd ${CURR_DIR}/../antchain-bridge-bcdns-factory
+mvn deploy -s $GITHUB_WORKSPACE/settings.xml
+if [ $? -ne 0 ]; then
+    log_error "failed to deploy antchain-bridge-bcdns-factory"
+    exit 1
+fi
+log_info "deploy antchain-bridge-bcdns-factory successfully"
+cd - > /dev/null 2>&1
+
 log_info "success"
 rm -rf antchain-bridge-sdk

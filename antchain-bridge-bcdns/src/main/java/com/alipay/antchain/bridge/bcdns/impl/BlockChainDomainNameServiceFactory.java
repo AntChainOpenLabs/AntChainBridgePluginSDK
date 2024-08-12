@@ -22,6 +22,12 @@ import com.alipay.antchain.bridge.bcdns.service.IBlockChainDomainNameService;
 import com.alipay.antchain.bridge.bcdns.types.exception.AntChainBridgeBCDNSException;
 import com.alipay.antchain.bridge.bcdns.types.exception.BCDNSErrorCodeEnum;
 
+/**
+ * This factory is going to be abandoned in the future.
+ * Please use new {@code BlockChainDomainNameServiceFactory}
+ * in module <b>antchain-bridge-bcdns-factory<</b> instead.
+ */
+@Deprecated
 public class BlockChainDomainNameServiceFactory {
 
     public static IBlockChainDomainNameService create(BCDNSTypeEnum type, byte[] rawConfig) {

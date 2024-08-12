@@ -63,12 +63,30 @@ import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
  *
  *     &#64;TLVField(tag = 7, type = TLVTypeEnum.STRING_ARRAY, order = 7)
  *     private List&#60;String&#62; myStringArray;
+ *
+ *     &#64;TLVField(tag = 8, type = TLVTypeEnum.MAP, order = 8)
+ *     private Map&#60;MapKeyClz, MapValueClz&#62; myMap;
+ * }
+ *
+ * &#64;TLVMapping(fieldName = "key")
+ * public class MapKeyClz {
+ *     private String key;
+ * }
+ *
+ * public class MapValueClz {
+ *     &#64;TLVField(tag = 0, type = TLVTypeEnum.STRING, order = 0)
+ *     private String value;
  * }
  * </pre>
  * <p>
  *     Following the example below, you can decode and encode the object of {@code MyClass}.
  *     There is more methods in the class {@link com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils},
  *     please check it.
+ * </p>
+ * <p>
+ *     It is particularly important to emphasize that the key and value classes of the {@link java.util.Map}
+ *     type field supposed to be wrapped primitive types, or their fields annotated with {@link TLVField},
+ *     or they are annotated with {@link TLVMapping} annotation.
  * </p>
  * <pre>
  * public void main() {

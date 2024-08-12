@@ -39,6 +39,9 @@ public enum BCDNSTypeEnum {
         if (StrUtil.equals(value, BCDNSTypeEnum.BIF.getCode())) {
             return BIF;
         }
+        if (StrUtil.equals(value, BCDNSTypeEnum.EMBEDDED.getCode())) {
+            return EMBEDDED;
+        }
         throw new AntChainBridgeBCDNSException(
                 BCDNSErrorCodeEnum.BCDNS_TYPE_UNKNOWN,
                 "Invalid value for bcdns type: " + value
@@ -49,6 +52,8 @@ public enum BCDNSTypeEnum {
         switch (value) {
             case 0:
                 return BIF;
+            case 1:
+                return EMBEDDED;
             default:
                 return null;
         }

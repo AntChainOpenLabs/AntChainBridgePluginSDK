@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.alipay.antchain.bridge.bcdns.embedded.starter.autocofigure.EmbeddedBcdnsAutoConfiguration

@@ -34,11 +34,13 @@ AntChain Bridge为开发者提供了SDK、手册和系统合约模板，来帮�
 
 在SDK中抽象了BCDNS服务的接口[IBlockChainDomainNameService](antchain-bridge-bcdns/src/main/java/com/alipay/antchain/bridge/bcdns/service/IBlockChainDomainNameService.java)，描述了BCDNS应该提供的功能，目前仅支持官方实现的BCDNS，支持的类型可[见](antchain-bridge-bcdns/src/main/java/com/alipay/antchain/bridge/bcdns/service/BCDNSTypeEnum.java)。
 
+在v0.3.0之后，拆分出单独的BCDNS Factory模块，用于快速启动不同类型BCDNS的客户端，并剥离依赖。增加关于Embedded BCDNS的实现代码，并提供Spring Boot Starter方便快速启动Embedded BCDNS服务。
+
 以下介绍了基于SDK的一个集成架构：
 
 ![](https://antchainbridge.oss-cn-shanghai.aliyuncs.com/antchainbridge/document/picture/deploy_arch_231228.png)
 
-SDK共有五个部分，包括：
+SDK共有六个部分，包括：
 
 - **antchain-bridge-commons**：包含很多工具方法和数据结构，帮助BBC实现快速开发；
 
@@ -50,11 +52,12 @@ SDK共有五个部分，包括：
 
 - **antchain-bridge-bcdns**：主要包含了接口`IBlockChainDomainNameService`，描述了一个BCDNS客户端应该有的功能，目前仅支持星火链网（BIF）的BCDNS客户端实现，详细使用可以参考[wiki]()中“如何实现跨链”的内容；
 
+- **antchain-bridge-bcdns-factory**：包含一个工厂类，支持依据类型创建BCDNS客户端，目前支持星火链网（BIF）的BCDNS客户端和Embedded BCDNS的实现，详细使用可以参考[wiki](https://github.com/AntChainOpenLab/AntChainBridgePluginSDK/wiki)中“如何实现跨链”的内容；
   
 
 # 构建
 
-**在开始之前，请您确保安装了maven和JDK，这里推荐使用[openjdk-1.8](https://adoptium.net/zh-CN/temurin/releases/?version=8)版本*
+**在开始之前，请您确保安装了maven和JDK，这里推荐使用[jdk-1.8](https://adoptium.net/zh-CN/temurin/releases/?version=8)版本*
 
 ## 本地安装
 
@@ -64,33 +67,9 @@ SDK共有五个部分，包括：
 mvn install -Dmaven.test.skip=true
 ```
 
-或者在release[页面](https://github.com/AntChainOpenLab/AntChainBridgePluginSDK/releases)找到适合的版本并下载到本地，解压之后，在根目录下，运行脚本完成SDK的安装：
-
-```
-./install_sdk.sh
-```
-
-提示信息如下，代表安装完成：
-
-```
-    ___            __   ______ __            _           ____         _      __
-   /   |   ____   / /_ / ____// /_   ____ _ (_)____     / __ ) _____ (_)____/ /____ _ ___
-  / /| |  / __ \ / __// /    / __ \ / __ `// // __ \   / __  |/ ___// // __  // __ `// _ \
- / ___ | / / / // /_ / /___ / / / // /_/ // // / / /  / /_/ // /   / // /_/ // /_/ //  __/
-/_/  |_|/_/ /_/ \__/ \____//_/ /_/ \__,_//_//_/ /_/  /_____//_/   /_/ \__,_/ \__, / \___/
-                                                                            /____/        
-
-[ INFO ]_[ 2023-12-27 17:40:42.170 ] : successful to install antchain-bridge-commons-0.2.0.jar
-[ INFO ]_[ 2023-12-27 17:40:44.170 ] : successful to install antchain-bridge-spi-0.2.0.jar
-[ INFO ]_[ 2023-12-27 17:40:45.170 ] : successful to install antchain-bridge-plugin-lib-0.2.0.jar
-[ INFO ]_[ 2023-12-27 17:40:47.170 ] : successful to install antchain-bridge-plugin-manager-0.2.0.jar
-[ INFO ]_[ 2023-12-27 17:40:48.170 ] : successful to install antchain-bridge-bcdns-0.2.0.jar
-[ INFO ]_[ 2023-12-27 17:40:48.170 ] : success
-```
-
 这样，SDK的Jar包就被安装在本地了。
 
-然后，可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在项目目录的[po m.xml](pom.xml)看到。
+然后，可以通过在maven的pom.xml配置依赖就可以了，比如下面一段配置，`${antchain-bridge.sdk.version}`为当前仓库的版本号，可以在项目目录的[pom.xml](pom.xml)看到。
 
 ```xml
 <dependency>
@@ -118,27 +97,14 @@ mvn install -Dmaven.test.skip=true
     <artifactId>antchain-bridge-bcdns</artifactId>
     <version>${antchain-bridge.sdk.version}</version>
 </dependency>
+<dependency>
+    <groupId>com.alipay.antchain.bridge</groupId>
+    <artifactId>antchain-bridge-bcdns-factory</artifactId>
+    <version>${antchain-bridge.sdk.version}</version>
+</dependency>
 ```
 
-## 通过GitHub Package安装
 
-参考[这里](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-to-github-packages)配置您的maven，在`setting.xml`中配置上您的GitHub账号和Token。
-
-在您的项目`pom.xml`中，配置上我们的repository：
-
-```xml
-<repositories>
-    <repository>
-        <id>github</id>
-        <url>https://maven.pkg.github.com/AntChainOpenLab/*</url>
-        <snapshots>
-            <enabled>true</enabled>
-        </snapshots>
-    </repository>
-</repositories>
-```
-
-这样您就可以导入上面的dependency来使用SDK。
 
 # 快速开始
 
@@ -410,7 +376,7 @@ IV4AUtT9d+Y8gRK/kmNySzlJ32Shw3FNj8Uvy3yjBxjO6vKOWH5Jhu936zMWOgk=
 
 ### 星火链网（BIF）BCDNS
 
-目前SDK仅支持星火链网的BCDNS服务客户端，这里介绍其配置项和如何实例化该客户端。
+目前SDK支持星火链网的BCDNS服务客户端，这里介绍其配置项和如何实例化该客户端。
 
 首先介绍配置，代码可[见](antchain-bridge-bcdns/src/main/java/com/alipay/antchain/bridge/bcdns/impl/bif/conf/BifBCNDSConfig.java)，主要分为两部分，一部分`certificationServiceConfig`是用于和颁证服务通信、鉴权，另一部分`chainConfig`用于和星火链网交互。
 
@@ -459,6 +425,10 @@ IV4AUtT9d+Y8gRK/kmNySzlJ32Shw3FNj8Uvy3yjBxjO6vKOWH5Jhu936zMWOgk=
 - relayerGovernContract：Relayer身份管理合约，依赖的星火链网BCDNS应当有唯一一本Relayer身份管理合约。
 
 准备完配置之后，可以根据[这里](antchain-bridge-bcdns/src/main/java/com/alipay/antchain/bridge/bcdns/impl/BlockChainDomainNameServiceFactory.java)创建一个BCDNS实例。
+
+### Embedded BCDNS
+
+Embedded BCDNS是内嵌在服务内部的BCDNS，提供中心化的权威服务，会使用一把私钥为跨链网络提供认证、准入等功能，按照服务端要求可以通过简单配置接入BCDNS，具体内容可以参考[这里](bcdns-services/embedded-bcdns/README.md)。
 
 # 社区治理
 

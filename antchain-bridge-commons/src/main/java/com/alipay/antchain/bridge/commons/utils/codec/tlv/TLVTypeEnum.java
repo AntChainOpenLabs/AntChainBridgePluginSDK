@@ -24,5 +24,6 @@ public enum TLVTypeEnum {
     STRING,
     BYTES,
     BYTES_ARRAY,
-    STRING_ARRAY;
+    STRING_ARRAY,
+    MAP;
 }

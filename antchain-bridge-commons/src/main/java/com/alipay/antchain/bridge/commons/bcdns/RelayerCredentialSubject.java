@@ -16,9 +16,6 @@
 
 package com.alipay.antchain.bridge.commons.bcdns;
 
-import java.security.PublicKey;
-import java.security.Security;
-
 import com.alipay.antchain.bridge.commons.bcdns.utils.ObjectIdentityUtil;
 import com.alipay.antchain.bridge.commons.core.base.ObjectIdentity;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
@@ -29,6 +26,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import java.security.PublicKey;
+import java.security.Security;
 
 @Getter
 @Setter
@@ -41,30 +41,30 @@ public class RelayerCredentialSubject extends AbstractCredentialSubjectWithSingl
 
     public static final String CURRENT_VERSION = "1.0";
 
-    public static final short TLV_TYPE_PTC_CREDENTIAL_SUBJECT_VERSION = 0x0000;
+    public static final short TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_VERSION = 0x0000;
 
-    public static final short TLV_TYPE_PTC_CREDENTIAL_SUBJECT_NAME = 0x0001;
+    public static final short TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_NAME = 0x0001;
 
-    public static final short TLV_TYPE_PTC_CREDENTIAL_SUBJECT_TYPE = 0x0002;
+    public static final short TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_TYPE = 0x0002;
 
-    public static final short TLV_TYPE_PTC_CREDENTIAL_SUBJECT_APPLICANT = 0x0003;
+    public static final short TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_APPLICANT = 0x0003;
 
-    public static final short TLV_TYPE_PTC_CREDENTIAL_SUBJECT_SUBJECT_INFO = 0x0004;
+    public static final short TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_SUBJECT_INFO = 0x0004;
 
     public static RelayerCredentialSubject decode(byte[] rawData) {
         return TLVUtils.decode(rawData, RelayerCredentialSubject.class);
     }
 
-    @TLVField(tag = TLV_TYPE_PTC_CREDENTIAL_SUBJECT_VERSION, type = TLVTypeEnum.STRING)
+    @TLVField(tag = TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_VERSION, type = TLVTypeEnum.STRING)
     private String version;
 
-    @TLVField(tag = TLV_TYPE_PTC_CREDENTIAL_SUBJECT_NAME, type = TLVTypeEnum.STRING, order = 1)
+    @TLVField(tag = TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_NAME, type = TLVTypeEnum.STRING, order = 1)
     private String name;
 
-    @TLVField(tag = TLV_TYPE_PTC_CREDENTIAL_SUBJECT_APPLICANT, type = TLVTypeEnum.BYTES, order = 2)
+    @TLVField(tag = TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_APPLICANT, type = TLVTypeEnum.BYTES, order = 2)
     private ObjectIdentity applicant;
 
-    @TLVField(tag = TLV_TYPE_PTC_CREDENTIAL_SUBJECT_SUBJECT_INFO, type = TLVTypeEnum.BYTES, order = 3)
+    @TLVField(tag = TLV_TYPE_RELAYER_CREDENTIAL_SUBJECT_SUBJECT_INFO, type = TLVTypeEnum.BYTES, order = 3)
     private byte[] subjectInfo;
 
     @Override

@@ -17,8 +17,15 @@
 package com.alipay.antchain.bridge.commons.utils.codec.tlv;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
+
+import cn.hutool.core.util.ObjectUtil;
+import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
+import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
+import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVMapping;
+import lombok.SneakyThrows;
 
 public class TLVItem {
 
@@ -102,6 +109,60 @@ public class TLVItem {
             return new TLVItem(type, os.size(), byteos.toByteArray());
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static TLVItem fromMap(short type, Map map) {
+        ByteArrayOutputStream byteos = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(byteos);
+
+        for (Object o : map.entrySet()) {
+            Object key = ((Map.Entry) o).getKey();
+            writeValueIntoStream(key, key.getClass(), os);
+            Object value = ((Map.Entry) o).getValue();
+            writeValueIntoStream(value, value.getClass(), os);
+        }
+
+        return new TLVItem(type, os.size(), byteos.toByteArray());
+    }
+
+    @SneakyThrows
+    private static void writeValueIntoStream(Object val, Class clz, DataOutputStream os) {
+        if (ObjectUtil.equals(clz, Integer.class) || ObjectUtil.equals(clz, int.class)) {
+            os.writeInt((Integer) val);
+        } else if (ObjectUtil.equals(clz, Long.class) || ObjectUtil.equals(clz, long.class)) {
+            os.writeLong((Long) val);
+        } else if (ObjectUtil.equals(clz, Short.class) || ObjectUtil.equals(clz, short.class)) {
+            os.writeShort((Short) val);
+        } else if (ObjectUtil.equals(clz, Byte.class) || ObjectUtil.equals(clz, byte.class)) {
+            os.writeByte((Byte) val);
+        } else if (ObjectUtil.equals(clz, Float.class) || ObjectUtil.equals(clz, float.class)) {
+            os.writeFloat((Float) val);
+        } else if (ObjectUtil.equals(clz, Boolean.class) || ObjectUtil.equals(clz, boolean.class)) {
+            os.writeBoolean((Boolean) val);
+        } else if (ObjectUtil.equals(clz, Character.class) || ObjectUtil.equals(clz, char.class)) {
+            os.writeChar((Character) val);
+        } else if (ObjectUtil.equals(clz, String.class)) {
+            byte[] rawVal = ((String) val).getBytes();
+            os.writeInt(Integer.reverseBytes(rawVal.length));
+            os.write(rawVal);
+        } else {
+            TLVMapping mapping = (TLVMapping) clz.getAnnotation(TLVMapping.class);
+            if (ObjectUtil.isNotNull(mapping)) {
+                Field fieldInMapping = TLVUtils.getFieldInMapping(clz, mapping);
+                writeValueIntoStream(fieldInMapping.get(val), fieldInMapping.getType(), os);
+                return;
+            }
+
+            if (Arrays.stream(clz.getDeclaredFields()).noneMatch(field -> ObjectUtil.isNotNull(field.getAnnotation(TLVField.class)))) {
+                throw new AntChainBridgeCommonsException(
+                        CommonsErrorCodeEnum.CODEC_TLV_DECODE_ERROR,
+                        String.format("class %s does not have any field annotated with @TLVField", clz.getName())
+                );
+            }
+            byte[] rawVal = TLVUtils.encode(val);
+            os.writeInt(Integer.reverseBytes(rawVal.length));
+            os.write(rawVal);
         }
     }
 
@@ -204,6 +265,65 @@ public class TLVItem {
             return strArray;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @SneakyThrows
+    public Map getMap(Class keyClz, Class valueClz) {
+        DataInputStream dataStream = new DataInputStream(new ByteArrayInputStream(value));
+        Map map = new HashMap();
+        while (dataStream.available() > 0) {
+            Object key = getObjectFromStream(keyClz, dataStream);
+            Object value = getObjectFromStream(valueClz, dataStream);
+            map.put(key, value);
+        }
+        return map;
+    }
+
+    @SneakyThrows
+    public Object getObjectFromStream(Class clz, DataInputStream dataStream) {
+        if (ObjectUtil.isNull(clz)) {
+            throw new RuntimeException("class object is null");
+        }
+        if (ObjectUtil.equals(clz, Integer.class) || ObjectUtil.equals(clz, int.class)) {
+            return dataStream.readInt();
+        } else if (ObjectUtil.equals(clz, Long.class) || ObjectUtil.equals(clz, long.class)) {
+            return dataStream.readLong();
+        } else if (ObjectUtil.equals(clz, Short.class) || ObjectUtil.equals(clz, short.class)) {
+            return dataStream.readShort();
+        } else if (ObjectUtil.equals(clz, Byte.class) || ObjectUtil.equals(clz, byte.class)) {
+            return dataStream.readByte();
+        } else if (ObjectUtil.equals(clz, Float.class) || ObjectUtil.equals(clz, float.class)) {
+            return dataStream.readFloat();
+        } else if (ObjectUtil.equals(clz, Boolean.class) || ObjectUtil.equals(clz, boolean.class)) {
+            return dataStream.readBoolean();
+        } else if (ObjectUtil.equals(clz, Character.class) || ObjectUtil.equals(clz, char.class)) {
+            return dataStream.readChar();
+        } else if (ObjectUtil.equals(clz, String.class)) {
+            int lvLen = Integer.reverseBytes(dataStream.readInt());
+            byte[] lvValue = new byte[lvLen];
+            dataStream.readFully(lvValue);
+            return new String(lvValue);
+        } else {
+            TLVMapping tlvMapping = (TLVMapping) clz.getAnnotation(TLVMapping.class);
+            if (ObjectUtil.isNotNull(tlvMapping)) {
+                Field fieldInMapping = TLVUtils.getFieldInMapping(clz, tlvMapping);
+                Object fieldObj = clz.newInstance();
+                fieldInMapping.set(fieldObj, getObjectFromStream(fieldInMapping.getType(), dataStream));
+
+                return fieldObj;
+            }
+
+            if (Arrays.stream(clz.getDeclaredFields()).noneMatch(field -> ObjectUtil.isNotNull(field.getAnnotation(TLVField.class)))) {
+                throw new AntChainBridgeCommonsException(
+                        CommonsErrorCodeEnum.CODEC_TLV_DECODE_ERROR,
+                        String.format("class %s does not have any field annotated with @TLVField", clz.getName())
+                );
+            }
+            int lvLen = Integer.reverseBytes(dataStream.readInt());
+            byte[] lvValue = new byte[lvLen];
+            dataStream.readFully(lvValue);
+            return TLVUtils.decode(lvValue, clz);
         }
     }
 
