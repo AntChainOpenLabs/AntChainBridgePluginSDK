@@ -18,6 +18,7 @@ package com.alipay.antchain.bridge.bcdns.types.base;
 
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
+import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,9 +36,22 @@ public class DomainRouter {
 
     private static final short TLV_TYPE_DOMAIN_ROUTER_DEST_RELAYER = 0x0001;
 
-    @TLVField(tag = TLV_TYPE_DOMAIN_ROUTER_DEST_DOMAIN, type = TLVTypeEnum.BYTES)
+    public static DomainRouter decode(byte[] raw) {
+        return TLVUtils.decode(raw, DomainRouter.class);
+    }
+
+    public DomainRouter(String destDomain, Relayer destRelayer) {
+        this.destDomain = new CrossChainDomain(destDomain);
+        this.destRelayer = destRelayer;
+    }
+
+    @TLVField(tag = TLV_TYPE_DOMAIN_ROUTER_DEST_DOMAIN, type = TLVTypeEnum.STRING)
     private CrossChainDomain destDomain;
 
     @TLVField(tag = TLV_TYPE_DOMAIN_ROUTER_DEST_RELAYER, type = TLVTypeEnum.BYTES, order = 1)
     private Relayer destRelayer;
+
+    public byte[] encode() {
+        return TLVUtils.encode(this);
+    }
 }

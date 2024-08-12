@@ -44,6 +44,16 @@ public enum CommonsErrorCodeEnum {
     UNSUPPORTED_OID_TYPE_ERROR("0002", "unsupported oid type"),
 
     /**
+     * The type of {@link com.alipay.antchain.bridge.commons.utils.crypto.HashAlgoEnum HashAlgoEnum} is not recognized
+     */
+    UNSUPPORTED_HASH_TYPE_ERROR("0003", "unsupported hash type"),
+
+    /**
+     * The type of {@link com.alipay.antchain.bridge.commons.utils.crypto.SignAlgoEnum SignAlgoEnum} is not recognized
+     */
+    UNSUPPORTED_SIGN_ALGO_TYPE_ERROR("0004", "unsupported sign algo type"),
+
+    /**
      * Something wrong about {@code AuthMessage}, like version, etc.
      */
     INCORRECT_AUTH_MESSAGE_ERROR("0101", "wrong am"),

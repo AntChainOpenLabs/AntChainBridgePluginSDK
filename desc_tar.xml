@@ -59,6 +59,20 @@
             </includes>
         </fileSet>
         <fileSet>
+            <directory>${project.basedir}${file.separator}antchain-bridge-bcdns-factory${file.separator}target</directory>
+            <outputDirectory>${file.separator}libs</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}${file.separator}bcdns-services${file.separator}embedded-bcdns${file.separator}embedded-bcdns-core${file.separator}target</directory>
+            <outputDirectory>${file.separator}libs</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
             <directory>${project.basedir}/scripts</directory>
             <outputDirectory>${file.separator}bin</outputDirectory>
             <includes>

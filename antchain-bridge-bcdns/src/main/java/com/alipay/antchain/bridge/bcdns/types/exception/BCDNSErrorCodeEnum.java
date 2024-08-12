@@ -51,7 +51,19 @@ public enum BCDNSErrorCodeEnum {
 
     BCDNS_QUERY_TPBTA_FAILED("8009", "query tpbta failed"),
 
-    BCDNS_TYPE_UNKNOWN("800a", "bcdns type unknown");
+    BCDNS_TYPE_UNKNOWN("800a", "bcdns type unknown"),
+
+    BCDNS_QUERY_ROOT_CERT_FAILED("800b", "query root cert failed"),
+
+    BCDNS_QUERY_APPLICATION_RESULT_FAILED("800c", "query application result failed"),
+
+    BCDNS_APPLY_RELAYER_CERT_FAILED("800d", "apply relayer failed"),
+
+    BCDNS_APPLY_PTC_CERT_FAILED("800e", "apply ptc failed"),
+
+    BCDNS_APPLY_DOMAIN_CERT_FAILED("800f", "apply domain failed"),
+
+    BCDNS_QUERY_RELAYER_CERT_FAILED("8010", "query relayer cert failed"),;
 
     /**
      * Error code for errors happened in project {@code antchain-bridge-commons}

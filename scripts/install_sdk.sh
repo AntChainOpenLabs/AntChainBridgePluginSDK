@@ -40,4 +40,18 @@ if [ $? -ne 0 ]; then
 fi
 log_info "successful to install antchain-bridge-bcdns-${SDK_VERSION}.jar"
 
+mvn install:install-file -Dfile=${CURR_DIR}/../libs/embedded-bcdns-core-${EBCDNS_VERSION}.jar -DgroupId=com.alipay.antchain.bridge -DartifactId=embedded-bcdns-core -Dversion=${EBCDNS_VERSION} -Dpackaging=jar > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    log_error "failed to copy embedded-bcdns-core-${EBCDNS_VERSION}.jar"
+    exit 1
+fi
+log_info "successful to install embedded-bcdns-core-${EBCDNS_VERSION}.jar"
+
+mvn install:install-file -Dfile=${CURR_DIR}/../libs/antchain-bridge-bcdns-factory-${SDK_VERSION}.jar -DgroupId=com.alipay.antchain.bridge -DartifactId=antchain-bridge-bcdns-factory -Dversion=${SDK_VERSION} -Dpackaging=jar > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    log_error "failed to copy antchain-bridge-bcdns-factory-${SDK_VERSION}.jar"
+    exit 1
+fi
+log_info "successful to install antchain-bridge-bcdns-factory-${SDK_VERSION}.jar"
+
 log_info "success"

@@ -6,7 +6,7 @@
 
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-commons</artifactId>
-    <version>0.2.3</version>
+    <version>0.3.0</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -69,6 +69,12 @@
             <groupId>cn.bitfactory</groupId>
             <artifactId>bif-chain-sdk</artifactId>
             <version>1.0.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk15on</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

@@ -23,7 +23,7 @@
     <packaging>pom</packaging>
     <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-sdk</artifactId>
-    <version>0.2.3</version>
+    <version>0.3.0</version>
 
     <modules>
         <module>antchain-bridge-commons</module>
@@ -31,6 +31,8 @@
         <module>antchain-bridge-plugin-lib</module>
         <module>antchain-bridge-plugin-manager</module>
         <module>antchain-bridge-bcdns</module>
+        <module>bcdns-services/embedded-bcdns/embedded-bcdns-core</module>
+        <module>antchain-bridge-bcdns-factory</module>
     </modules>
 
     <properties>

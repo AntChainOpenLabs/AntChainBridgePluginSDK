@@ -6,7 +6,8 @@ WHITE='\033[1;37m'
 NC='\033[0m'
 LIGHT_GRAY='\033[0;37m'
 
-SDK_VERSION='0.2.0'
+SDK_VERSION='0.3.0'
+EBCDNS_VERSION='0.1.0'
 
 function print_blue() {
   printf "${BLUE}%s${NC}\n" "$1"

@@ -16,26 +16,31 @@
 
 package com.alipay.antchain.bridge.commons.utils.codec.tlv;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.util.ByteUtil;
+import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alipay.antchain.bridge.commons.exception.AntChainBridgeCommonsException;
 import com.alipay.antchain.bridge.commons.exception.CommonsErrorCodeEnum;
+import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVCreator;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVMapping;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 @SuppressWarnings("all")
 public class TLVUtils {
+
+    public static String encodeToHex(Object obj) {
+        return HexUtil.encodeHexStr(encode(obj));
+    }
 
     public static byte[] encode(Object obj) {
         return encode(obj, Integer.MAX_VALUE);
@@ -89,9 +94,9 @@ public class TLVUtils {
                                 || String.class.isAssignableFrom(field.getType())
                                 || "java.util.List<byte[]>".equalsIgnoreCase(field.getGenericType().getTypeName())
                                 || "java.util.List<java.lang.String>".equalsIgnoreCase(field.getGenericType().getTypeName())
-                        ) {
+                ) {
                     items.add(getItem(tlvField.type(), tlvField.tag(), field.get(obj)));
-                } else if (field.getType().isEnum()) {
+                } else if (field.getType().isEnum() && tlvField.type() == TLVTypeEnum.UINT8) {
                     Method getValueM = field.getType().getMethod("ordinal");
                     if (ObjectUtil.isEmpty(getValueM)) {
                         throw new AntChainBridgeCommonsException(
@@ -101,6 +106,17 @@ public class TLVUtils {
                     }
                     int ordinal = (int) getValueM.invoke(field.get(obj));
                     items.add(getItem(tlvField.type(), tlvField.tag(), ordinal));
+                } else if (field.getType() == Map.class) {
+                    if (tlvField.type() != TLVTypeEnum.MAP) {
+                        throw new AntChainBridgeCommonsException(
+                                CommonsErrorCodeEnum.CODEC_TLV_ENCODE_ERROR,
+                                StrUtil.format(
+                                        "map field {}@{} must be annotated with type MAP on TLVField.type",
+                                        field.getClass().getTypeName(), field.getName()
+                                )
+                        );
+                    }
+                    items.add(getItem(tlvField.type(), tlvField.tag(), field.get(obj)));
                 } else {
                     Object value = field.get(obj);
                     Class fieldClz = value.getClass();
@@ -126,21 +142,7 @@ public class TLVUtils {
                         }
 
                     } else {
-                        Field fieldInMapping = null;
-                        for (Field declaredField : fieldClz.getDeclaredFields()) {
-                            if (StrUtil.equals(declaredField.getName(), mapping.fieldName())) {
-                                fieldInMapping = declaredField;
-                                break;
-                            }
-                        }
-                        if (ObjectUtil.isEmpty(fieldInMapping)) {
-                            throw new AntChainBridgeCommonsException(
-                                    CommonsErrorCodeEnum.CODEC_TLV_ENCODE_ERROR,
-                                    String.format("field class %s has no field %s mentioned in @TLVMapping",
-                                            fieldClz.getName(), mapping.fieldName()));
-                        }
-                        fieldInMapping.setAccessible(true);
-                        items.add(getItem(tlvField.type(), tlvField.tag(), fieldInMapping.get(value)));
+                        items.add(getItem(tlvField.type(), tlvField.tag(), getFieldInMapping(fieldClz, mapping).get(value)));
                     }
                 }
             }
@@ -153,6 +155,25 @@ public class TLVUtils {
         }
 
         return new TLVPacket((short) 0x00, items);
+    }
+
+    protected static Field getFieldInMapping(Class clz, TLVMapping mapping) {
+        Field fieldInMapping = null;
+        for (Field declaredField : clz.getDeclaredFields()) {
+            if (StrUtil.equals(declaredField.getName(), mapping.fieldName())) {
+                fieldInMapping = declaredField;
+                break;
+            }
+        }
+        if (ObjectUtil.isEmpty(fieldInMapping)) {
+            throw new AntChainBridgeCommonsException(
+                    CommonsErrorCodeEnum.CODEC_TLV_ENCODE_ERROR,
+                    String.format("field class %s has no field %s mentioned in @TLVMapping",
+                            clz.getName(), mapping.fieldName()));
+        }
+        fieldInMapping.setAccessible(true);
+
+        return fieldInMapping;
     }
 
     private static List<Field> orderFields(List<Field> fields, int maxOrder, List<Integer> requiredOrderList) {
@@ -212,6 +233,10 @@ public class TLVUtils {
         return fillFields(fields, clz.getSuperclass());
     }
 
+    public static <T> T decodeFromHex(String hex, Class<T> clz) {
+        return decode(HexUtil.decodeHex(hex), clz);
+    }
+
     public static <T> T decode(byte[] raw, Class<T> clz) {
         TLVPacket packet = TLVPacket.decode(raw);
         try {
@@ -230,7 +255,11 @@ public class TLVUtils {
                 TLVItem tlvItem = packet.getItemForTag(tlvField.tag());
                 if (ObjectUtil.isNotEmpty(tlvItem)) {
                     field.setAccessible(true);
-                    Object val = parseValueFromItem(tlvItem, tlvField.type());
+                    Object val = parseValueFromItem(
+                            tlvItem,
+                            tlvField.type(),
+                            field.getGenericType()
+                    );
                     if (
                             field.getType().isPrimitive()
                                     || field.getType().isArray()
@@ -240,9 +269,9 @@ public class TLVUtils {
                     ) {
                         field.set(obj, val);
                     } else if (field.getType().isEnum()) {
-                        // TLVField requires that enum class has static method
-                        // `valueOf` with type `val.getClass()` parameter
-                        field.set(obj, field.getType().getMethod("valueOf", val.getClass()).invoke(null, val));
+                        field.set(obj, objectFromCreator(field, val));
+                    } else if (field.getType() == Map.class) {
+                        field.set(obj, val);
                     } else {
                         Class fieldClz = field.getType();
                         TLVMapping mapping = (TLVMapping) fieldClz.getAnnotation(TLVMapping.class);
@@ -264,21 +293,7 @@ public class TLVUtils {
                                 );
                             }
                         } else {
-                            Field fieldInMapping = null;
-                            for (Field declaredField : fieldClz.getDeclaredFields()) {
-                                if (StrUtil.equals(declaredField.getName(), mapping.fieldName())) {
-                                    fieldInMapping = declaredField;
-                                    break;
-                                }
-                            }
-                            if (ObjectUtil.isEmpty(fieldInMapping)) {
-                                throw new AntChainBridgeCommonsException(
-                                        CommonsErrorCodeEnum.CODEC_TLV_DECODE_ERROR,
-                                        String.format("field class %s has no field %s mentioned in @TLVMapping",
-                                                fieldClz.getName(), mapping.fieldName())
-                                );
-                            }
-                            fieldInMapping.setAccessible(true);
+                            Field fieldInMapping = getFieldInMapping(fieldClz, mapping);
                             Object fieldObj = fieldClz.newInstance();
                             fieldInMapping.set(fieldObj, val);
                             field.set(obj, fieldObj);
@@ -298,7 +313,29 @@ public class TLVUtils {
         }
     }
 
-    private static Object parseValueFromItem(TLVItem item, TLVTypeEnum type) {
+    private static Object objectFromCreator(Field field, Object val) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        for (Method method : field.getType().getMethods()) {
+            TLVCreator tlvCreator = method.getAnnotation(TLVCreator.class);
+            if (ObjectUtil.isNull(tlvCreator)) {
+                continue;
+            }
+            if (method.getParameterCount() != 1) {
+                continue;
+            }
+            if (!method.getParameterTypes()[0].isAssignableFrom(val.getClass())) {
+                continue;
+            }
+            method.setAccessible(true);
+            return method.invoke(null, val);
+        }
+
+        // Deprecated :
+        // TLVField requires that enum class has static method
+        // `valueOf` with type `val.getClass()` parameter
+        return field.getType().getMethod("valueOf", val.getClass()).invoke(null, val);
+    }
+
+    private static Object parseValueFromItem(TLVItem item, TLVTypeEnum type, Type fieldGenericType) {
         switch (type) {
             case UINT8:
                 return item.getUint8Value();
@@ -316,6 +353,12 @@ public class TLVUtils {
                 return item.getBytesArray();
             case STRING_ARRAY:
                 return item.getStringArray();
+            case MAP:
+                Type[] kvTypes = ((ParameterizedTypeImpl) fieldGenericType).getActualTypeArguments();
+                if (ObjectUtil.isEmpty(kvTypes) || kvTypes.length != 2) {
+                    throw new RuntimeException("incorrect kv types for MAP");
+                }
+                return item.getMap((Class) kvTypes[0], (Class) kvTypes[1]);
             default:
                 throw new AntChainBridgeCommonsException(
                         CommonsErrorCodeEnum.CODEC_TLV_DECODE_ERROR,
@@ -354,6 +397,9 @@ public class TLVUtils {
                 break;
             case STRING_ARRAY:
                 item = TLVItem.fromStringArray(tag, (List<String>) value);
+                break;
+            case MAP:
+                item = TLVItem.fromMap(tag, (Map) value);
                 break;
             default:
                 throw new AntChainBridgeCommonsException(
