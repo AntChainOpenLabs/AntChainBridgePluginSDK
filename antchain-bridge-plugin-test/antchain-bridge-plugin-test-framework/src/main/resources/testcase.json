@@ -1,0 +1,36 @@
+{
+  "testCases": [
+    {
+      "name": "case1",
+      "jarPath": "plugin-testchain-0.1-SNAPSHOT-plugin.jar",
+      "product": "testchain",
+      "domain": "domain1",
+      "pluginLoadAndStartTestList": [
+        "loadPlugin",
+        "startPlugin",
+        "startPluginFromStop",
+        "stopPlugin",
+        "createBBCService"
+      ],
+      "pluginInterfaceTestList": [
+        "startup"
+      ]
+    },
+    {
+      "name": "case2",
+      "jarPath": "invalid/path/to/plugin-testchain-0.1-SNAPSHOT-plugin.jar",
+      "product": "testchain",
+      "domain": "domain1",
+      "pluginLoadAndStartTestList": [
+        "loadPlugin",
+        "startPlugin",
+        "startPluginFromStop",
+        "stopPlugin",
+        "createBBCService"
+      ],
+      "pluginInterfaceTestList": [
+        "startup"
+      ]
+    }
+  ]
+}
