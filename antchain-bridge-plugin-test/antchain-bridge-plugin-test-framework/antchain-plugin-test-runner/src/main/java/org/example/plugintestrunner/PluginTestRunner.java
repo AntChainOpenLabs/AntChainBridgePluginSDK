@@ -50,13 +50,11 @@ public class PluginTestRunner {
             logger.rlog(LogLevel.INFO, "Running " + testCase.getName());
             chainManagerService.run(testCase);
             pluginManagerService.run(testCase);
-            // TODO
-            // pluginTestService.run(testCase);
+            pluginTestService.run(testCase);
         }
-        chainManagerService.close();
+        pluginTestService.close();
         pluginManagerService.close();
-        // TODO
-        // pluginTestService.close();
+        chainManagerService.close();
 
         printTestResult();
     }
@@ -68,10 +66,9 @@ public class PluginTestRunner {
                 configManager.getProperty("script.directory"));
         ChainManagerService chainManagerService = new ChainManagerService(logger, shellScriptRunner);
         PluginManagerService pluginManagerService = new PluginManagerService(logger, configManager.getProperty("plugin.directory"));
-        // TODO
+        PluginTestService pluginTestService = new PluginTestService(logger, pluginManagerService, chainManagerService);
         TestCaseContainer testCaseContainer = TestCaseLoader.loadTestCasesFromFile(configManager.getProperty("testcase.path"));
-        // TODO
-        return new PluginTestRunner(logger, pluginManagerService, null, chainManagerService, testCaseContainer);
+        return new PluginTestRunner(logger, pluginManagerService, pluginTestService, chainManagerService, testCaseContainer);
     }
 
     private void printTestResult() {

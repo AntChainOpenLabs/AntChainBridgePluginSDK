@@ -163,3 +163,81 @@ INFO [08-04|16:23:41.076] Transaction pool stopped
 INFO [08-04|16:23:41.078] Persisting dirty state to disk           root=7990e1..a3fb13 layers=0
 INFO [08-04|16:23:41.078] Persisted dirty state to disk            size=69.00B elapsed="311.628µs"
 INFO [08-04|16:23:41.078] Blockchain stopped
+INFO [09-02|15:05:38.225] Starting Geth in ephemeral dev mode...
+WARN [09-02|15:05:38.225] You are running Geth in --dev mode. Please note the following:
+
+  1. This mode is only intended for fast, iterative development without assumptions on
+     security or persistence.
+  2. The database is created in memory unless specified otherwise. Therefore, shutting down
+     your computer or losing power will wipe your entire block data and chain state for
+     your dev environment.
+  3. A random, pre-allocated developer account will be available and unlocked as
+     eth.coinbase, which can be used for testing. The random dev account is temporary,
+     stored on a ramdisk, and will be lost if your machine is restarted.
+  4. Mining is enabled by default. However, the client will only seal blocks if transactions
+     are pending in the mempool. The miner's minimum accepted gas price is 1.
+  5. Networking is disabled; there is no listen-address, the maximum number of peers is set
+     to 0, and discovery is disabled.
+
+INFO [09-02|15:05:38.232] Maximum peer count                       ETH=50 total=50
+INFO [09-02|15:05:38.237] Smartcard socket not found, disabling    err="stat /run/pcscd/pcscd.comm: no such file or directory"
+INFO [09-02|15:05:38.243] Set global gas cap                       cap=50,000,000
+INFO [09-02|15:05:38.500] Using developer account                  address=0xE9E22f8abf63D2CAD799064eB3FD6B584FF8c850
+INFO [09-02|15:05:38.500] Defaulting to pebble as the backing database
+INFO [09-02|15:05:38.500] Allocated cache and file handles         database=/tmp/ethereum/geth/chaindata cache=512.00MiB handles=524,288
+INFO [09-02|15:05:38.504] Opened ancient database                  database=/tmp/ethereum/geth/chaindata/ancient/chain readonly=false
+INFO [09-02|15:05:38.504] Freezer shutting down
+INFO [09-02|15:05:38.505] Initializing the KZG library             backend=gokzg
+INFO [09-02|15:05:38.524] Allocated trie memory caches             clean=154.00MiB dirty=256.00MiB
+INFO [09-02|15:05:38.524] Using pebble as the backing database
+INFO [09-02|15:05:38.524] Allocated cache and file handles         database=/tmp/ethereum/geth/chaindata cache=512.00MiB handles=524,288
+INFO [09-02|15:05:38.528] Opened ancient database                  database=/tmp/ethereum/geth/chaindata/ancient/chain readonly=false
+INFO [09-02|15:05:38.528] State schema set to default              scheme=path
+INFO [09-02|15:05:38.528] Initialising Ethereum protocol           network=1337 dbversion=<nil>
+ERROR[09-02|15:05:38.528] Head block is not reachable
+INFO [09-02|15:05:38.531] Opened ancient database                  database=/tmp/ethereum/geth/chaindata/ancient/state readonly=false
+INFO [09-02|15:05:38.531] Writing custom genesis block
+INFO [09-02|15:05:38.536] 
+INFO [09-02|15:05:38.536] ---------------------------------------------------------------------------------------------------------------------------------------------------------
+INFO [09-02|15:05:38.536] Chain ID:  1337 (unknown)
+INFO [09-02|15:05:38.536] Consensus: unknown
+INFO [09-02|15:05:38.536] 
+INFO [09-02|15:05:38.536] Pre-Merge hard forks (block based):
+INFO [09-02|15:05:38.536]  - Homestead:                   #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/homestead.md)
+INFO [09-02|15:05:38.536]  - Tangerine Whistle (EIP 150): #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/tangerine-whistle.md)
+INFO [09-02|15:05:38.536]  - Spurious Dragon/1 (EIP 155): #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/spurious-dragon.md)
+INFO [09-02|15:05:38.536]  - Spurious Dragon/2 (EIP 158): #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/spurious-dragon.md)
+INFO [09-02|15:05:38.536]  - Byzantium:                   #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/byzantium.md)
+INFO [09-02|15:05:38.536]  - Constantinople:              #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/constantinople.md)
+INFO [09-02|15:05:38.536]  - Petersburg:                  #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/petersburg.md)
+INFO [09-02|15:05:38.536]  - Istanbul:                    #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/istanbul.md)
+INFO [09-02|15:05:38.536]  - Muir Glacier:                #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/muir-glacier.md)
+INFO [09-02|15:05:38.536]  - Berlin:                      #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/berlin.md)
+INFO [09-02|15:05:38.536]  - London:                      #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/london.md)
+INFO [09-02|15:05:38.536]  - Arrow Glacier:               #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/arrow-glacier.md)
+INFO [09-02|15:05:38.536]  - Gray Glacier:                #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/gray-glacier.md)
+INFO [09-02|15:05:38.536] 
+INFO [09-02|15:05:38.536] Merge configured:
+INFO [09-02|15:05:38.536]  - Hard-fork specification:    https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/paris.md
+INFO [09-02|15:05:38.536]  - Network known to be merged: true
+INFO [09-02|15:05:38.536]  - Total terminal difficulty:  0
+INFO [09-02|15:05:38.536] 
+INFO [09-02|15:05:38.536] Post-Merge hard forks (timestamp based):
+INFO [09-02|15:05:38.536]  - Shanghai:                    @0          (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/shanghai.md)
+INFO [09-02|15:05:38.536]  - Cancun:                      @0          (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/cancun.md)
+INFO [09-02|15:05:38.536] 
+INFO [09-02|15:05:38.536] ---------------------------------------------------------------------------------------------------------------------------------------------------------
+INFO [09-02|15:05:38.536] 
+INFO [09-02|15:05:38.537] Loaded most recent local block           number=0 hash=58b213..aef486 td=0 age=55y5mo2w
+WARN [09-02|15:05:38.537] Failed to load snapshot                  err="missing or corrupted snapshot"
+INFO [09-02|15:05:38.537] Rebuilding state snapshot
+INFO [09-02|15:05:38.537] Initialized transaction indexer          range="last 2350000 blocks"
+INFO [09-02|15:05:38.537] Resuming state snapshot generation       root=d8a21f..81bf35 accounts=0 slots=0 storage=0.00B dangling=0 elapsed="497.568µs"
+INFO [09-02|15:05:38.538] Generated state snapshot                 accounts=11 slots=0 storage=482.00B dangling=0 elapsed=1.429ms
+INFO [09-02|15:05:38.559] Gasprice oracle is ignoring threshold set threshold=2
+INFO [09-02|15:05:38.560] Starting peer-to-peer node               instance=Geth/v1.14.8-stable-a9523b64/linux-amd64/go1.22.6
+WARN [09-02|15:05:38.561] P2P server will be useless, neither dialing nor listening
+INFO [09-02|15:05:38.564] IPC endpoint opened                      url=/tmp/ethereum/geth.ipc
+INFO [09-02|15:05:38.564] HTTP server started                      endpoint=127.0.0.1:8545 auth=false prefix= cors= vhosts=localhost
+INFO [09-02|15:05:38.566] New local node record                    seq=1,725,260,738,564 id=a48f21c8fc856456 ip=127.0.0.1 udp=0 tcp=0
+INFO [09-02|15:05:38.567] Started P2P networking                   self=enode://7752022eb92098fdee9f7940d4e719f6aad3338d46504122b95c532666ce76b6a8bc35dad194b91e7d62a468426c16d7b951d5f8ca7a976f7b21d79f4a626f65@127.0.0.1:0

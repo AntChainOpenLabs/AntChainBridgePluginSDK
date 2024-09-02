@@ -58,7 +58,11 @@ public class ChainManagerException extends Exception {
             super(message);
         }
     }
-    
+
+    public static class ChainManagerNotFoundExpcetion extends  ChainManagerException {
+        public ChainManagerNotFoundExpcetion(String message) {super(message);}
+    }
+
     // 基础异常类的构造函数
     public ChainManagerException(String message) {
         super(message);

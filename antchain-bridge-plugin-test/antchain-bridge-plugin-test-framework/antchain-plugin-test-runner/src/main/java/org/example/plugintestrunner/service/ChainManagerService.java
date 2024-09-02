@@ -233,4 +233,18 @@ public class ChainManagerService extends AbstractService {
         List<String> runningChainManagers = new ArrayList<>(tmpChainManagers.keySet());
         logger.rlog(LogLevel.INFO, runningChainManagers.toString());
     }
+
+    public IChainManager getChainManager(String product) throws ChainManagerNotFoundExpcetion{
+        IChainManager iChainManager = tmpChainManagers.get(product);
+        if (iChainManager == null) {
+            iChainManager = localChainManagers.get(product);
+            if (iChainManager == null) {
+                throw new ChainManagerNotFoundExpcetion("ChainManager not fonud!");
+            } else {
+                return iChainManager;
+            }
+        } else {
+            return iChainManager;
+        }
+    }
 }

@@ -35,7 +35,7 @@
       <dependency>
         <groupId>org.web3j</groupId>
         <artifactId>core</artifactId>
-        <version>5.0.0</version>
+        <version>4.9.8</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -76,6 +76,16 @@
           <groupId>org.pf4j</groupId>
           <artifactId>pf4j</artifactId>
           <version>3.8.0</version>
+      </dependency>
+      <dependency>
+          <groupId>com.alipay.antchain.bridge</groupId>
+          <artifactId>simple-ethereum-bbc</artifactId>
+          <version>0.2.0</version>
+      </dependency>
+      <dependency>
+          <groupId>org.testchain</groupId>
+          <artifactId>plugin-testchain1</artifactId>
+          <version>0.1-SNAPSHOT</version>
       </dependency>
   </dependencies>
 </project>

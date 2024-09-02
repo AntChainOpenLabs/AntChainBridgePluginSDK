@@ -1,18 +1,40 @@
 package org.example.plugintestrunner.service;
 
+import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
+import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
+import com.alipay.antchain.bridge.plugins.ethereum.EthereumConfig;
+import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
+import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
+import lombok.Setter;
+import org.aspectj.weaver.ast.Test;
+import org.example.plugintestrunner.chainmanager.EthChainManager;
+import org.example.plugintestrunner.chainmanager.IChainManager;
+import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginTestException;
 import org.example.plugintestrunner.exception.PluginTestException.*;
 import org.example.plugintestrunner.testcase.TestCase;
 import org.example.plugintestrunner.util.LogLevel;
 import org.example.plugintestrunner.util.PTRLogger;
+import org.pf4j.Plugin;
 
 import java.util.HashMap;
 import java.util.List;
 
 public class PluginTestService extends AbstractService{
 
-    public PluginTestService(PTRLogger logger) {
+    @Setter
+    private PluginManagerService pluginManagerService;
+    @Setter
+    private ChainManagerService chainManagerService;
+
+    private IBBCService bbcService;
+    private AbstractBBCContext abstractBBCContext;
+    private TestCase testCase;
+
+    public PluginTestService(PTRLogger logger, PluginManagerService pluginManagerService, ChainManagerService chainManagerService) {
         super(logger);
+        this.pluginManagerService = pluginManagerService;
+        this.chainManagerService = chainManagerService;
     }
 
     @Override
@@ -24,7 +46,8 @@ public class PluginTestService extends AbstractService{
         try {
             runTest(testCase);
             logger.rlog(LogLevel.INFO, "Plugin interface test for " + testCase.getName() + ": PASSED");
-        } catch (PluginTestException e) {
+            testCase.setPluginInterfaceTestSuccess(true);
+        } catch (Exception e) {
             logger.rlog(LogLevel.ERROR, "Plugin interface test for " + testCase.getName() + ": FAILED");
             logger.rlog(LogLevel.ERROR, e.getMessage());
             if (e.getCause() != null) {
@@ -42,7 +65,12 @@ public class PluginTestService extends AbstractService{
     }
 
 
-    private void runTest(TestCase testCase) throws PluginTestException {
+    private void runTest(TestCase testCase) throws PluginTestException, ChainManagerException {
+        this.testCase = testCase;
+        // 从 pluginManagerService 中获取 bbcService
+        bbcService = pluginManagerService.getBBCService(testCase.getProduct(), testCase.getDomain());
+        // 从 chainManager 中获取链配置信息，然后修改 abstractBBCContext
+        abstractBBCContext = createAbstractBBCContext(chainManagerService.getChainManager(testCase.getProduct()));
         if (testCase.isStartup()) {
             checkDependency("startup", testCase);
             testStartUp();
@@ -97,6 +125,17 @@ public class PluginTestService extends AbstractService{
         }
     }
 
+    private AbstractBBCContext createAbstractBBCContext(IChainManager chainManager) {
+        EthereumConfig conf = new EthereumConfig();
+        conf.setUrl(chainManager.getHttpUrl());
+        conf.setPrivateKey(chainManager.getPrivateKey());
+        conf.setGasPrice(2300000000L);
+        conf.setGasLimit(3000000);
+        AbstractBBCContext context = new DefaultBBCContext();
+        context.setConfForBlockchainClient(conf.toJsonString().getBytes());
+        return context;
+    }
+
     // 检查每个接口的依赖项，如果依赖项没有执行，则抛出异常
     private void checkDependency(String item, TestCase testCase) throws PluginTestException{
         HashMap<String, List<String>> map = testCase.getPluginInterfaceTestDependency();
@@ -119,7 +158,7 @@ public class PluginTestService extends AbstractService{
     // dependency: none
     public void testStartUp() throws PluginTestException {
         try {
-            // TODO
+            bbcService.startup(abstractBBCContext);
         } catch (Exception e) {
             throw new StartupException("Failed to run startup test.", e);
         }
@@ -128,7 +167,7 @@ public class PluginTestService extends AbstractService{
     // dependency: testStartUp
     public void testShutDown() throws PluginTestException {
         try {
-            // TODO
+            bbcService.shutdown();
         } catch (Exception e) {
             throw new ShutdownException("Failed to run shutdown test.", e);
         }
@@ -137,7 +176,7 @@ public class PluginTestService extends AbstractService{
     // dependency: testStartUp
     public void testGetContext() throws PluginTestException {
         try {
-            // TODO
+            bbcService.getContext();
         } catch (Exception e) {
             throw new GetContextException("Failed to run get context test.", e);
         }
@@ -146,7 +185,7 @@ public class PluginTestService extends AbstractService{
     // dependency: testStartUp
     public void testQueryLatestHeight() throws PluginTestException {
         try {
-            // TODO
+            bbcService.queryLatestHeight();
         } catch (Exception e) {
             throw new QueryLatestHeightException("Failed to run query latest height test.", e);
         }
@@ -155,7 +194,7 @@ public class PluginTestService extends AbstractService{
     // dependency: testStartUp, testGetContext
     public void testSetupAuthMessageContract() throws PluginTestException {
         try {
-            // TODO
+            bbcService.setupAuthMessageContract();
         } catch (Exception e) {
             throw new SetupAuthMessageContractException("Failed to run setup auth message contract test.", e);
         }
@@ -164,7 +203,7 @@ public class PluginTestService extends AbstractService{
     // dependency: testStartUp, testGetContext
     public void testSetupSDPMessageContract() throws PluginTestException {
         try {
-            // TODO
+            bbcService.setupSDPMessageContract();
         } catch (Exception e) {
             throw new SetupSDPMessageContractException("Failed to run setup sdp message contract test.", e);
         }
@@ -173,7 +212,7 @@ public class PluginTestService extends AbstractService{
     // dependency: testStartUp, testGetContext, testSetupSDPMessageContract
     public void testSetLocalDomain() throws PluginTestException {
         try {
-            // TODO
+            bbcService.setLocalDomain(testCase.getDomain());
         } catch (Exception e) {
             throw new SetLocalDomainException("Failed to run set local domain test.", e);
         }
@@ -182,7 +221,7 @@ public class PluginTestService extends AbstractService{
     // dependency: testStartUp, testGetContext, testSetupSDPMessageContract, testSetLocalDomain
     public void testQuerySDPMessageSeq() throws PluginTestException {
         try {
-            // TODO
+            bbcService.querySDPMessageSeq();
         } catch (Exception e) {
             throw new QuerySDPMessageSeqException("Failed to run query sdp message seq test.", e);
         }
@@ -236,5 +275,4 @@ public class PluginTestService extends AbstractService{
             throw new ReadCrossChainMessageReceiptException("Failed to run read cross chain message receipt test.", e);
         }
     }
-
 }

@@ -7,8 +7,7 @@ public class ChainConfig {
         public static final String httpAddr;
         public static final int httpPort;
         public static final String httpApi;
-        public static final String walletDir;
-        public static final String defaultPassword;
+        public static final String privateKeyFile;
 
         static {
             ChainConfigManager config = ChainConfigManager.getInstance();
@@ -16,8 +15,7 @@ public class ChainConfig {
             httpAddr = config.getProperty("ethereum.http_addr");
             httpPort = Integer.parseInt(config.getProperty("ethereum.http_port"));
             httpApi = config.getProperty("ethereum.http_api");
-            walletDir = config.getProperty("ethereum.wallet_dir");
-            defaultPassword = config.getProperty("ethereum.default_password");
+            privateKeyFile = config.getProperty("ethereum.private_key_file");
         }
 
         public static String getHttpUrl() {

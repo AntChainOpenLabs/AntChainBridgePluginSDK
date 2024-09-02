@@ -3,6 +3,7 @@ package org.example.plugintestrunner.chainmanager;
 import lombok.Getter;
 import lombok.Setter;
 import org.web3j.crypto.CipherException;
+import org.web3j.protocol.exceptions.TransactionException;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -13,7 +14,6 @@ import java.util.concurrent.ExecutionException;
 @Getter
 public abstract class IChainManager {
     String httpUrl;
-    @Setter
     String privateKey;
     String gasPrice;
     String gasLimit;
@@ -33,7 +33,7 @@ public abstract class IChainManager {
     public abstract boolean isConnected() throws ExecutionException, InterruptedException, IOException;
 
     // 设置新账户
-    public abstract void setAccount(String password, String walletDirectory) throws InvalidAlgorithmParameterException, CipherException, IOException, NoSuchAlgorithmException, NoSuchProviderException;
+    public abstract void setPrivateKey(String privateKeyFile) throws IOException;
 
     // 设置 gasLimit
     public abstract void setGasLimit() throws IOException;

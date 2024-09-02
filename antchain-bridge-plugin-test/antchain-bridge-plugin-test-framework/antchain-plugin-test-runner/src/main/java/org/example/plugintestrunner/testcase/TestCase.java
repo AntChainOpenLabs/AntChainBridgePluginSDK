@@ -22,6 +22,10 @@ public class TestCase {
     private List<String> pluginInterfaceTestList;
 
 
+    // 判断链配置是否合法
+    @JsonIgnore
+    private boolean chainConfValid;
+
     // 插件加载启动测试标志
     @JsonIgnore
     private final List<String> ValidPluginLoadAndStartTestList = Arrays.asList("loadPlugin", "startPlugin", "startPluginFromStop", "stopPlugin", "createBBCService");
@@ -74,7 +78,8 @@ public class TestCase {
 
     // 检查 chainConf 合法性，合法返回 true
     public boolean isChainConfValid() {
-        return chainConf != null && chainConf.isValid();
+        chainConfValid = chainConf != null && chainConf.isValid();
+        return chainConfValid;
     }
 
     // 检查 pluginLoadAndStartTestList 合法性

@@ -6,6 +6,8 @@ import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.ChainManagerException.*;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class IChainManagerFactory {
     public static IChainManager createIChainManager(String chainType, String httpUrl, String privateKey, String gasPrice, String gasLimit) throws IOException, ChainManagerException {
@@ -25,9 +27,7 @@ public class IChainManagerFactory {
         switch (cp) {
             case ETH:
             case TESTCHAIN:
-                return new EthChainManager(ChainConfig.EthChainConfig.getHttpUrl(),
-                        ChainConfig.EthChainConfig.defaultPassword,
-                        ChainConfig.EthChainConfig.walletDir);
+                return new EthChainManager(ChainConfig.EthChainConfig.getHttpUrl(), ChainConfig.EthChainConfig.privateKeyFile);
             // TODO add more chain products
             default:
                 throw new ChainNotSupportedException("Unsupported chain product: " + chainProduct);

@@ -3,6 +3,7 @@ package org.example.plugintestrunner.service;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainDomain;
 import com.alipay.antchain.bridge.plugins.manager.exception.AntChainBridgePluginManagerException;
 
+import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import lombok.Getter;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException.*;
@@ -10,7 +11,6 @@ import org.example.plugintestrunner.testcase.TestCase;
 import org.example.plugintestrunner.util.LogLevel;
 import org.example.plugintestrunner.util.PTRLogger;
 import com.alipay.antchain.bridge.plugins.manager.pf4j.Pf4jAntChainBridgePluginManager;
-
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +35,7 @@ public class PluginManagerService extends AbstractService{
         try {
             runTest(testCase);
             logger.rlog(LogLevel.INFO, "Plugin loading and starting test for " + testCase.getName() + ": PASSED");
+            // 运行成功
             testCase.setPluginLoadAndStartTestSuccess(true);
         } catch (PluginManagerException e) {
             logger.rlog(LogLevel.ERROR, "Plugin loading and starting test for " + testCase.getName() + ": FAILED");
@@ -199,6 +200,10 @@ public class PluginManagerService extends AbstractService{
         return manager.getBBCService(pluginProduct, new CrossChainDomain(domainName)) != null;
     }
 
+    public IBBCService getBBCService(String pluginProduct, String domainName) {
+        return manager.getBBCService(pluginProduct, new CrossChainDomain(domainName));
+    }
+
     private Path resolveJarPath(String jarPath) {
         Path path = Paths.get(jarPath);
         if (path.getNameCount() == 1) {
@@ -208,4 +213,5 @@ public class PluginManagerService extends AbstractService{
         }
         return path;
     }
+
 }

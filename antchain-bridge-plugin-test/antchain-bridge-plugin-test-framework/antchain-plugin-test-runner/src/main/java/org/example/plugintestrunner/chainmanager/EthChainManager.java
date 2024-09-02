@@ -7,37 +7,43 @@ import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.EthAccounts;
+import org.web3j.protocol.core.methods.response.EthCoinbase;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
+import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.tx.Transfer;
+import org.web3j.utils.Convert;
 
-import java.io.IOException;
+import java.io.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.io.File;
 
 
 @Getter
 public class EthChainManager extends IChainManager {
-    private final Web3j web3j;
 
+    private final Web3j web3j;
 
     public EthChainManager(String httpUrl) {
         super(httpUrl);
         this.web3j = Web3j.build(new HttpService(httpUrl));
     }
 
-    public EthChainManager(String httpUrl, String password, String walletDirectory) throws IOException, ChainManagerException {
+    public EthChainManager(String httpUrl, String privateKeyFile) throws IOException, ChainManagerException {
         super(httpUrl);
         this.web3j = Web3j.build(new HttpService(httpUrl));
         if (!isConnected()) {
             throw new ChainManagerConstructionException("Max attempts to connect to the Ethereum node exceeded");
         }
         try {
-            setAccount(password, walletDirectory);
+            setPrivateKey(privateKeyFile);
             setGasLimit();
             setGasPrice();
         } catch (Exception e) {
@@ -64,19 +70,31 @@ public class EthChainManager extends IChainManager {
         return web3ClientVersion.getWeb3ClientVersion() != null;
     }
 
-    public void setAccount(String password, String walletDirectory) throws InvalidAlgorithmParameterException, CipherException, IOException, NoSuchAlgorithmException, NoSuchProviderException {
-        String walletFileName = WalletUtils.generateNewWalletFile(password, new File(walletDirectory), false);
-        Credentials credentials =  WalletUtils.loadCredentials(password, Paths.get(walletDirectory, walletFileName).toFile());
-        privateKey = credentials.getEcKeyPair().getPrivateKey().toString(16);
+    // 通过文件获取
+    public void setPrivateKey(String privateKeyFile) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(privateKeyFile));
+        privateKey = br.readLine();
     }
 
+    // 通过 web3j 获取
     public void setGasLimit() throws IOException {
         gasLimit = web3j.ethGasPrice().send().getGasPrice().toString();
     }
 
+    public long getGasLimitLong() throws IOException {
+        BigInteger gasPrice1 = web3j.ethGasPrice().send().getGasPrice();
+        return gasPrice1.longValue();
+    }
+
+    // 通过 web3j 获取
     public void setGasPrice() throws IOException {
         EthBlock latestBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send();
         gasPrice = latestBlock.getBlock().getGasLimit().toString();
+    }
+
+    public long getGasPriceLong() throws IOException {
+        EthBlock latestBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send();
+        return latestBlock.getBlock().getGasLimit().longValue();
     }
 
     public void close() {
