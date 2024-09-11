@@ -179,25 +179,26 @@ public class ChainMakerBBCService extends AbstractBBCService {
             }
 
             chainClient = chainManager.createChainClient(sdkConfig);
-        } catch (ChainClientException | RpcServiceClientException | UtilsException | ChainMakerCryptoSuiteException |
-                 IllegalAccessException e) {
-            getBBCLogger().error("[startup] Connect to the chainmaker network exception", e);
+        } catch (Exception e) {
+            getBBCLogger().error("[startup] Connect to the chainmaker network with exception", e);
             throw new RuntimeException(e);
         }
+        getBBCLogger().info("[startup] Connect to the chainmaker network success");
 
         // 3. get client address of chainClient
         try {
             clientAddress = CryptoUtils.certToAddrStr(
                     chainClient.getClientUser().getCertificate(),
                     ChainConfigOuterClass.AddrType.ETHEREUM);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (Exception e) {
             getBBCLogger().error("[startup] fail to get client address", e);
             throw new RuntimeException("fail to get client address", e);
         }
+        getBBCLogger().info("[startup] get client address of chainClient: %s", clientAddress);
 
         // 4. Create admin user for endorsement
-        int amdinUserNum = config.getAdminTlsKeyPaths().size();
-        for (int i = 0; i < amdinUserNum; i++) {
+        int adminUserNum = config.getAdminTlsKeyPaths().size();
+        for (int i = 0; i < adminUserNum; i++) {
             try {
                 adminUserList.add(
                         new User(
@@ -206,33 +207,38 @@ public class ChainMakerBBCService extends AbstractBBCService {
                                 config.getAdminCertPaths().get(i),
                                 config.getAdminTlsKeyPaths().get(i),
                                 config.getAdminTlsCertPaths().get(i)));
-            } catch (ChainMakerCryptoSuiteException e) {
+            } catch (Exception e) {
                 getBBCLogger().error("[startup] fail to create admin user for endorsement", e);
                 throw new RuntimeException("fail to create admin user for endorsement", e);
             }
         }
 
-        // 3. set context
-        this.bbcContext = new ChainMakerContext(abstractBBCContext);
+        // 5. set context
+        try {
+            this.bbcContext = new ChainMakerContext(abstractBBCContext);
 
-        this.bbcContext.setAmContractName(this.config.getAmContractName());
-        this.bbcContext.setSdpContractName(this.config.getSdpContractName());
+            this.bbcContext.setAmContractName(this.config.getAmContractName());
+            this.bbcContext.setSdpContractName(this.config.getSdpContractName());
 
-        // 4. set the pre-deployed contracts into context
-        if (ObjectUtil.isNull(abstractBBCContext.getAuthMessageContract())
-                && StrUtil.isNotEmpty(this.config.getAmContractAddressDeployed())) {
-            AuthMessageContract authMessageContract = new AuthMessageContract();
-            authMessageContract.setContractAddress(this.config.getAmContractAddressDeployed());
-            authMessageContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
-            this.bbcContext.setAuthMessageContract(authMessageContract);
-        }
+            // set the pre-deployed contracts into context
+            if (ObjectUtil.isNull(abstractBBCContext.getAuthMessageContract())
+                    && StrUtil.isNotEmpty(this.config.getAmContractAddressDeployed())) {
+                AuthMessageContract authMessageContract = new AuthMessageContract();
+                authMessageContract.setContractAddress(this.config.getAmContractAddressDeployed());
+                authMessageContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
+                this.bbcContext.setAuthMessageContract(authMessageContract);
+            }
 
-        if (ObjectUtil.isNull(abstractBBCContext.getSdpContract())
-                && StrUtil.isNotEmpty(this.config.getSdpContractAddressDeployed())) {
-            SDPContract sdpContract = new SDPContract();
-            sdpContract.setContractAddress(this.config.getSdpContractAddressDeployed());
-            sdpContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
-            this.bbcContext.setSdpContract(sdpContract);
+            if (ObjectUtil.isNull(abstractBBCContext.getSdpContract())
+                    && StrUtil.isNotEmpty(this.config.getSdpContractAddressDeployed())) {
+                SDPContract sdpContract = new SDPContract();
+                sdpContract.setContractAddress(this.config.getSdpContractAddressDeployed());
+                sdpContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
+                this.bbcContext.setSdpContract(sdpContract);
+            }
+        } catch (Exception e) {
+            getBBCLogger().error("[startup] fail to set context", e);
+            throw new RuntimeException("fail to set context", e);
         }
 
         getBBCLogger().info("ChainMaker startup success, (" +
