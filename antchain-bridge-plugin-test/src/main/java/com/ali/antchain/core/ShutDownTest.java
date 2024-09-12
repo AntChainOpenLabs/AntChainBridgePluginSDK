@@ -1,4 +1,4 @@
-package com.ali.antchain.Test;
+package com.ali.antchain.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,16 +16,16 @@ public class ShutDownTest {
 
     public static void run(AbstractBBCContext context, AbstractBBCService service){
         ShutDownTest shutdown = new ShutDownTest(service);
-        shutdown.shutdown(context);
+        shutdown.shutdown_success(context);
     }
 
-    public void shutdown(AbstractBBCContext  context){
+    public void shutdown_success(AbstractBBCContext context){
         try {
             // 调用 shutdown关闭服务
+            service.startup(context);
             service.shutdown();
         } catch (Exception e) {
-            // 异常
-            log.error("Failed to setup authentication message contract", e.getMessage());
+            log.error("Failed to setup authentication message contract", e);
         }
     }
 }

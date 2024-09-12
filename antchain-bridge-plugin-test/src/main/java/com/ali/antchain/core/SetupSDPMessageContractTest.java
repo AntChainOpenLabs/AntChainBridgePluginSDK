@@ -1,4 +1,4 @@
-package com.ali.antchain.Test;
+package com.ali.antchain.core;
 
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
@@ -16,10 +16,10 @@ public class SetupSDPMessageContractTest {
 
     public static void run(AbstractBBCContext context, AbstractBBCService service){
         SetupSDPMessageContractTest SetupSDP = new SetupSDPMessageContractTest(service);
-        SetupSDP.setupsdpcontract(context);
+        SetupSDP.setupsdpcontract_success(context);
     }
 
-    public void setupsdpcontract(AbstractBBCContext  context) {
+    public void setupsdpcontract_success(AbstractBBCContext context) {
         if (service == null) {
             throw new IllegalStateException("Service is not initialized.");
         }

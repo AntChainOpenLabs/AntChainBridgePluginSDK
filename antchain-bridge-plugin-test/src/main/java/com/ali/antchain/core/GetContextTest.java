@@ -1,4 +1,4 @@
-package com.ali.antchain.Test;
+package com.ali.antchain.core;
 
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.AuthMessageContract;

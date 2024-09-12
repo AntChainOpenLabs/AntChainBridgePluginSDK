@@ -1,4 +1,4 @@
-package com.ali.antchain.Test;
+package com.ali.antchain.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
@@ -13,12 +13,19 @@ public class StartUpTest {
         this.service = service;
     }
 
-    public static void run(AbstractBBCContext context, AbstractBBCService service){
+    public static void runBefore(AbstractBBCContext context, AbstractBBCService service){
         StartUpTest startUpTest = new StartUpTest(service);
-        startUpTest.startuptest_success(context);
+
+        startUpTest.startup_success(context);
     }
 
-    public void startuptest_success(AbstractBBCContext  context) {
+    public static void run(AbstractBBCContext context, AbstractBBCService service){
+        StartUpTest startUpTest = new StartUpTest(service);
+
+        startUpTest.startup_success(context);
+    }
+
+    public void startup_success(AbstractBBCContext context) {
         try {
             service.startup(context);
             // 使用日志框架记录信息
