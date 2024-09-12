@@ -5,6 +5,7 @@ import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 
 public class PluginsTest {
+
     AbstractBBCContext context;
     AbstractBBCService service;
     String product;
