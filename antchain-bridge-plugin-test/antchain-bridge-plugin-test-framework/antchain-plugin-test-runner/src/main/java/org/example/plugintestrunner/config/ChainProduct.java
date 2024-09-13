@@ -8,11 +8,9 @@ public enum ChainProduct {
     ETH("simple-ethereum"),
     CHAINMAKER("chainmaker"),
     FABRIC("fabric"),
-    POLYGON("polygon"),
-    BCOS("fiscobcos"),
+    BCOS("fisco-bcos"),
     EOS("eos"),
-    HYPERCHAIN("hyperchain2"),
-    MYCHAIN("mychain010");
+    HYPERCHAIN("hyperchain");
 
     private final String value;
 

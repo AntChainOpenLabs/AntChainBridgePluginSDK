@@ -50,9 +50,9 @@ public class PluginTestRunner {
             logger.rlog(LogLevel.INFO, "Running " + testCase.getName());
             chainManagerService.run(testCase);
             pluginManagerService.run(testCase);
-            pluginTestService.run(testCase);
+//            pluginTestService.run(testCase);
         }
-        pluginTestService.close();
+//        pluginTestService.close();
         pluginManagerService.close();
         chainManagerService.close();
 

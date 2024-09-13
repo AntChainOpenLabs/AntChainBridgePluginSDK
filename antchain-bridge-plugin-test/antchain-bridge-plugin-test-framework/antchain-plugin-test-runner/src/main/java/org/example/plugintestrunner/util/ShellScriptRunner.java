@@ -18,9 +18,9 @@ public class ShellScriptRunner {
         this.scriptDirectory = scriptDirectory;
     }
 
-    public void runScript(String scriptName) throws IOException, InterruptedException {
+    public void runScript(String childDir, String scriptName) throws IOException, InterruptedException {
         // 构造脚本完整路径
-        String scriptPath = Paths.get(scriptDirectory, scriptName).toAbsolutePath().toString();
+        String scriptPath = Paths.get(scriptDirectory, childDir, scriptName).toAbsolutePath().toString();
         // 设置日志文件路径
         Path logFilePath = Paths.get(logDirectory, scriptName.split("\\.")[0] + ".log").toAbsolutePath();
 
@@ -40,8 +40,8 @@ public class ShellScriptRunner {
     }
 
 
-    public boolean scriptExists(String scriptName) {
-        Path path = Paths.get(scriptDirectory, scriptName).toAbsolutePath();
+    public boolean scriptExists(String childDir, String scriptName) {
+        Path path = Paths.get(scriptDirectory, childDir, scriptName).toAbsolutePath();
         return path.toFile().exists();
     }
 }

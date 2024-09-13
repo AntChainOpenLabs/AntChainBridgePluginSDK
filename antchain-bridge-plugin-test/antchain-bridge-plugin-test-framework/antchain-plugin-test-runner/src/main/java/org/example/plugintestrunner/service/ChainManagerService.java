@@ -1,5 +1,6 @@
 package org.example.plugintestrunner.service;
 
+import one.block.eosiojavarpcprovider.error.EosioJavaRpcProviderInitializerError;
 import org.example.plugintestrunner.chainmanager.IChainManager;
 import org.example.plugintestrunner.chainmanager.IChainManagerFactory;
 import org.example.plugintestrunner.config.ChainProduct;
@@ -63,19 +64,20 @@ public class ChainManagerService extends AbstractService {
             } catch (InterruptedException e) {
                 logger.plog(LogLevel.ERROR, "Failed to sleep");
             }
-        } else {
-            // 用户本地启动了测试链，不需要创建一条临时的测试链，但仍然需要和用户的链交互
-            try {
-                initializeLocalChain(testCase);
-                logger.plog(LogLevel.INFO, "Successfully initialized local chain");
-            } catch (ChainManagerException e) {
-                logger.plog(LogLevel.ERROR, "Failed to initialize local chain: " + e.getMessage());
-                if (e.getCause() != null) {
-                    logger.rlog(LogLevel.ERROR, e.getCause().getMessage());
-                }
-
-            }
         }
+//        else {
+//            // 用户本地启动了测试链，不需要创建一条临时的测试链，但仍然需要和用户的链交互
+//            try {
+//                initializeLocalChain(testCase);
+//                logger.plog(LogLevel.INFO, "Successfully initialized local chain");
+//            } catch (ChainManagerException e) {
+//                logger.plog(LogLevel.ERROR, "Failed to initialize local chain: " + e.getMessage());
+//                if (e.getCause() != null) {
+//                    logger.rlog(LogLevel.ERROR, e.getCause().getMessage());
+//                }
+//
+//            }
+//        }
 
         // 清除 MDC
         logger.clearMDC();
@@ -126,49 +128,51 @@ public class ChainManagerService extends AbstractService {
         }
     }
 
-    private void initializeLocalChain(TestCase testCase) throws ChainManagerException {
-        String product = testCase.getProduct();
-        TestCaseChainConf chainConf = testCase.getChainConf();
-        if (ChainProduct.isInvalid(product)) {
-            throw new InvalidProductException("Invalid product: " + product);
-        } else {
-            // 判断 localChainManagers 中是否已经存在该类型的链
-            if (localChainManagers.get(product) != null) {
-                IChainManager chainManager = localChainManagers.get(product);
-                // 判断配置信息是否一致
-                if (chainManager.getHttpUrl().equals(chainConf.getUrl()) &&
-                        chainManager.getPrivateKey().equals(chainConf.getPrivateKey()) &&
-                        chainManager.getGasPrice().equals(String.valueOf(chainConf.getGasPrice())) &&
-                        chainManager.getGasLimit().equals(String.valueOf(chainConf.getGasLimit()))) {
-                    logger.plog(LogLevel.INFO, "Chain for " + product + " already exists");
-                } else {
-                    logger.plog(LogLevel.INFO, "Chain configuration changed, restart chain for " + product);
-                    // 先关闭原有的 chainManager 连接
-                    chainManager.close();
-                    // 启动新的 chainManager
-                    try {
-                        localChainManagers.put(product, IChainManagerFactory.createIChainManager(product,
-                                chainConf.getUrl(),
-                                chainConf.getPrivateKey(),
-                                String.valueOf(chainConf.getGasPrice()),
-                                String.valueOf(chainConf.getGasLimit())));
-                    } catch (Exception e) {
-                        throw new ChainManagerConstructionException("Failed to create chainManager for chain: " + product, e);
-                    }
-                }
-            } else {
-                try {
-                    localChainManagers.put(product, IChainManagerFactory.createIChainManager(product,
-                            chainConf.getUrl(),
-                            chainConf.getPrivateKey(),
-                            String.valueOf(chainConf.getGasPrice()),
-                            String.valueOf(chainConf.getGasLimit())));
-                } catch (Exception e) {
-                    throw new ChainManagerConstructionException("Failed to create chainManager for chain: " + product, e);
-                }
-            }
-        }
-    }
+//    private void initializeLocalChain(TestCase testCase) throws ChainManagerException {
+//        String product = testCase.getProduct();
+//        TestCaseChainConf chainConf = testCase.getChainConf();
+//        if (ChainProduct.isInvalid(product)) {
+//            throw new InvalidProductException("Invalid product: " + product);
+//        } else {
+//            // 判断 localChainManagers 中是否已经存在该类型的链
+//            if (localChainManagers.get(product) != null) {
+//                logger.plog(LogLevel.INFO, "Chain for " + product + " already exists");
+////                IChainManager chainManager = localChainManagers.get(product);
+////                // 判断配置信息是否一致
+////                if (chainManager.getHttpUrl().equals(chainConf.getUrl()) &&
+////                        chainManager.getPrivateKey().equals(chainConf.getPrivateKey()) &&
+////                        chainManager.getGasPrice().equals(String.valueOf(chainConf.getGasPrice())) &&
+////                        chainManager.getGasLimit().equals(String.valueOf(chainConf.getGasLimit()))) {
+////                    logger.plog(LogLevel.INFO, "Chain for " + product + " already exists");
+////                }
+////                else {
+////                    logger.plog(LogLevel.INFO, "Chain configuration changed, restart chain for " + product);
+////                    // 先关闭原有的 chainManager 连接
+////                    chainManager.close();
+////                    // 启动新的 chainManager
+////                    try {
+////                        localChainManagers.put(product, IChainManagerFactory.createIChainManager(product,
+////                                chainConf.getUrl(),
+////                                chainConf.getPrivateKey(),
+////                                String.valueOf(chainConf.getGasPrice()),
+////                                String.valueOf(chainConf.getGasLimit())));
+////                    } catch (Exception e) {
+////                        throw new ChainManagerConstructionException("Failed to create chainManager for chain: " + product, e);
+////                    }
+////                }
+//            } else {
+//                try {
+//                    localChainManagers.put(product, IChainManagerFactory.createIChainManager(product,
+//                            chainConf.getUrl(),
+//                            chainConf.getPrivateKey(),
+//                            String.valueOf(chainConf.getGasPrice()),
+//                            String.valueOf(chainConf.getGasLimit())));
+//                } catch (Exception e) {
+//                    throw new ChainManagerConstructionException("Failed to create chainManager for chain: " + product, e);
+//                }
+//            }
+//        }
+//    }
 
     /*
      *
@@ -186,10 +190,10 @@ public class ChainManagerService extends AbstractService {
             logger.plog(LogLevel.INFO, "Chain for " + product + " already exists");
         } else {
             String scriptName = product + STARTUP_SUFFIX;
-            if (!shellScriptRunner.scriptExists(scriptName)) {
+            if (!shellScriptRunner.scriptExists(product, scriptName)) {
                 throw new ScriptNotFoundException("Script not found: " + scriptName);
             }
-            shellScriptRunner.runScript(scriptName);
+            shellScriptRunner.runScript(product, scriptName);
         }
         logger.plog(LogLevel.INFO, "Successfully start chain: " + product);
         // 休眠 5 秒，等待链启动完成
@@ -197,15 +201,17 @@ public class ChainManagerService extends AbstractService {
         Thread.sleep(5000);
 
         // 创建 chainManager
-        IChainManager chainManager = IChainManagerFactory.createIChainManager(product);
+        // TODO
+        IChainManager chainManager;
+        try {
+            chainManager = IChainManagerFactory.createIChainManager(product);
+        } catch (Exception e) {
+            throw new ChainManagerException("Failed to create chainManager for chain: " + product, e);
+        }
 
         // 添加到 tmpChainManagers 中
         tmpChainManagers.put(product, chainManager);
         logger.plog(LogLevel.INFO, "Successfully initialized chainManager for chain: " + product);
-        logger.plog(LogLevel.INFO, "url: " + chainManager.getHttpUrl());
-        logger.plog(LogLevel.INFO, "private key: " + chainManager.getPrivateKey());
-        logger.plog(LogLevel.INFO, "gas price: " + chainManager.getGasPrice());
-        logger.plog(LogLevel.INFO, "gas limit: " + chainManager.getGasLimit());
     }
 
     public void shutdown(String product) throws ChainManagerException, IOException, InterruptedException {
@@ -218,10 +224,10 @@ public class ChainManagerService extends AbstractService {
             tmpChainManagers.get(product).close();
             // 执行关闭脚本
             String scriptName = product + SHUTDOWN_SUFFIX;
-            if (!shellScriptRunner.scriptExists(scriptName)) {
+            if (!shellScriptRunner.scriptExists(product, scriptName)) {
                 throw new ScriptNotFoundException("Script not found: " + scriptName);
             }
-            shellScriptRunner.runScript(scriptName);
+            shellScriptRunner.runScript(product, scriptName);
             // 从 chainManagers 中移除
             tmpChainManagers.remove(product);
         }

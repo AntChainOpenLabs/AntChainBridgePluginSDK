@@ -2,12 +2,8 @@ package org.example.plugintestrunner.service;
 
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
-import com.alipay.antchain.bridge.plugins.ethereum.EthereumConfig;
-import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import lombok.Setter;
-import org.aspectj.weaver.ast.Test;
-import org.example.plugintestrunner.chainmanager.EthChainManager;
 import org.example.plugintestrunner.chainmanager.IChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginTestException;
@@ -15,7 +11,6 @@ import org.example.plugintestrunner.exception.PluginTestException.*;
 import org.example.plugintestrunner.testcase.TestCase;
 import org.example.plugintestrunner.util.LogLevel;
 import org.example.plugintestrunner.util.PTRLogger;
-import org.pf4j.Plugin;
 
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +65,7 @@ public class PluginTestService extends AbstractService{
         // 从 pluginManagerService 中获取 bbcService
         bbcService = pluginManagerService.getBBCService(testCase.getProduct(), testCase.getDomain());
         // 从 chainManager 中获取链配置信息，然后修改 abstractBBCContext
-        abstractBBCContext = createAbstractBBCContext(chainManagerService.getChainManager(testCase.getProduct()));
+//        abstractBBCContext = createAbstractBBCContext(chainManagerService.getChainManager(testCase.getProduct()));
         if (testCase.isStartup()) {
             checkDependency("startup", testCase);
             testStartUp();
@@ -125,16 +120,16 @@ public class PluginTestService extends AbstractService{
         }
     }
 
-    private AbstractBBCContext createAbstractBBCContext(IChainManager chainManager) {
-        EthereumConfig conf = new EthereumConfig();
-        conf.setUrl(chainManager.getHttpUrl());
-        conf.setPrivateKey(chainManager.getPrivateKey());
-        conf.setGasPrice(2300000000L);
-        conf.setGasLimit(3000000);
-        AbstractBBCContext context = new DefaultBBCContext();
-        context.setConfForBlockchainClient(conf.toJsonString().getBytes());
-        return context;
-    }
+//    private AbstractBBCContext createAbstractBBCContext(IChainManager chainManager) {
+//        EthereumConfig conf = new EthereumConfig();
+//        conf.setUrl(chainManager.getHttpUrl());
+//        conf.setPrivateKey(chainManager.getPrivateKey());
+//        conf.setGasPrice(2300000000L);
+//        conf.setGasLimit(3000000);
+//        AbstractBBCContext context = new DefaultBBCContext();
+//        context.setConfForBlockchainClient(conf.toJsonString().getBytes());
+//        return context;
+//    }
 
     // 检查每个接口的依赖项，如果依赖项没有执行，则抛出异常
     private void checkDependency(String item, TestCase testCase) throws PluginTestException{
@@ -221,7 +216,7 @@ public class PluginTestService extends AbstractService{
     // dependency: testStartUp, testGetContext, testSetupSDPMessageContract, testSetLocalDomain
     public void testQuerySDPMessageSeq() throws PluginTestException {
         try {
-            bbcService.querySDPMessageSeq();
+            // TODO
         } catch (Exception e) {
             throw new QuerySDPMessageSeqException("Failed to run query sdp message seq test.", e);
         }

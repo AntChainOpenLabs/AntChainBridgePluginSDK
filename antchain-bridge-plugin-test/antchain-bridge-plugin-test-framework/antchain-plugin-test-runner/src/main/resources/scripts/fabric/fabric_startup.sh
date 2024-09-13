@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# https://www.cnblogs.com/biaogejiushibiao/p/12290728.html
+
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/../../config.properties"
 CHAIN_TYPE="fabric"
@@ -29,7 +32,7 @@ if [ -d "$data_dir/fabric-samples" ]; then
     log "INFO" "The fabric-samples directory already exists. Skipping installation."
 else
     log "INFO" "The fabric-samples directory does not exist. Starting installation..."
-    ./install-fabric.sh -f $version samples
+    ./install-fabric.sh -f "$version" samples
 fi
 
 
@@ -41,20 +44,20 @@ if [ -f "hyperledger-fabric-linux-amd64-$version.tar.gz" ]; then
     log "INFO" "Fabric archive already exists, extracting and overwriting..."
 else
     log "INFO" "Fabric archive not found, downloading..."
-    curl -L -O https://github.com/hyperledger/fabric/releases/download/v$version/hyperledger-fabric-linux-amd64-$version.tar.gz
+    curl -L -O -x http://49.52.27.67:7890 https://github.com/hyperledger/fabric/releases/download/v"$version"/hyperledger-fabric-linux-amd64-"$version".tar.gz
 fi
 
-tar --overwrite -xvf hyperledger-fabric-linux-amd64-$version.tar.gz
+tar --overwrite -xvf hyperledger-fabric-linux-amd64-"$version".tar.gz
 
 # Check if the fabric-ca archive exists
 if [ -f "hyperledger-fabric-ca-linux-amd64-$version.tar.gz" ]; then
     log "INFO" "Fabric-CA archive already exists, extracting and overwriting..."
 else
     log "INFO" "Fabric-CA archive not found, downloading..."
-    curl -L -O https://github.com/hyperledger/fabric-ca/releases/download/v$version/hyperledger-fabric-ca-linux-amd64-$version.tar.gz
+    curl -L -O -x http://49.52.27.67:7890 https://github.com/hyperledger/fabric-ca/releases/download/v"$version"/hyperledger-fabric-ca-linux-amd64-"$version".tar.gz
 fi
 
-tar --overwrite -xvf hyperledger-fabric-ca-linux-amd64-$version.tar.gz
+tar --overwrite -xvf hyperledger-fabric-ca-linux-amd64-"$version".tar.gz
 
 
 # 运行测试链

@@ -8,10 +8,10 @@ source "$SCRIPT_DIR"/../utils.sh
 
 
 # 读取配置文件
-get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir version
+get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir version conf_file
 
 # step1. 创建并打开目录
-mkdir -p $data_dir && cd $data_dir || exit
+mkdir -p "$data_dir" && cd "$data_dir" || exit
 
 # step2. 源码下载
 # 下载源码
@@ -71,3 +71,6 @@ mv ../build/release/*.tar.gz ../build/bak
 # step6. 查看节点启动使用正常
 # 查看进程是否存在
 ps -ef|grep chainmaker | grep -v grep
+
+# step7. 配置 sdk
+cp "$SCRIPT_DIR"/sdk_config.yml "$conf_file"
