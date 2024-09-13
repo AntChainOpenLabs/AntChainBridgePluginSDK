@@ -46,7 +46,7 @@ public class SetProtocolTest {
 
         // 4. after set protocol
         // 4.1 Check whether the protocol address is correct.
-        String protocolAddr = tester.getProtocol(curCtx);
+        String protocolAddr = tester.getProtocol(curCtx.getAuthMessageContract().getContractAddress());
         Assert.assertEquals(curCtx.getSdpContract().getContractAddress(), protocolAddr);
 
         // 4.2 Check whether the contract status in the context is ready

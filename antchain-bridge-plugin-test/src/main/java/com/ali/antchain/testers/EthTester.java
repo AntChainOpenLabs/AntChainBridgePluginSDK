@@ -69,11 +69,12 @@ public class EthTester extends AbstractTester {
         }
     }
 
+
     @Override
-    public String getProtocol(AbstractBBCContext _context) {
+    public String getProtocol(String amContractAddr) {
         try {
             String protocolAddr = AuthMsg.load(
-                            _context.getAuthMessageContract().getContractAddress(),
+                            amContractAddr,
                             web3jClient,
                             credentials,
                             new DefaultGasProvider())
@@ -89,16 +90,30 @@ public class EthTester extends AbstractTester {
     }
 
     @Override
-    public byte[] deployApp() {
+    public byte[] deployApp(String protocolAddr) {
         try {
+            // 1. 部署合约
             AppContract appContract = AppContract.deploy(
                     web3jClient,
                     rawTransactionManager,
                     new DefaultGasProvider()
             ).send();
-            return HexUtil.decodeHex(
-                    String.format("000000000000000000000000%s", StrUtil.removePrefix(appContract.getContractAddress(), "0x"))
-            );
+            byte[] appContractAddr = HexUtil.decodeHex(String.format("000000000000000000000000%s", StrUtil.removePrefix(appContract.getContractAddress(), "0x")));
+
+
+            // 2. 设置app合约中的protocol合约地址
+            TransactionReceipt receipt = appContract.setProtocol(protocolAddr).send();
+            if (receipt.isStatusOK()) {
+                getBbcLogger().info("set protocol({}) to app contract({})",
+                        appContract.getContractAddress(),
+                        protocolAddr);
+            } else {
+                throw new Exception(String.format("failed to set protocol(%s) to app contract(%s)",
+                        appContract.getContractAddress(),
+                        protocolAddr));
+            }
+
+            return appContractAddr;
         } catch (Exception e) {
             getBbcLogger().error("", e);
         }

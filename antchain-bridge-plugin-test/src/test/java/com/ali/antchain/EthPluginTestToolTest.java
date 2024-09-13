@@ -1,4 +1,4 @@
-package com.ali.antchain.tools;
+package com.ali.antchain;
 
 import com.ali.antchain.EthPluginTestTool;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;

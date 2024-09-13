@@ -44,7 +44,8 @@ public class RelayAuthMessageTest {
         prepare();
 
         // 部署APP合约
-        byte[] targetIdentity = tester.deployApp();
+        AbstractBBCContext curCtx = service.getContext();
+        byte[] targetIdentity = tester.deployApp(curCtx.getSdpContract().getContractAddress());
 
         CrossChainMessageReceipt receipt = service.relayAuthMessage(getRawMsgFromRelayer(targetIdentity));
         Assert.assertTrue(receipt.isSuccessful());
