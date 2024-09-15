@@ -35,12 +35,10 @@ import org.bouncycastle.util.encoders.Hex;
 import org.chainmaker.pb.common.*;
 import org.chainmaker.pb.config.ChainConfigOuterClass;
 import org.chainmaker.sdk.*;
-import org.chainmaker.sdk.config.SdkConfig;
+import org.chainmaker.sdk.config.*;
 import org.chainmaker.sdk.crypto.ChainMakerCryptoSuiteException;
-import org.chainmaker.sdk.utils.CryptoUtils;
-import org.chainmaker.sdk.utils.SdkUtils;
+import org.chainmaker.sdk.utils.*;
 import org.chainmaker.sdk.utils.Utils;
-import org.chainmaker.sdk.utils.UtilsException;
 import org.web3j.abi.*;
 import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Bytes32;
@@ -48,6 +46,7 @@ import org.web3j.abi.datatypes.generated.Uint32;
 import org.web3j.protocol.core.methods.response.Log;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -124,36 +123,41 @@ public class ChainMakerBBCService extends AbstractBBCService {
         getBBCLogger().info("[startup] ChainMaker startup with context: {}",
                 new String(abstractBBCContext.getConfForBlockchainClient()));
 
-        if (ObjectUtil.isNull(abstractBBCContext)) {
-            throw new RuntimeException("null bbc context");
-        }
-        if (ObjectUtil.isEmpty(abstractBBCContext.getConfForBlockchainClient())) {
-            throw new RuntimeException("empty blockchain client conf");
-        }
-
-        // 1. Obtain the configuration information
         try {
-            config = ChainMakerConfig.fromJsonString(new String(abstractBBCContext.getConfForBlockchainClient()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        if (StrUtil.isEmpty(config.getSdkConfig())) {
-            throw new RuntimeException("SdkConfig is empty");
-        }
-        if (config.getAdminTlsKeyPaths().isEmpty()) {
-            throw new RuntimeException("AdminTlsKeyPath is empty");
-        }
-        if (config.getAdminTlsKeyPaths().size() != config.getAdminTlsCertPaths().size()) {
-            throw new RuntimeException("AdminTlsCertPaths size not match");
-        }
-        if (config.getAdminKeyPaths().isEmpty()) {
-            throw new RuntimeException("AdminKeyPath is empty");
-        }
-        if (config.getAdminKeyPaths().size() != config.getAdminKeyPaths().size()) {
-            throw new RuntimeException("AdminKeyPaths size not match");
-        }
-        if (config.getOrgIds().isEmpty()) {
-            throw new RuntimeException("OrgId is empty");
+            if (ObjectUtil.isNull(abstractBBCContext)) {
+                throw new RuntimeException("null bbc context");
+            }
+            if (ObjectUtil.isEmpty(abstractBBCContext.getConfForBlockchainClient())) {
+                throw new RuntimeException("empty blockchain client conf");
+            }
+
+            // 1. Obtain the configuration information
+            try {
+                config = ChainMakerConfig.fromJsonString(new String(abstractBBCContext.getConfForBlockchainClient()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (StrUtil.isEmpty(config.getSdkConfig())) {
+                throw new RuntimeException("SdkConfig is empty");
+            }
+            if (config.getAdminTlsKeyPaths().isEmpty()) {
+                throw new RuntimeException("AdminTlsKeyPath is empty");
+            }
+            if (config.getAdminTlsKeyPaths().size() != config.getAdminTlsCertPaths().size()) {
+                throw new RuntimeException("AdminTlsCertPaths size not match");
+            }
+            if (config.getAdminKeyPaths().isEmpty()) {
+                throw new RuntimeException("AdminKeyPath is empty");
+            }
+            if (config.getAdminKeyPaths().size() != config.getAdminKeyPaths().size()) {
+                throw new RuntimeException("AdminKeyPaths size not match");
+            }
+            if (config.getOrgIds().isEmpty()) {
+                throw new RuntimeException("OrgId is empty");
+            }
+        } catch (Exception e) {
+            getBBCLogger().error("[startup] Obtain the configuration information exception", e);
+            throw e;
         }
 
         // 2. Connect to the chainmaker network
@@ -161,13 +165,24 @@ public class ChainMakerBBCService extends AbstractBBCService {
         SdkConfig sdkConfig = gson.fromJson(config.getSdkConfig(), SdkConfig.class);
         try {
             chainManager = ChainManager.getInstance();
-            chainClient = chainManager.getChainClient(sdkConfig.getChainClient().getChainId());
-            if (chainClient == null) {
-                chainClient = chainManager.createChainClient(sdkConfig);
+
+            // 移除chainManager中缓存的链sdk
+            for (Field field : ChainManager.class.getDeclaredFields()) {
+                if (StrUtil.equals(field.getName(), "chains")) {
+                    field.setAccessible(true);
+                    Map map = (Map) field.get(chainManager);
+                    map.remove(sdkConfig.getChainClient().getChainId());
+                    getBBCLogger().info("[startup] chainManager remove chain, id: {}",
+                            sdkConfig.getChainClient().getChainId());
+                    break;
+                }
             }
-        } catch (ChainClientException | RpcServiceClientException | UtilsException |
-                 ChainMakerCryptoSuiteException ex) {
-            throw new RuntimeException(ex);
+
+            chainClient = chainManager.createChainClient(sdkConfig);
+        } catch (ChainClientException | RpcServiceClientException | UtilsException | ChainMakerCryptoSuiteException |
+                 IllegalAccessException e) {
+            getBBCLogger().error("[startup] Connect to the chainmaker network exception", e);
+            throw new RuntimeException(e);
         }
 
         // 3. get client address of chainClient
@@ -176,6 +191,7 @@ public class ChainMakerBBCService extends AbstractBBCService {
                     chainClient.getClientUser().getCertificate(),
                     ChainConfigOuterClass.AddrType.ETHEREUM);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            getBBCLogger().error("[startup] fail to get client address", e);
             throw new RuntimeException("fail to get client address", e);
         }
 
@@ -191,12 +207,16 @@ public class ChainMakerBBCService extends AbstractBBCService {
                                 config.getAdminTlsKeyPaths().get(i),
                                 config.getAdminTlsCertPaths().get(i)));
             } catch (ChainMakerCryptoSuiteException e) {
+                getBBCLogger().error("[startup] fail to create admin user for endorsement", e);
                 throw new RuntimeException("fail to create admin user for endorsement", e);
             }
         }
 
         // 3. set context
         this.bbcContext = new ChainMakerContext(abstractBBCContext);
+
+        this.bbcContext.setAmContractName(this.config.getAmContractName());
+        this.bbcContext.setSdpContractName(this.config.getSdpContractName());
 
         // 4. set the pre-deployed contracts into context
         if (ObjectUtil.isNull(abstractBBCContext.getAuthMessageContract())
@@ -215,7 +235,17 @@ public class ChainMakerBBCService extends AbstractBBCService {
             this.bbcContext.setSdpContract(sdpContract);
         }
 
-        getBBCLogger().info("ChainMaker startup success");
+        getBBCLogger().info("ChainMaker startup success, (" +
+                        "amAddr: {}, amStatus: {}, " +
+                        "sdpAddr: {}, sdpStatus: {}," +
+                        "amName: {}, sdpName: {})",
+                this.bbcContext.getAuthMessageContract() != null ? this.bbcContext.getAuthMessageContract().getContractAddress() : "",
+                this.bbcContext.getAuthMessageContract() != null ? this.bbcContext.getAuthMessageContract().getStatus() : "",
+                this.bbcContext.getSdpContract() != null ? this.bbcContext.getSdpContract().getContractAddress() : "",
+                this.bbcContext.getSdpContract() != null ? this.bbcContext.getSdpContract().getStatus() : "",
+                this.bbcContext.getAmContractName() != null ? this.bbcContext.getAmContractName() : "",
+                this.bbcContext.getSdpContractName() != null ? this.bbcContext.getSdpContractName() : ""
+        );
     }
 
     @Override
@@ -282,6 +312,8 @@ public class ChainMakerBBCService extends AbstractBBCService {
         authMessageContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
         bbcContext.setAuthMessageContract(authMessageContract);
         bbcContext.setAmContractName(contract.getName());
+        config.setAmContractName(contract.getName());
+        bbcContext.setConfForBlockchainClient(config.toJsonString().getBytes());
         getBBCLogger().info("setup am contract successful: {}-{}",
                 contract.getName(),
                 contract.getAddress());
@@ -312,6 +344,8 @@ public class ChainMakerBBCService extends AbstractBBCService {
         sdpContract.setStatus(ContractStatusEnum.CONTRACT_DEPLOYED);
         bbcContext.setSdpContract(sdpContract);
         bbcContext.setSdpContractName(contract.getName());
+        config.setSdpContractName(contract.getName());
+        bbcContext.setConfForBlockchainClient(config.toJsonString().getBytes());
         getBBCLogger().info("setup sdp contract successful: {}-{}",
                 contract.getName(),
                 contract.getAddress());
