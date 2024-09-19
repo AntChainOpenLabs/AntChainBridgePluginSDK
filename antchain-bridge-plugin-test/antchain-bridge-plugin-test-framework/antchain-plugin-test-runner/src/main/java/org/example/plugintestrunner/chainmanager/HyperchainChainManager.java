@@ -1,15 +1,16 @@
 package org.example.plugintestrunner.chainmanager;
 
-import cn.hutool.core.util.StrUtil;
 import cn.hyperchain.sdk.account.Account;
 import cn.hyperchain.sdk.account.Algo;
 import cn.hyperchain.sdk.provider.DefaultHttpProvider;
 import cn.hyperchain.sdk.provider.ProviderManager;
 import cn.hyperchain.sdk.service.*;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
+@Getter
 public class HyperchainChainManager extends IChainManager {
 
     DefaultHttpProvider defaultHttpProvider;
@@ -20,6 +21,8 @@ public class HyperchainChainManager extends IChainManager {
     BlockService blockService;
     MQService mqService;
     Account account;
+
+    private String config;
 
     public HyperchainChainManager(String url) {
         // 2. build provider manager
@@ -32,13 +35,14 @@ public class HyperchainChainManager extends IChainManager {
         blockService = ServiceManager.getBlockService(providerManager);
         mqService = ServiceManager.getMQService(providerManager);
         // 4. create account
-//        if (StrUtil.isNotEmpty(config.getAccountJson()) && config.getPassword() != null) {
-//            account = Account.fromAccountJson(config.getAccountJson(), config.getPassword());
-//        } else {
-//            account = accountService.genAccount(Algo.SMRAW);
-//        }
-    }
+        String password = "";
+        account = accountService.genAccount(Algo.SMRAW, password);
 
+        config = String.format(
+                "{\"url\": \"%s\", \"accountJson\": {\"address\": \"%s\", \"publicKey\": \"%s\", \"privateKey\": \"%s\", \"version\": \"%s\", \"algo\": \"%s\"}, \"password\": \"%s\"}",
+                url, account.getAddress(), account.getPublicKey(), account.getPrivateKey(), account.getVersion().getV(), account.getAlgo().getAlgo(), password
+        );
+    }
 
     @Override
     public boolean isConnected() throws ExecutionException, InterruptedException, IOException {

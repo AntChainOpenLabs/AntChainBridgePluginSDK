@@ -13,7 +13,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-
   <dependencies>
       <dependency>
           <groupId>org.junit.jupiter</groupId>
@@ -72,25 +71,21 @@
         <artifactId>asciitable</artifactId>
         <version>0.3.2</version>
       </dependency>
-      <dependency>
-          <groupId>org.pf4j</groupId>
-          <artifactId>pf4j</artifactId>
-          <version>3.8.0</version>
-      </dependency>
-      <dependency>
-          <groupId>com.alipay.antchain.bridge</groupId>
-          <artifactId>simple-ethereum-bbc</artifactId>
-          <version>0.2.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.testchain</groupId>
-          <artifactId>plugin-testchain1</artifactId>
-          <version>0.1-SNAPSHOT</version>
-      </dependency>
+<!--      <dependency>-->
+<!--          <groupId>org.pf4j</groupId>-->
+<!--          <artifactId>pf4j</artifactId>-->
+<!--          <version>3.10.0</version>-->
+<!--      </dependency>-->
       <dependency>
           <groupId>one.block</groupId>
           <artifactId>eosiojava</artifactId>
           <version>1.0.0</version>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.slf4j</groupId>
+                  <artifactId>slf4j-jdk14</artifactId>
+              </exclusion>
+          </exclusions>
       </dependency>
       <dependency>
           <groupId>one.block</groupId>
@@ -142,5 +137,30 @@
           <artifactId>fabric-sdk-java</artifactId>
           <version>1.4.16</version>
       </dependency>
-  </dependencies>
-</project>
+      <dependency>
+          <groupId>com.alipay.antchain.bridge</groupId>
+          <artifactId>simple-ethereum-bbc</artifactId>
+          <version>0.2.0</version>
+      </dependency>
+      <dependency>
+          <groupId>com.alipay.antchain.bridge</groupId>
+          <artifactId>fiscobcos-bbc</artifactId>
+          <version>1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+          <groupId>com.alipay.antchain.bridge</groupId>
+          <artifactId>chainmaker-bbc</artifactId>
+          <version>0.1.0</version>
+      </dependency>
+      <dependency>
+          <groupId>com.alipay.antchain.bridge</groupId>
+          <artifactId>hyperchain2-bbc</artifactId>
+          <version>0.1.0</version>
+      </dependency>
+      <dependency>
+          <groupId>com.alipay.antchain.bridge</groupId>
+          <artifactId>simple-fabric-bbc</artifactId>
+          <version>0.1.1</version>
+      </dependency>
+      </dependencies>
+ </project>

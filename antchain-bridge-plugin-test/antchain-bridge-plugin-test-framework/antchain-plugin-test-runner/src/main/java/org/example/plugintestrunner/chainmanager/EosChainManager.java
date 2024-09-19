@@ -25,6 +25,8 @@ public class EosChainManager extends IChainManager {
 
     private final EosioJavaRpcProviderImpl rpcProvider;
 
+    private String config;
+
     public EosChainManager(String url) throws EosioJavaRpcProviderInitializerError {
         rpcProvider = new EosioJavaRpcProviderImpl(url);
     }

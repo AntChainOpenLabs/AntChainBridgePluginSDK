@@ -18,16 +18,16 @@ import java.math.BigInteger;
 @Setter
 public class EthChainManager extends IChainManager {
 
+    private String httpUrl;
     private String privateKey;
     private String gasPrice;
     private String gasLimit;
     private final Web3j web3j;
+    private String config;
 
     public EthChainManager(String httpUrl, String privateKeyFile) throws IOException, ChainManagerException {
+        this.httpUrl = httpUrl;
         this.web3j = Web3j.build(new HttpService(httpUrl));
-        if (!isConnected()) {
-            throw new ChainManagerConstructionException("Max attempts to connect to the Ethereum node exceeded");
-        }
         try {
             setPrivateKey(privateKeyFile);
             setGasLimit();
@@ -35,6 +35,9 @@ public class EthChainManager extends IChainManager {
         } catch (Exception e) {
             throw new ChainManagerConstructionException("Failed to set account or gas limit or gas price", e);
         }
+        // 构造用于插件测试的配置信息
+        config = String.format("{\"gasLimit\":%s,\"gasPrice\":%s,\"privateKey\":\"%s\",\"url\":\"%s\"}",
+                gasLimit, gasPrice, privateKey, httpUrl);
     }
 
     public boolean isConnected() throws IOException {
@@ -54,14 +57,14 @@ public class EthChainManager extends IChainManager {
     }
 
     // 通过 web3j 获取
-    public void setGasLimit() throws IOException {
-        gasLimit = web3j.ethGasPrice().send().getGasPrice().toString();
+    public void setGasPrice() throws IOException {
+        gasPrice = web3j.ethGasPrice().send().getGasPrice().toString();
     }
 
     // 通过 web3j 获取
-    public void setGasPrice() throws IOException {
+    public void setGasLimit() throws IOException {
         EthBlock latestBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send();
-        gasPrice = latestBlock.getBlock().getGasLimit().toString();
+        gasLimit = latestBlock.getBlock().getGasLimit().toString();
     }
 
     public void close() {

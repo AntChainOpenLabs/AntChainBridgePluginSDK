@@ -16,15 +16,13 @@ import org.hyperledger.fabric.sdk.exception.TransactionException;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
 
 public class IChainManagerFactory {
     // 根据 product 创建 IChainManager
-    public static IChainManager createIChainManager(String chainProduct) throws IOException, ChainManagerException, EosioJavaRpcProviderInitializerError, UtilsException, ChainClientException, RpcServiceClientException, ChainMakerCryptoSuiteException, InvalidArgumentException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException, NoSuchProviderException, ClassNotFoundException, InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException, TransactionException, ProposalException {
+    public static IChainManager createIChainManager(String chainProduct) throws Exception {
         ChainProduct cp = ChainProduct.fromValue(chainProduct);
         switch (cp) {
             case ETH:
@@ -36,9 +34,10 @@ public class IChainManagerFactory {
             case BCOS:
                 return new FiscoBcosChainManager(ChainConfig.FiscoBcosChainConfig.confFile);
             case FABRIC:
-                return new FabricChainManager(ChainConfig.FabricChainConfig.privateKeyFile, ChainConfig.FabricChainConfig.certFile, ChainConfig.FabricChainConfig.peerTlsCertFile, ChainConfig.FabricChainConfig.ordererTlsCertFile);
+//                return new FabricChainManager(ChainConfig.FabricChainConfig.privateKeyFile, ChainConfig.FabricChainConfig.certFile, ChainConfig.FabricChainConfig.peerTlsCertFile, ChainConfig.FabricChainConfig.ordererTlsCertFile);
+                  return new FabricChainManager(ChainConfig.FabricChainConfig.confFile);
             case CHAINMAKER:
-                return new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile);
+                return new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile, ChainConfig.ChainMakerChainConfig.chainmakerJsonFile);
             case HYPERCHAIN:
                 return new HyperchainChainManager(ChainConfig.HyperChainChainConfig.getHttpUrl());
             default:

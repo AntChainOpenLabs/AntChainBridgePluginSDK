@@ -45,18 +45,20 @@ public class ChainConfig {
 
         static {
             ChainConfigManager config = ChainConfigManager.getInstance();
-            dataDir = config.getProperty("fisco-bcos.data_dir");
-            confDir = config.getProperty("fisco-bcos.conf_dir");
-            confFile = config.getProperty("fisco-bcos.conf_file");
+            dataDir = config.getProperty("fiscobcos.data_dir");
+            confDir = config.getProperty("fiscobcos.conf_dir");
+            confFile = config.getProperty("fiscobcos.conf_file");
         }
     }
 
     public static class ChainMakerChainConfig extends ChainConfig {
         public static final String confFile;
+        public static final String chainmakerJsonFile;
 
         static {
             ChainConfigManager config = ChainConfigManager.getInstance();
             confFile = config.getProperty("chainmaker.conf_file");
+            chainmakerJsonFile = config.getProperty("chainmaker.chainmaker_json_file");
         }
     }
 
@@ -76,17 +78,11 @@ public class ChainConfig {
 
 
     public static class FabricChainConfig extends ChainConfig {
-        public static final String privateKeyFile;
-        public static final String certFile;
-        public static final String peerTlsCertFile;
-        public static final String ordererTlsCertFile;
+        public static final String confFile;
 
         static {
             ChainConfigManager config = ChainConfigManager.getInstance();
-            privateKeyFile = config.getProperty("fabric.private_key_file");
-            certFile = config.getProperty("fabric.cert_file");
-            peerTlsCertFile = config.getProperty("fabric.peer_tls_cert_file");
-            ordererTlsCertFile = config.getProperty("fabric.orderer_tls_cert_file");
+            confFile = config.getProperty("fabric.conf_file");
         }
     }
     // TODO add more chains

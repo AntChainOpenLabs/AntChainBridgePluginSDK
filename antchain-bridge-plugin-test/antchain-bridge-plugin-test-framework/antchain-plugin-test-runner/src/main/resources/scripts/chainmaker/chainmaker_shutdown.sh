@@ -17,3 +17,6 @@ cd $data_dir/chainmaker-go/scripts || exit
 
 # step3. 检查节点进程
 ps -ef|grep chainmaker | grep -v grep
+
+# step4. 删除 crypto-config 目录
+rm -rf "$SCRIPT_DIR"/crypto-config

@@ -44,7 +44,8 @@ fi
 
 # 启动测试链
 log "INFO" "Starting Geth in developer mode..."
-nohup geth --dev --datadir "$data_dir" -mine --miner.gaslimit "$gas_price" --miner.gasprice "$gas_limit" --http --http.addr "$http_addr" --http.port "$http_port" --http.api "$http_api" > "$data_dir"/log 2>&1 &
+#nohup geth --dev --datadir "$data_dir" -mine --miner.gaslimit "$gas_price" --miner.gasprice "$gas_limit" --http --http.addr "$http_addr" --http.port "$http_port" --http.api "$http_api" > "$data_dir"/log 2>&1 &
+nohup geth --dev --datadir "$data_dir" --http --http.addr "$http_addr" --http.port "$http_port" --http.api "$http_api" > "$data_dir"/log 2>&1 &
 
 # 保存 Geth 进程ID
 echo $! > "$data_dir/geth.pid"

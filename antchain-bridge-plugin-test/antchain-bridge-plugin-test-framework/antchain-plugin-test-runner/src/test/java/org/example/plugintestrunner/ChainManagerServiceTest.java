@@ -53,7 +53,7 @@ public class ChainManagerServiceTest {
 
     @Test
     public void testFiscoBcos() throws ChainManagerException, IOException, InterruptedException, ExecutionException {
-        String product = "fisco-bcos";
+        String product = "fiscobcos";
         chainManagerService.startup(product);
         FiscoBcosChainManager manager = new FiscoBcosChainManager(ChainConfig.FiscoBcosChainConfig.confFile);
         assert manager.isConnected();
@@ -70,18 +70,11 @@ public class ChainManagerServiceTest {
     }
 
 
-//    TESTCHAIN("testchain"), done
-//    ETH("simple-ethereum"), done
-//    CHAINMAKER("chainmaker"),
-//    FABRIC("fabric"),
-//    BCOS("fisco-bcos"), done
-//    EOS("eos"), done
-//    HYPERCHAIN("hyperchain"); done
     @Test
-    public void testChainMaker() throws ChainManagerException, IOException, InterruptedException, EosioJavaRpcProviderInitializerError, UtilsException, ExecutionException, ChainClientException, ChainMakerCryptoSuiteException, RpcServiceClientException {
+    public void testChainMaker() throws Exception {
         String product = "chainmaker";
         chainManagerService.startup(product);
-        ChainMakerChainManager manager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile);
+        ChainMakerChainManager manager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile, ChainConfig.ChainMakerChainConfig.chainmakerJsonFile);
         assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
@@ -101,7 +94,7 @@ public class ChainManagerServiceTest {
     public void testFabric() throws ChainManagerException, IOException, InterruptedException, InvalidArgumentException, TransactionException, ProposalException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException, NoSuchProviderException, ClassNotFoundException, InvocationTargetException, IllegalAccessException, InstantiationException, NoSuchMethodException {
 //        String product = "fabric";
 //        chainManagerService.startup(product);
-        FabricChainManager manager = new FabricChainManager(ChainConfig.FabricChainConfig.privateKeyFile, ChainConfig.FabricChainConfig.certFile, ChainConfig.FabricChainConfig.peerTlsCertFile, ChainConfig.FabricChainConfig.ordererTlsCertFile);
+//        FabricChainManager manager = new FabricChainManager(ChainConfig.FabricChainConfig.privateKeyFile, ChainConfig.FabricChainConfig.certFile, ChainConfig.FabricChainConfig.peerTlsCertFile, ChainConfig.FabricChainConfig.ordererTlsCertFile);
 //        assert manager.isConnected();
 //        chainManagerService.shutdown(product);
     }

@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/../../config.properties"
-CHAIN_TYPE="fisco-bcos"
+CHAIN_TYPE="fiscobcos"
 source "$SCRIPT_DIR"/../utils.sh
 
 get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir
