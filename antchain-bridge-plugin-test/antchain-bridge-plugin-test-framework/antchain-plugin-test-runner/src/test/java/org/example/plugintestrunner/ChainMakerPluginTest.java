@@ -4,6 +4,7 @@ import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.ChainMakerChainManager;
+import org.example.plugintestrunner.config.ChainConfig;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.service.ChainManagerService;
@@ -38,8 +39,8 @@ public class ChainMakerPluginTest {
 
 
     @BeforeEach
-    public void init() throws PluginManagerException, IOException, ChainManagerException, InterruptedException {
-        PTRLogger logger = new PTRLogger();
+    public void init() throws Exception {
+        PTRLogger logger = PTRLogger.getInstance();
         // 加载启动插件
         pluginManagerService = new PluginManagerService(logger, PLUGIN_DIRECTORY);
         pluginManagerService.testLoadPlugin(JAR_PATH);
@@ -50,6 +51,7 @@ public class ChainMakerPluginTest {
         chainManagerService = new ChainManagerService(logger, shellScriptRunner);
         chainManagerService.startup(PLUGIN_PRODUCT);
         chainManager = (ChainMakerChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
+//        chainManager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile, ChainConfig.ChainMakerChainConfig.chainmakerJsonFile, ChainConfig.ChainMakerChainConfig.cryptoConfigPath);
         // 配置 context、bbcService
         bbcContext = new DefaultBBCContext();
         bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
@@ -59,6 +61,12 @@ public class ChainMakerPluginTest {
     @Test
     public void testChainMaker() {
         bbcService.startup(bbcContext);
+        bbcService.setupAuthMessageContract();
+        bbcService.setupSDPMessageContract();
+//        bbcService.setupAuthMessageContract();
+//        bbcService.setupSDPMessageContract();
+        System.out.println("authMessageContractAddress: " + bbcService.getContext().getAuthMessageContract().getContractAddress());
+        System.out.println("sdpMessageContractAddress: " + bbcService.getContext().getSdpContract().getContractAddress());
     }
 
     @AfterEach

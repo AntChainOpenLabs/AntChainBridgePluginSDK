@@ -2,14 +2,11 @@ package org.example.plugintestrunner;
 
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
-import com.alipay.antchain.bridge.plugins.ethereum.EthereumConfig;
 import com.alipay.antchain.bridge.plugins.ethereum.abi.AppContract;
-import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.EthChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
-import org.example.plugintestrunner.exception.TestCaseLoaderException;
 import org.example.plugintestrunner.service.ChainManagerService;
 import org.example.plugintestrunner.service.PluginManagerService;
 import org.example.plugintestrunner.util.PTRLogger;
@@ -18,8 +15,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Credentials;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
 
@@ -48,7 +43,7 @@ public class EthereumPluginTest {
 
     @BeforeEach
     public void init() throws PluginManagerException, IOException, ChainManagerException, InterruptedException {
-        PTRLogger logger = new PTRLogger();
+        PTRLogger logger = PTRLogger.getInstance();
         // 加载启动插件
         pluginManagerService = new PluginManagerService(logger, PLUGIN_DIRECTORY);
         pluginManagerService.testLoadPlugin(JAR_PATH);

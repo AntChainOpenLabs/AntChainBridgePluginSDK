@@ -6,7 +6,7 @@ CHAIN_TYPE="eos"
 source "$SCRIPT_DIR"/../utils.sh
 
 
-get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir version http_server_address account_name
+get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir version http_server_address account_name private_key_file
 
 mkdir $data_dir && cd $data_dir || exit
 
@@ -51,6 +51,10 @@ plugin = eosio::http_plugin
 
 http-server-address = 0.0.0.0:8888
 
+enable-stale-production = true
+
+producer-name = eosio
+
 access-control-allow-origin = *
 access-control-allow-headers = Content-Type
 access-control-allow-credentials = true
@@ -62,7 +66,7 @@ nohup nodeos --config-dir "$data_dir" --data-dir "$data_dir"/data --contracts-co
 ## 初始化私钥
 #mkdir -p "$data_dir"/keosd
 ## 运行 keosd
-##keosd --data-dir tmp/eosio/keosd/data --config-dir tmp/eosio/keosd --http-server-address=127.0.0.1:8900 &
+##keosd --data-dir /tmp/eosio-wallet/keosd/data --config-dir /tmp/eosio-wallet/keosd --http-server-address=127.0.0.1:8900 &
 #keosd --data-dir "$data_dir"/keosd/data --config-dir "$data_dir"/keosd --http-server-address=127.0.0.1:"$http_server_address" &
 ## 创建钱包
 ##cleos --wallet-url http://127.0.0.1:8900 wallet create --to-console
@@ -85,3 +89,22 @@ nohup nodeos --config-dir "$data_dir" --data-dir "$data_dir"/data --contracts-co
 # cleos --wallet-url http://127.0.0.1:8900 wallet import --private-key 5K5EyEUcvgK4bC4dJK8DQTKHFFd7FWP46UZXGJBi2hfFzu1k44q
 # 使用钱包创建账户
 # cleos --wallet-url http://127.0.0.1:8900 create account eosio mynewaccount EOS6jncWRTRHYhFfacVdThHsL9hidbof4eyZpQPUsFmbTDAYNkV9f
+
+# sleep 2 s
+sleep 2
+cleos wallet create --to-console
+cleos wallet import --private-key 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
+# 创建 test 账户
+output=$(cleos create key --to-console 2>&1)
+private_key=$(echo "$output" | grep "Private key" | awk '{print $3}')
+public_key=$(echo "$output" | grep "Public key" | awk '{print $3}')
+cleos wallet import --private-key "$private_key"
+cleos create account eosio test "$public_key" "$public_key"
+echo "$private_key" > "$private_key_file"
+# 创建 sys.am 账户
+#output=$(cleos create key --to-console 2>&1)
+#private_key=$(echo "$output" | grep "Private key" | awk '{print $3}')
+#public_key=$(echo "$output" | grep "Public key" | awk '{print $3}')
+#cleos wallet import --private-key "$private_key"
+#cleos create account eosio sys.am "$public_key" "$public_key"
+#echo "$private_key" > "$data_dir"/sys_am_private_key.txt

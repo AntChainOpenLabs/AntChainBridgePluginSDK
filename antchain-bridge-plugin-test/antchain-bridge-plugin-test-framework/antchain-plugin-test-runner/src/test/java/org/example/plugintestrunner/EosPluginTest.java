@@ -5,7 +5,6 @@ import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.EosChainManager;
-import org.example.plugintestrunner.chainmanager.HyperchainChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.service.ChainManagerService;
@@ -26,8 +25,8 @@ public class EosPluginTest {
 
     // 插件配置
     private final String PLUGIN_DIRECTORY = "src/main/resources/plugins";
-    private final String JAR_PATH = "hyperchain2-bbc-0.1.0-plugin.jar";
-    private final String PLUGIN_PRODUCT = "hyperchain2";
+    private final String JAR_PATH = "eos-bbc-0.1.2-plugin.jar";
+    private final String PLUGIN_PRODUCT = "eos";
     private final String DOMAIN_NAME = "domain1";
     private final String SCRIPT_DIR = "src/main/resources/scripts";
     private final String LOG_DIR = "logs";
@@ -40,7 +39,7 @@ public class EosPluginTest {
 
     @BeforeEach
     public void init() throws PluginManagerException, IOException, ChainManagerException, InterruptedException {
-        PTRLogger logger = new PTRLogger();
+        PTRLogger logger = PTRLogger.getInstance();
         // 加载启动插件
         pluginManagerService = new PluginManagerService(logger, PLUGIN_DIRECTORY);
         pluginManagerService.testLoadPlugin(JAR_PATH);
@@ -52,15 +51,15 @@ public class EosPluginTest {
         chainManagerService.startup(PLUGIN_PRODUCT);
         chainManager = (EosChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
         // 配置 context、bbcService
-//        bbcContext = new DefaultBBCContext();
-//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
-//        bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
+        bbcContext = new DefaultBBCContext();
+        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
+        bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 
     @Test
     public void testEos() {
-//        System.out.println(chainManager.getConfig());
-//        bbcService.startup(bbcContext);
+        System.out.println(chainManager.getConfig());
+        bbcService.startup(bbcContext);
     }
 
     @AfterEach

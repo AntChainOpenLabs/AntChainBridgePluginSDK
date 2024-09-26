@@ -74,8 +74,8 @@ ps -ef|grep chainmaker | grep -v grep
 
 # step7. 配置 sdk
 #cp "$SCRIPT_DIR"/sdk_config.yml "$conf_file"
-mkdir -p "$SCRIPT_DIR"/crypto-config || cd "$SCRIPT_DIR"/crypto-config || exit
-cp -r "$data_dir"/chainmaker-go/config/crypto-config/wx-org1.chainmaker.org "$SCRIPT_DIR"/crypto-config/
-cp -r "$data_dir"/chainmaker-go/config/crypto-config/wx-org2.chainmaker.org "$SCRIPT_DIR"/crypto-config/
-cp -r "$data_dir"/chainmaker-go/config/crypto-config/wx-org3.chainmaker.org "$SCRIPT_DIR"/crypto-config/
-cp -r "$data_dir"/chainmaker-go/config/crypto-config/wx-org4.chainmaker.org "$SCRIPT_DIR"/crypto-config/
+#mkdir -p "$SCRIPT_DIR"/crypto-config || cd "$SCRIPT_DIR"/crypto-config || exit
+#cp -r "$data_dir"/chainmaker-go/config/crypto-config/wx-org1.chainmaker.org "$SCRIPT_DIR"/crypto-config/
+#cp -r "$data_dir"/chainmaker-go/config/crypto-config/wx-org2.chainmaker.org "$SCRIPT_DIR"/crypto-config/
+#cp -r "$data_dir"/chainmaker-go/config/crypto-config/wx-org3.chainmaker.org "$SCRIPT_DIR"/crypto-config/
+#cp -r "$data_dir"/chainmaker-go/config/crypto-config/wx-org4.chainmaker.org "$SCRIPT_DIR"/crypto-config/

@@ -11,7 +11,6 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
 import java.io.*;
-import java.math.BigInteger;
 
 
 @Getter
@@ -25,7 +24,7 @@ public class EthChainManager extends IChainManager {
     private final Web3j web3j;
     private String config;
 
-    public EthChainManager(String httpUrl, String privateKeyFile) throws IOException, ChainManagerException {
+    public EthChainManager(String httpUrl, String privateKeyFile) throws ChainManagerException {
         this.httpUrl = httpUrl;
         this.web3j = Web3j.build(new HttpService(httpUrl));
         try {

@@ -39,7 +39,7 @@ public class HyperChainPluginTest {
 
     @BeforeEach
     public void init() throws PluginManagerException, IOException, ChainManagerException, InterruptedException {
-        PTRLogger logger = new PTRLogger();
+        PTRLogger logger = PTRLogger.getInstance();
         // 加载启动插件
         pluginManagerService = new PluginManagerService(logger, PLUGIN_DIRECTORY);
         pluginManagerService.testLoadPlugin(JAR_PATH);

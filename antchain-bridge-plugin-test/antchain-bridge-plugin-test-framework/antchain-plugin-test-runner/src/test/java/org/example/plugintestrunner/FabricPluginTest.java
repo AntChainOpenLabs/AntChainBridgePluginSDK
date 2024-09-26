@@ -4,9 +4,8 @@ package org.example.plugintestrunner;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
-import org.example.plugintestrunner.chainmanager.EosChainManager;
 import org.example.plugintestrunner.chainmanager.FabricChainManager;
-import org.example.plugintestrunner.chainmanager.HyperchainChainManager;
+import org.example.plugintestrunner.config.ChainConfig;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.service.ChainManagerService;
@@ -41,7 +40,7 @@ public class FabricPluginTest {
 
     @BeforeEach
     public void init() throws PluginManagerException, IOException, ChainManagerException, InterruptedException {
-        PTRLogger logger = new PTRLogger();
+        PTRLogger logger = PTRLogger.getInstance();
         // 加载启动插件
         pluginManagerService = new PluginManagerService(logger, PLUGIN_DIRECTORY);
         pluginManagerService.testLoadPlugin(JAR_PATH);
@@ -52,6 +51,7 @@ public class FabricPluginTest {
         chainManagerService = new ChainManagerService(logger, shellScriptRunner);
         chainManagerService.startup(PLUGIN_PRODUCT);
         chainManager = (FabricChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
+//        chainManager = new FabricChainManager(ChainConfig.FabricChainConfig.confFile);
         // 配置 context、bbcService
         bbcContext = new DefaultBBCContext();
         bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
@@ -59,9 +59,12 @@ public class FabricPluginTest {
     }
 
     @Test
-    public void testEos() {
+    public void testFabric() {
         System.out.println(chainManager.getConfig());
         bbcService.startup(bbcContext);
+        bbcService.setupAuthMessageContract();
+        bbcService.setupSDPMessageContract();
+        System.out.println("latest height: " + bbcService.queryLatestHeight());
     }
 
     @AfterEach

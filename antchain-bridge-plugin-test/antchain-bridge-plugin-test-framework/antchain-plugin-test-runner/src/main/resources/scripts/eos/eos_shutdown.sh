@@ -34,4 +34,5 @@ else
     log "INFO" "All nodeos processes have been stopped."
 fi
 
-rm -rf $data_dir
+rm -rf "$data_dir"
+rm -rf ~/eosio-wallet/./default.wallet

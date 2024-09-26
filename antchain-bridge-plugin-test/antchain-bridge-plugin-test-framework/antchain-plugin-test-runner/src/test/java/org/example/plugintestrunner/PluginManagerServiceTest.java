@@ -18,7 +18,7 @@ public class PluginManagerServiceTest {
 
     @BeforeEach
     public void init(){
-        PTRLogger logger = new PTRLogger();
+        PTRLogger logger = PTRLogger.getInstance();
         pluginManagerService = new PluginManagerService(logger, PLUGIN_DIRECTORY);
     }
 

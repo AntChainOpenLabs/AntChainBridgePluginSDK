@@ -26,11 +26,13 @@ public class ChainConfig {
     public static class EosChainConfig extends ChainConfig {
         public static final String dataDir;
         public static final String httpServerAddress;
+        public static final String privateKeyFile;
 
         static {
             ChainConfigManager config = ChainConfigManager.getInstance();
             dataDir = config.getProperty("eos.data_dir");
             httpServerAddress = config.getProperty("eos.http_server_address");
+            privateKeyFile = config.getProperty("eos.private_key_file");
         }
 
         public static String getHttpUrl() {
@@ -54,11 +56,13 @@ public class ChainConfig {
     public static class ChainMakerChainConfig extends ChainConfig {
         public static final String confFile;
         public static final String chainmakerJsonFile;
+        public static final String cryptoConfigPath;
 
         static {
             ChainConfigManager config = ChainConfigManager.getInstance();
             confFile = config.getProperty("chainmaker.conf_file");
             chainmakerJsonFile = config.getProperty("chainmaker.chainmaker_json_file");
+            cryptoConfigPath = config.getProperty("chainmaker.crypto_config_path");
         }
     }
 

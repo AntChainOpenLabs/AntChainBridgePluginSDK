@@ -44,17 +44,17 @@
       <dependency>
         <groupId>com.alipay.antchain.bridge</groupId>
         <artifactId>antchain-bridge-plugin-manager</artifactId>
-        <version>0.2.1</version>
+        <version>0.3.0</version>
       </dependency>
       <dependency>
         <groupId>com.alipay.antchain.bridge</groupId>
         <artifactId>antchain-bridge-spi</artifactId>
-        <version>0.2.1</version>
+        <version>0.3.0</version>
       </dependency>
       <dependency>
         <groupId>com.alipay.antchain.bridge</groupId>
         <artifactId>antchain-bridge-commons</artifactId>
-        <version>0.2.1</version>
+        <version>0.3.0</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
@@ -72,50 +72,44 @@
         <version>0.3.2</version>
       </dependency>
 <!--      <dependency>-->
-<!--          <groupId>org.pf4j</groupId>-->
-<!--          <artifactId>pf4j</artifactId>-->
-<!--          <version>3.10.0</version>-->
+<!--          <groupId>io.grpc</groupId>-->
+<!--          <artifactId>grpc-netty</artifactId>-->
+<!--          <version>1.53.0</version>-->
+<!--          <exclusions>-->
+<!--              <exclusion>-->
+<!--                  <groupId>io.netty</groupId>-->
+<!--                  <artifactId>netty-handler</artifactId>-->
+<!--              </exclusion>-->
+<!--          </exclusions>-->
 <!--      </dependency>-->
-      <dependency>
-          <groupId>one.block</groupId>
-          <artifactId>eosiojava</artifactId>
-          <version>1.0.0</version>
-          <exclusions>
-              <exclusion>
-                  <groupId>org.slf4j</groupId>
-                  <artifactId>slf4j-jdk14</artifactId>
-              </exclusion>
-          </exclusions>
-      </dependency>
-      <dependency>
-          <groupId>one.block</groupId>
-          <artifactId>eosio-java-rpc-provider</artifactId>
-          <version>1.0.0</version>
-      </dependency>
-      <dependency>
-          <groupId>one.block</groupId>
-          <artifactId>eosiojavasoftkeysignatureprovider</artifactId>
-          <version>1.0.0</version>
-      </dependency>
-      <dependency>
-          <groupId>one.block</groupId>
-          <artifactId>eosio-java-abieos-serialization-provider</artifactId>
-          <version>1.0.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.fisco-bcos.java-sdk</groupId>
-          <artifactId>fisco-bcos-java-sdk</artifactId>
-          <version>3.6.0</version>
-      </dependency>
       <dependency>
           <groupId>org.hyperledger.fabric-sdk-java</groupId>
           <artifactId>fabric-sdk-java</artifactId>
           <version>1.4.16</version>
+          <exclusions>
+              <exclusion>
+                  <groupId>io.grpc</groupId>
+                  <artifactId>grpc-protobuf</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.grpc</groupId>
+                  <artifactId>grpc-stub</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.grpc</groupId>
+                  <artifactId>grpc-netty</artifactId>
+              </exclusion>
+          </exclusions>
       </dependency>
       <dependency>
           <groupId>org.chainmaker</groupId>
           <artifactId>chainmaker-sdk-java</artifactId>
           <version>2.3.2</version>
+      </dependency>
+      <dependency>
+          <groupId>org.yaml</groupId>
+          <artifactId>snakeyaml</artifactId>
+          <version>1.29</version>
       </dependency>
       <dependency>
           <groupId>cn.hyperchain</groupId>
@@ -124,7 +118,15 @@
           <exclusions>
               <exclusion>
                   <groupId>io.grpc</groupId>
+                  <artifactId>grpc-stub</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.grpc</groupId>
                   <artifactId>grpc-core</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>io.grpc</groupId>
+                  <artifactId>grpc-protobuf</artifactId>
               </exclusion>
               <exclusion>
                   <groupId>io.grpc</groupId>
@@ -132,35 +134,18 @@
               </exclusion>
           </exclusions>
       </dependency>
-      <dependency>
-          <groupId>org.hyperledger.fabric-sdk-java</groupId>
-          <artifactId>fabric-sdk-java</artifactId>
-          <version>1.4.16</version>
-      </dependency>
+      <!-- App Contract -->
       <dependency>
           <groupId>com.alipay.antchain.bridge</groupId>
           <artifactId>simple-ethereum-bbc</artifactId>
           <version>0.2.0</version>
+          <scope>provided</scope>
       </dependency>
       <dependency>
           <groupId>com.alipay.antchain.bridge</groupId>
           <artifactId>fiscobcos-bbc</artifactId>
           <version>1.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-          <groupId>com.alipay.antchain.bridge</groupId>
-          <artifactId>chainmaker-bbc</artifactId>
-          <version>0.1.0</version>
-      </dependency>
-      <dependency>
-          <groupId>com.alipay.antchain.bridge</groupId>
-          <artifactId>hyperchain2-bbc</artifactId>
-          <version>0.1.0</version>
-      </dependency>
-      <dependency>
-          <groupId>com.alipay.antchain.bridge</groupId>
-          <artifactId>simple-fabric-bbc</artifactId>
-          <version>0.1.1</version>
+          <scope>provided</scope>
       </dependency>
       </dependencies>
  </project>

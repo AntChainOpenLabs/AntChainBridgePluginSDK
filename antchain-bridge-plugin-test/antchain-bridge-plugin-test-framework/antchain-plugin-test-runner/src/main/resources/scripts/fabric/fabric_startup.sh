@@ -65,8 +65,30 @@ cd ./first-network || exit
 yes "" | ./byfn.sh up -c mychannel
 
 
-# ./network.sh up createChannel -c "$channel"
-# ./network.sh deployCC -ccn basic -ccp ../asset-transfer-basic/chaincode-go -ccl go
+# 配置文件修改
+CRYPTO_CONFIG_FILE="$data_dir/fabric-samples/first-network/crypto-config"
+CONF_FILE="$SCRIPT_DIR/conf.json"
+cp "$CONF_FILE" "$data_dir/"
+python3 "$SCRIPT_DIR"/fill_args.py "$data_dir/conf.json" "$CRYPTO_CONFIG_FILE"
 
-# # 新建钱包目录
-# rm -rf "${wallet_dir}" && mkdir -p "${wallet_dir}"
+# CONF_FILE="$SCRIPT_DIR/conf.json"
+# MSP_DIR="$data_dir/fabric-samples/first-network/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp"
+# # 替换 conf.json 中的 key
+# KEY_FILE=$(ls "$MSP_DIR"/keystore/*_sk)
+# if [ -z "$KEY_FILE" ]; then
+#   log "ERROR" "Error: No key file found"
+#   exit 1
+# fi
+# KEY_CONTENT=$(cat "$KEY_FILE")
+# jq --arg key "$KEY_CONTENT" '.user.key = $key' "$CONF_FILE" > tmp_conf.json && mv tmp_conf.json "$CONF_FILE"
+
+# # 替换 conf.json 中的 cert
+# CERT_FILE=$(ls "$MSP_DIR"/signcerts/*.pem)
+# if [ -z "$CERT_FILE" ]; then
+#   log "ERROR" "Error: No cert file found"
+#   exit 1
+# fi
+# CERT_CONTENT=$(cat "$CERT_FILE")
+# jq --arg cert "$CERT_CONTENT" '.user.cert = $cert' "$CONF_FILE" > tmp_conf.json && mv tmp_conf.json "$CONF_FILE"
+
+

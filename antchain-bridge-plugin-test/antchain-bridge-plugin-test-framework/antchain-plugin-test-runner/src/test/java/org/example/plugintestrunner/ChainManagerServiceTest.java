@@ -1,10 +1,5 @@
 package org.example.plugintestrunner;
 
-import one.block.eosiojavarpcprovider.error.EosioJavaRpcProviderInitializerError;
-import org.chainmaker.sdk.ChainClientException;
-import org.chainmaker.sdk.RpcServiceClientException;
-import org.chainmaker.sdk.crypto.ChainMakerCryptoSuiteException;
-import org.chainmaker.sdk.utils.UtilsException;
 import org.example.plugintestrunner.chainmanager.*;
 import org.example.plugintestrunner.config.ChainConfig;
 import org.example.plugintestrunner.config.ChainConfigManager;
@@ -35,7 +30,7 @@ public class ChainManagerServiceTest {
     @BeforeEach
     public void init() throws IOException {
         ChainConfigManager configManager = ChainConfigManager.getInstance();
-        PTRLogger logger = new PTRLogger();
+        PTRLogger logger = PTRLogger.getInstance();
         ShellScriptRunner shellScriptRunner = new ShellScriptRunner(configManager.getProperty("log.directory"),
                 configManager.getProperty("script.directory"));
         chainManagerService = new ChainManagerService(logger, shellScriptRunner);
@@ -55,16 +50,16 @@ public class ChainManagerServiceTest {
     public void testFiscoBcos() throws ChainManagerException, IOException, InterruptedException, ExecutionException {
         String product = "fiscobcos";
         chainManagerService.startup(product);
-        FiscoBcosChainManager manager = new FiscoBcosChainManager(ChainConfig.FiscoBcosChainConfig.confFile);
+        FiscoBcosChainManager manager = new FiscoBcosChainManager(ChainConfig.FiscoBcosChainConfig.confDir);
         assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
 
     @Test
-    public void testEOS() throws ChainManagerException, IOException, InterruptedException, EosioJavaRpcProviderInitializerError {
+    public void testEOS() throws ChainManagerException, IOException, InterruptedException {
         String product = "eos";
         chainManagerService.startup(product);
-        EosChainManager manager = new EosChainManager(ChainConfig.EosChainConfig.getHttpUrl());
+        EosChainManager manager = new EosChainManager(ChainConfig.EosChainConfig.getHttpUrl(), ChainConfig.EosChainConfig.privateKeyFile);
         assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
@@ -74,14 +69,14 @@ public class ChainManagerServiceTest {
     public void testChainMaker() throws Exception {
         String product = "chainmaker";
         chainManagerService.startup(product);
-        ChainMakerChainManager manager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile, ChainConfig.ChainMakerChainConfig.chainmakerJsonFile);
+        ChainMakerChainManager manager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile);
         assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
 
 
     @Test
-    public void testHyperChain() throws ChainManagerException, IOException, InterruptedException, EosioJavaRpcProviderInitializerError, UtilsException, ExecutionException, ChainClientException, ChainMakerCryptoSuiteException, RpcServiceClientException {
+    public void testHyperChain() throws ChainManagerException, IOException, InterruptedException, ExecutionException {
         String product = "hyperchain";
         chainManagerService.startup(product);
         HyperchainChainManager manager = new HyperchainChainManager(ChainConfig.HyperChainChainConfig.getHttpUrl());

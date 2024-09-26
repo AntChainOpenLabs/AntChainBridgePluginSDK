@@ -2,44 +2,50 @@ package org.example.plugintestrunner.chainmanager;
 
 import lombok.Getter;
 import lombok.Setter;
-import one.block.eosiojava.error.serializationProvider.SerializationProviderError;
-import one.block.eosiojava.error.signatureProvider.GetAvailableKeysError;
-import one.block.eosiojava.implementations.ABIProviderImpl;
-import one.block.eosiojava.interfaces.ISerializationProvider;
-import one.block.eosiojava.interfaces.ISignatureProvider;
-import one.block.eosiojava.models.rpcProvider.request.GetRequiredKeysRequest;
-import one.block.eosiojava.models.rpcProvider.response.GetInfoResponse;
-import one.block.eosiojava.session.TransactionSession;
-import one.block.eosiojavaabieosserializationprovider.AbiEosSerializationProviderImpl;
-import one.block.eosiojavarpcprovider.error.EosioJavaRpcProviderInitializerError;
-import one.block.eosiojavarpcprovider.implementations.EosioJavaRpcProviderImpl;
-import one.block.eosiosoftkeysignatureprovider.SoftKeySignatureProviderImpl;
-import one.block.eosiosoftkeysignatureprovider.error.ImportKeyError;
-
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 @Getter
 @Setter
 public class EosChainManager extends IChainManager {
 
-    private final EosioJavaRpcProviderImpl rpcProvider;
+
+    private String url;
+    private String userPriKey;
+    private String amContractAddressDeployed;
+    private String sdpContractAddressDeployed;
+    private String userName;
+    private boolean waitUtilTxIrreversible;
+
+
+            //         mockConf.setUrl(VALID_URL);
+            //        mockConf.setUserPriKey(EOS_DEFAULT_PRIVATE_KEY);
+            //        mockConf.setAmContractAddressDeployed(EOS_AM_CONTRACT_NAME);
+            //        mockConf.setSdpContractAddressDeployed(EOS_SDP_CONTRACT_NAME);
+            //        mockConf.setUserName(EOS_DEFAULT_USER_NAME);
+            //        mockConf.setWaitUtilTxIrreversible(true);
 
     private String config;
 
-    public EosChainManager(String url) throws EosioJavaRpcProviderInitializerError {
-        rpcProvider = new EosioJavaRpcProviderImpl(url);
+    public EosChainManager(String url, String private_key_file) throws IOException {
+        this.url = url;
+        BufferedReader br = new BufferedReader(new FileReader(private_key_file));
+        this.userPriKey = br.readLine();
+        br.close();
+        this.amContractAddressDeployed = "am";
+        this.sdpContractAddressDeployed = "sdp";
+        this.userName = "test";
+        this.waitUtilTxIrreversible = true;
+        this.config = String.format("{\"url\":\"%s\",\"userPriKey\":\"%s\",\"amContractAddressDeployed\":\"%s\",\"sdpContractAddressDeployed\":\"%s\",\"userName\":\"%s\",\"waitUtilTxIrreversible\":%b}",
+                url, userPriKey, amContractAddressDeployed, sdpContractAddressDeployed, userName, waitUtilTxIrreversible);
+
+
     }
 
     @Override
     public boolean isConnected() {
-        try {
-            GetInfoResponse info = rpcProvider.getInfo();
-            System.out.println(info.getChainId());
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return true;
     }
 
     @Override

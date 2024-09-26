@@ -187,7 +187,7 @@ public class PluginManagerService extends AbstractService{
     public void testCreateBBCService(String pluginProduct, String domainName) throws PluginManagerException {
         try {
             CrossChainDomain domain = new CrossChainDomain(domainName);
-            manager.createBBCService(pluginProduct, domain);
+            manager.createBBCService(pluginProduct, domain, logger.getProcessLogger());
             logger.plog(LogLevel.INFO, "BBC service for " + pluginProduct + " has been successfully created");
         } catch (Exception e) {
             throw new BBCServiceCreateException("Failed to create BBC service", e);

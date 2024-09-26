@@ -2,7 +2,6 @@ package org.example.plugintestrunner;
 
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
-import com.alipay.antchain.bridge.plugins.fiscobcos.abi.AppContract;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.FiscoBcosChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
@@ -36,7 +35,7 @@ public class FiscoBcosPluginTest {
 
     @BeforeEach
     public void init() throws IOException, ChainManagerException, InterruptedException, PluginManagerException {
-        PTRLogger logger = new PTRLogger();
+        PTRLogger logger = PTRLogger.getInstance();
         // 加载启动插件
         pluginManagerService = new PluginManagerService(logger, PLUGIN_DIRECTORY);
         pluginManagerService.testLoadPlugin(JAR_PATH);
@@ -62,8 +61,10 @@ public class FiscoBcosPluginTest {
 
         // 调用 bbcService
         bbcService.startup(bbcContext);
-//        bbcService.setupAuthMessageContract();
-//        bbcService.setupSDPMessageContract();
+        bbcService.setupAuthMessageContract();
+        bbcService.setupSDPMessageContract();
+        System.out.println("authMessageContractAddress: " + bbcService.getContext().getAuthMessageContract().getContractAddress());
+        System.out.println("sdpMessageContractAddress: " + bbcService.getContext().getSdpContract().getContractAddress());
     }
 
 

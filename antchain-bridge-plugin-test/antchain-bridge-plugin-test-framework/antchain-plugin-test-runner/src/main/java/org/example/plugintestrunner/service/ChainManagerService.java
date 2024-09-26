@@ -1,13 +1,11 @@
 package org.example.plugintestrunner.service;
 
-import one.block.eosiojavarpcprovider.error.EosioJavaRpcProviderInitializerError;
 import org.example.plugintestrunner.chainmanager.IChainManager;
 import org.example.plugintestrunner.chainmanager.IChainManagerFactory;
 import org.example.plugintestrunner.config.ChainProduct;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.ChainManagerException.*;
 import org.example.plugintestrunner.testcase.TestCase;
-import org.example.plugintestrunner.testcase.TestCaseChainConf;
 import org.example.plugintestrunner.util.LogLevel;
 import org.example.plugintestrunner.util.PTRLogger;
 import org.example.plugintestrunner.util.ShellScriptRunner;

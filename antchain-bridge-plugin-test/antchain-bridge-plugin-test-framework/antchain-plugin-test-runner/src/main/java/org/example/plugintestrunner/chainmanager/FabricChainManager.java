@@ -1,32 +1,11 @@
 package org.example.plugintestrunner.chainmanager;
 
-import com.alipay.antchain.bridge.plugins.chainmaker.ChainMakerConfig;
 import lombok.Getter;
-import lombok.Setter;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.hyperledger.fabric.sdk.*;
-import org.hyperledger.fabric.sdk.exception.ProposalException;
-import org.hyperledger.fabric.sdk.exception.TransactionException;
-import org.hyperledger.fabric.sdk.user.*;
-import org.hyperledger.fabric.sdk.exception.CryptoException;
-import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
-import org.hyperledger.fabric.sdk.security.CryptoSuite;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.Security;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 @Getter
@@ -36,17 +15,17 @@ public class FabricChainManager extends IChainManager{
 
     public FabricChainManager(String conf_file) {
         StringBuilder jsonStringBuilder = new StringBuilder();
-        try (InputStream inputStream = ChainMakerConfig.class.getClassLoader().getResourceAsStream(conf_file);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(conf_file), StandardCharsets.UTF_8)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 jsonStringBuilder.append(line);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read chainmaker JSON file", e);
+            throw new RuntimeException("Failed to read chainmaker JSON file from path: " + conf_file, e);
         }
         config = jsonStringBuilder.toString();
     }
+
 
 
 //    HFClient hfClient;

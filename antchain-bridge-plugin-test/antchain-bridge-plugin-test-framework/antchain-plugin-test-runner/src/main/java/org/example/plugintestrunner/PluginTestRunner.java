@@ -61,7 +61,7 @@ public class PluginTestRunner {
 
     public static PluginTestRunner init() throws IOException, TestCaseLoaderException {
         ChainConfigManager configManager = ChainConfigManager.getInstance();
-        PTRLogger logger = new PTRLogger();
+        PTRLogger logger = PTRLogger.getInstance();
         ShellScriptRunner shellScriptRunner = new ShellScriptRunner(configManager.getProperty("log.directory"),
                 configManager.getProperty("script.directory"));
         ChainManagerService chainManagerService = new ChainManagerService(logger, shellScriptRunner);
