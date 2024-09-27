@@ -1,6 +1,6 @@
 package com.ali.antchain.abstarct;
 
-import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
+import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 
 // 需要不同测试工具实现的定制化测试操作
 public interface ITester {
@@ -25,5 +25,14 @@ public interface ITester {
      * @param txhash
      */
     public void waitForTxConfirmed(String txhash);
+
+    public String sendMsg(AbstractBBCService service,String sendtype);
+
+//    public String create();
+//
+//    public void preExecute(String encodefunc, AbstractBBCService service);
+//
+//    public void sendTx(AbstractBBCService service,String encodefunc);
+
 
 }

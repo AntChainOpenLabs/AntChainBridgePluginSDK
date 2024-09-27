@@ -25,11 +25,16 @@ public class SetupSDPMessageContractTest {
         }
         try {
             service.startup(context);
+
+            // set up am
             service.setupAuthMessageContract();
+
             // set up sdp
             service.setupSDPMessageContract();
+
             // get context
             AbstractBBCContext ctx = service.getContext();
+            
             log.info("SDP contract status: {}", ctx.getSdpContract().getStatus());
         } catch (Exception e) {
             log.error("Error setting up SDP contract", e);

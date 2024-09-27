@@ -2,22 +2,37 @@ package com.ali.antchain.testers;
 
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestUtil;
+import com.ali.antchain.abi.AppContract;
+import com.ali.antchain.abi.AuthMsg;
 import com.ali.antchain.abstarct.AbstractTester;
-import com.ali.antchain.lib.abi.AppContract;
-import com.ali.antchain.lib.abi.AuthMsg;
-import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
+
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import org.junit.Assert;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.DynamicBytes;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public class EthTester extends AbstractTester {
@@ -25,6 +40,9 @@ public class EthTester extends AbstractTester {
     private static final String WEB3J = "web3j";
     private static final String CREDENTIALS = "credentials";
     private static final String TRANSACTIONMANAGER = "rawTransactionManager";
+
+    // TODO
+    private static final String REMOTE_APP_CONTRACT = "0xdd11AA371492B94AB8CDEdf076F84ECCa72820e1";
 
     private static final int MAX_TX_RESULT_QUERY_TIME = 100;
 
@@ -119,6 +137,92 @@ public class EthTester extends AbstractTester {
         }
 
         return null;
+    }
+
+
+    @Override
+    public String sendMsg(AbstractBBCService service,String sendtype) {
+
+        String txhash = "";
+        try {
+            // 1. create function
+            List<Type> inputParameters = new ArrayList<>();
+            inputParameters.add(new Utf8String("remoteDomain"));
+            inputParameters.add(new Bytes32(DigestUtil.sha256(REMOTE_APP_CONTRACT)));
+            inputParameters.add(new DynamicBytes(sendtype.getBytes()));
+            Function function = new Function(
+                    AppContract.FUNC_SENDUNORDEREDMESSAGE, // function name
+                    inputParameters, // inputs
+                    Collections.emptyList() // outputs
+            );
+            String encodedFunc = FunctionEncoder.encode(function);
+
+            // 获取service的class
+            Class<?> serviceClazz = service.getClass();
+
+            // 2.1 从 service 中获取 web3j
+            Field web3jField = null;
+            web3jField = serviceClazz.getDeclaredField(WEB3J);
+
+            // 允许访问私有字段
+            web3jField.setAccessible(true);
+            Object web3jObj = null;
+            web3jObj = web3jField.get(service);
+            if (web3jObj instanceof Web3j) {
+                web3jClient = (Web3j) web3jObj;
+            }
+
+            // 2.2 从 service 中获取 credentials
+            Field credentialsField = serviceClazz.getDeclaredField(CREDENTIALS);
+            credentialsField.setAccessible(true);
+            Object credentialsObj = credentialsField.get(service);
+
+            if (credentialsObj instanceof Credentials) {
+                credentials = (Credentials) credentialsObj;
+            }
+
+            // 2.3 部署app合约
+            AppContract appContract = AppContract.deploy(
+                    web3jClient,
+                    rawTransactionManager,
+                    new DefaultGasProvider()
+            ).send();
+
+            // 2.4 调用ethcall
+            EthCall call = web3jClient.ethCall(
+                    Transaction.createEthCallTransaction(
+                            credentials.getAddress(),
+                            appContract.getContractAddress(),
+                            encodedFunc
+                    ),
+                    DefaultBlockParameterName.LATEST
+            ).send();
+
+            // 2.5 获取rawTransactionManager
+            Field rawTransactionManagerField = serviceClazz.getDeclaredField(TRANSACTIONMANAGER);
+            rawTransactionManagerField.setAccessible(true);
+            Object rawTransactionManagerObj = rawTransactionManagerField.get(service);
+            if (rawTransactionManagerObj instanceof TransactionManager) {
+                rawTransactionManager = (RawTransactionManager) rawTransactionManagerObj;
+            }
+
+            // 2.6 发送交易
+            EthSendTransaction ethSendTransaction = rawTransactionManager.sendTransaction(
+                    BigInteger.valueOf(2300000000L),
+                    BigInteger.valueOf(3000000),
+                    appContract.getContractAddress(),
+                    encodedFunc,
+                    BigInteger.ZERO
+            );
+            txhash = ethSendTransaction.getTransactionHash();
+            getBbcLogger().info("send {} msg tx {}", sendtype,ethSendTransaction.getTransactionHash());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return txhash;
+
     }
 
     @Override

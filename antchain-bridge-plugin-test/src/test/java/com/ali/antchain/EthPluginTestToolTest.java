@@ -1,8 +1,9 @@
 package com.ali.antchain;
 
-import com.ali.antchain.EthPluginTestTool;
+
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
+
 import com.alipay.antchain.bridge.plugins.ethereum.EthereumBBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import junit.framework.TestCase;
@@ -19,11 +20,11 @@ public class EthPluginTestToolTest extends TestCase {
     EthPluginTestTool ethTestTool;
     String product;
     String url = "http://127.0.0.1:7545";
-    String key = "0xc52e50920ed5e3548e22152fb0e5d5fd13d49ab5bad98212a73027d6e1f1e7ef";
+    String key = "0x36c40fd6a40ce7b37089fa40c79527243720fbcb5393145be689aca5af5719e2";
     long gasPrice = 2300000000L;
     long gasLimit = 3000000;
 
-    String testConfig = "{\"gasLimit\":3000000,\"gasPrice\":4100000000,\"privateKey\":\"0xc52e50920ed5e3548e22152fb0e5d5fd13d49ab5bad98212a73027d6e1f1e7ef\",\"url\":\"http://127.0.0.1:7545\"}";
+    String testConfig = "{\"gasLimit\":3000000,\"gasPrice\":4100000000,\"privateKey\":\"0x36c40fd6a40ce7b37089fa40c79527243720fbcb5393145be689aca5af5719e2\",\"url\":\"http://127.0.0.1:7545\"}";
 
     @Before
     public void setUp() throws Exception {
@@ -39,15 +40,19 @@ public class EthPluginTestToolTest extends TestCase {
     }
 
     public void testShutdownTest() {
+        ethTestTool.shutdownTest();
     }
 
     public void testGetcontextTest() {
+        ethTestTool.getcontextTest();
     }
 
     public void testSetupamcontractTest() {
+        ethTestTool.setupamcontractTest();
     }
 
     public void testSetupsdpcontractTest() {
+        ethTestTool.setupsdpcontractTest();
     }
 
     @Test
@@ -56,6 +61,7 @@ public class EthPluginTestToolTest extends TestCase {
     }
 @Test
     public void testQuerysdpmessageseqTest() {
+        ethTestTool.querysdpmessageseqTest();
     }
 
     public void testSetamcontractandlocaldomainTest() {
@@ -63,6 +69,11 @@ public class EthPluginTestToolTest extends TestCase {
     }
 
     public void testReadcrosschainmessagereceiptTest() {
+        ethTestTool.readcrosschainmessagereceiptTest();
+    }
+
+    public void testReadcrosschainmessagebyheightTest() {
+        ethTestTool.readcrosschainmessagebyheightTest();
     }
 
     public void testRelayauthmessageTest() {

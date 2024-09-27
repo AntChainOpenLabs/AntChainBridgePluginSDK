@@ -2,6 +2,7 @@ package com.ali.antchain;
 
 import com.ali.antchain.abstarct.IPluginTestTool;
 import com.ali.antchain.core.*;
+//import com.ali.antchain.core.ReadCrossChainMessagesByHeightTest;
 import com.ali.antchain.testers.EthTester;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
@@ -10,7 +11,7 @@ public class EthPluginTestTool implements IPluginTestTool {
 
     AbstractBBCContext inContext;
     AbstractBBCService bbcService;
-    
+
     public EthPluginTestTool(AbstractBBCContext _context, AbstractBBCService _service) {
         inContext = _context;
         bbcService = _service;
@@ -61,7 +62,14 @@ public class EthPluginTestTool implements IPluginTestTool {
 
     @Override
     public void readcrosschainmessagereceiptTest() {
+        StartUpTest.runBefore(inContext, bbcService);
+        ReadCrossChainMessageReceiptTest.run(bbcService, new EthTester(bbcService));
+    }
 
+    @Override
+    public void readcrosschainmessagebyheightTest() {
+        StartUpTest.runBefore(inContext, bbcService);
+        ReadCrossChainMessagesByHeightTest.run(bbcService, new EthTester(bbcService));
     }
 
     @Override

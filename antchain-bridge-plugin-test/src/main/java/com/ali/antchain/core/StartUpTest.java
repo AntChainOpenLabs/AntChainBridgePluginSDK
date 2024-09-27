@@ -15,8 +15,8 @@ public class StartUpTest {
 
     public static void runBefore(AbstractBBCContext context, AbstractBBCService service){
         StartUpTest startUpTest = new StartUpTest(service);
-
         startUpTest.startup_success(context);
+        startUpTest.startup_fail(context);
     }
 
     public static void run(AbstractBBCContext context, AbstractBBCService service){
@@ -36,5 +36,9 @@ public class StartUpTest {
             // 异常处理
             log.error("Error during startup test", e);
         }
+    }
+    public void startup_fail(AbstractBBCContext context) {
+        //TODO
+        System.out.println("startup fail...");
     }
 }

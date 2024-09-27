@@ -27,6 +27,8 @@ public interface IPluginTestTool {
 
     public void relayauthmessageTest();
 
+    public void readcrosschainmessagebyheightTest();
+
 //    public static void main(String[] args) throws Exception{
 //        String url = "http://127.0.0.1:7545";
 //        String key = "0x45cfa3b6addf98274bfd9e3482a695406c7dcc99e1588bd6e0127b8fc06ae916";

@@ -17,6 +17,7 @@ public class ShutDownTest {
     public static void run(AbstractBBCContext context, AbstractBBCService service){
         ShutDownTest shutdown = new ShutDownTest(service);
         shutdown.shutdown_success(context);
+        shutdown.shutdown_fail(context);
     }
 
     public void shutdown_success(AbstractBBCContext context){
@@ -27,5 +28,10 @@ public class ShutDownTest {
         } catch (Exception e) {
             log.error("Failed to setup authentication message contract", e);
         }
+    }
+
+    public void shutdown_fail(AbstractBBCContext context){
+        //TODO
+        System.out.println("shutdown fail...");
     }
 }
