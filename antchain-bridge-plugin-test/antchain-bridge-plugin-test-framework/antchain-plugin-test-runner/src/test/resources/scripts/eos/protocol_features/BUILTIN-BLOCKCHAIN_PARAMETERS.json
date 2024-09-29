@@ -1,0 +1,11 @@
+{
+  "protocol_feature_type": "builtin",
+  "description_digest": "70787548dcea1a2c52c913a37f74ce99e6caae79110d7ca7b859936a0075b314",
+  "dependencies": [],
+  "subjective_restrictions": {
+    "earliest_allowed_activation_time": "1970-01-01T00:00:00.000",
+    "preactivation_required": true,
+    "enabled": true
+  },
+  "builtin_feature_codename": "BLOCKCHAIN_PARAMETERS"
+}

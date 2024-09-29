@@ -1,0 +1,11 @@
+{
+  "protocol_feature_type": "builtin",
+  "description_digest": "69b064c5178e2738e144ed6caa9349a3995370d78db29e494b3126ebd9111966",
+  "dependencies": [],
+  "subjective_restrictions": {
+    "earliest_allowed_activation_time": "1970-01-01T00:00:00.000",
+    "preactivation_required": true,
+    "enabled": true
+  },
+  "builtin_feature_codename": "ACTION_RETURN_VALUE"
+}

@@ -4,7 +4,7 @@ import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.ethereum.abi.AppContract;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
-import org.example.plugintestrunner.chainmanager.EthChainManager;
+import org.example.plugintestrunner.chainmanager.eth.EthChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.service.ChainManagerService;
@@ -27,11 +27,11 @@ public class EthereumPluginTest {
     private ChainManagerService chainManagerService;
 
     // 插件配置
-    private final String PLUGIN_DIRECTORY = "src/main/resources/plugins";
+    private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "simple-ethereum-bbc-0.2.0-plugin.jar";
     private final String PLUGIN_PRODUCT = "simple-ethereum";
     private final String DOMAIN_NAME = "domain1";
-    private final String SCRIPT_DIR = "src/main/resources/scripts";
+    private final String SCRIPT_DIR = "src/test/resources/scripts";
     private final String LOG_DIR = "logs";
 
 

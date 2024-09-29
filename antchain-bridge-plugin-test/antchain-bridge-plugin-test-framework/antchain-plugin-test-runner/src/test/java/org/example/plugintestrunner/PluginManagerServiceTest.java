@@ -10,7 +10,7 @@ public class PluginManagerServiceTest {
 
     private PluginManagerService pluginManagerService;
 
-    private final String PLUGIN_DIRECTORY = "src/main/resources/plugins";
+    private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "plugin-testchain-0.1-SNAPSHOT-plugin.jar";
     private final String PLUGIN_PRODUCT = "testchain";
     private final String DOMAIN_NAME = "domain";

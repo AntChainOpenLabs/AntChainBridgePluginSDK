@@ -1,5 +1,11 @@
 package org.example.plugintestrunner.chainmanager;
 
+import org.example.plugintestrunner.chainmanager.chainmaker.ChainMakerChainManager;
+import org.example.plugintestrunner.chainmanager.eos.EosChainManager;
+import org.example.plugintestrunner.chainmanager.eth.EthChainManager;
+import org.example.plugintestrunner.chainmanager.fabric.FabricChainManager;
+import org.example.plugintestrunner.chainmanager.fiscobcos.FiscoBcosChainManager;
+import org.example.plugintestrunner.chainmanager.hyperchain.HyperchainChainManager;
 import org.example.plugintestrunner.config.ChainConfig;
 import org.example.plugintestrunner.config.ChainProduct;
 import org.example.plugintestrunner.exception.ChainManagerException.*;
@@ -12,7 +18,6 @@ public class IChainManagerFactory {
             case ETH:
             case TESTCHAIN:
                 return new EthChainManager(ChainConfig.EthChainConfig.getHttpUrl(), ChainConfig.EthChainConfig.privateKeyFile);
-            // TODO add more chain products
             case EOS:
                 return new EosChainManager(ChainConfig.EosChainConfig.getHttpUrl(), ChainConfig.EosChainConfig.privateKeyFile);
             case BCOS:

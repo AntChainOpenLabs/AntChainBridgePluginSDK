@@ -3,7 +3,7 @@ package org.example.plugintestrunner;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
-import org.example.plugintestrunner.chainmanager.FiscoBcosChainManager;
+import org.example.plugintestrunner.chainmanager.fiscobcos.FiscoBcosChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.service.ChainManagerService;
@@ -22,11 +22,11 @@ public class FiscoBcosPluginTest {
     private PluginManagerService pluginManagerService;
     private ChainManagerService chainManagerService;
 
-    private final String PLUGIN_DIRECTORY = "src/main/resources/plugins";
+    private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "fiscobcos-bbc-1.0-SNAPSHOT-plugin.jar";
     private final String PLUGIN_PRODUCT = "fiscobcos";
     private final String DOMAIN_NAME = "domain1";
-    private final String SCRIPT_DIR = "src/main/resources/scripts";
+    private final String SCRIPT_DIR = "src/test/resources/scripts";
     private final String LOG_DIR = "logs";
 
     private FiscoBcosChainManager chainManager;

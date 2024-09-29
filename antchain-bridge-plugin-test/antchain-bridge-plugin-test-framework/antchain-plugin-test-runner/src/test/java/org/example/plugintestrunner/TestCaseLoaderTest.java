@@ -15,7 +15,7 @@ import java.util.List;
 public class TestCaseLoaderTest {
 
 
-    private final String testCasesPath = "src/main/resources/testcase.json";
+    private final String testCasesPath = "src/test/resources/testcase.json";
 
     private TestCaseContainer testCaseContainer;
 

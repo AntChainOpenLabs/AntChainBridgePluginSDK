@@ -1,6 +1,10 @@
 package org.example.plugintestrunner;
 
-import org.example.plugintestrunner.chainmanager.*;
+import org.example.plugintestrunner.chainmanager.chainmaker.ChainMakerChainManager;
+import org.example.plugintestrunner.chainmanager.eos.EosChainManager;
+import org.example.plugintestrunner.chainmanager.eth.EthChainManager;
+import org.example.plugintestrunner.chainmanager.fiscobcos.FiscoBcosChainManager;
+import org.example.plugintestrunner.chainmanager.hyperchain.HyperchainChainManager;
 import org.example.plugintestrunner.config.ChainConfig;
 import org.example.plugintestrunner.config.ChainConfigManager;
 import org.example.plugintestrunner.exception.ChainManagerException;

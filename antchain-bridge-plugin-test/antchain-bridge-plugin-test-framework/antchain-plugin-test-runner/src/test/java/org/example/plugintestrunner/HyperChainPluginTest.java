@@ -4,7 +4,7 @@ package org.example.plugintestrunner;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
-import org.example.plugintestrunner.chainmanager.HyperchainChainManager;
+import org.example.plugintestrunner.chainmanager.hyperchain.HyperchainChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.service.ChainManagerService;
@@ -24,11 +24,11 @@ public class HyperChainPluginTest {
     private ChainManagerService chainManagerService;
 
     // 插件配置
-    private final String PLUGIN_DIRECTORY = "src/main/resources/plugins";
+    private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "hyperchain2-bbc-0.1.0-plugin.jar";
     private final String PLUGIN_PRODUCT = "hyperchain2";
     private final String DOMAIN_NAME = "domain1";
-    private final String SCRIPT_DIR = "src/main/resources/scripts";
+    private final String SCRIPT_DIR = "src/test/resources/scripts";
     private final String LOG_DIR = "logs";
 
 

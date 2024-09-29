@@ -206,7 +206,7 @@ public class PluginManagerCmd implements Runnable {
                     String domainName = domainNameList.get(i);
                     try {
                         pluginManagerService.testCreateBBCService(pluginProduct, domainName);
-                        logger.rlog(LogLevel.INFO, "Successfully created BBC service for domain: " + domainName);
+                        logger.rlog(LogLevel.INFO, "Successfully created BBC service for product: " + pluginProduct + "with domain " + domainName);
                     } catch (PluginManagerException e) {
                         logger.rlog(LogLevel.ERROR, e.getMessage());
                         if (e.getCause() != null) {

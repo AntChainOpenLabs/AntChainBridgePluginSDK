@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -147,5 +147,18 @@
           <version>1.0-SNAPSHOT</version>
           <scope>provided</scope>
       </dependency>
-      </dependencies>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version> <!-- 你可以使用合适的版本 -->
+                <configuration>
+                    <source>1.8</source>  <!-- Java 8 作为示例，可以设置为你需要的版本 -->
+                    <target>1.8</target>  <!-- 同上，设置为需要的版本 -->
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
  </project>

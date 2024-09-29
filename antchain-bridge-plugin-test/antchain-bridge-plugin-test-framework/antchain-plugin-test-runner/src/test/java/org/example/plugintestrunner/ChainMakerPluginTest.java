@@ -3,10 +3,7 @@ package org.example.plugintestrunner;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
-import org.example.plugintestrunner.chainmanager.ChainMakerChainManager;
-import org.example.plugintestrunner.config.ChainConfig;
-import org.example.plugintestrunner.exception.ChainManagerException;
-import org.example.plugintestrunner.exception.PluginManagerException;
+import org.example.plugintestrunner.chainmanager.chainmaker.ChainMakerChainManager;
 import org.example.plugintestrunner.service.ChainManagerService;
 import org.example.plugintestrunner.service.PluginManagerService;
 import org.example.plugintestrunner.util.PTRLogger;
@@ -14,8 +11,6 @@ import org.example.plugintestrunner.util.ShellScriptRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
 
 public class ChainMakerPluginTest {
 
@@ -25,11 +20,11 @@ public class ChainMakerPluginTest {
     private ChainManagerService chainManagerService;
 
     // 插件配置
-    private final String PLUGIN_DIRECTORY = "src/main/resources/plugins";
+    private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "chainmaker-bbc-0.1.0-plugin.jar";
     private final String PLUGIN_PRODUCT = "chainmaker";
     private final String DOMAIN_NAME = "domain1";
-    private final String SCRIPT_DIR = "src/main/resources/scripts";
+    private final String SCRIPT_DIR = "src/test/resources/scripts";
     private final String LOG_DIR = "logs";
 
 
@@ -51,7 +46,7 @@ public class ChainMakerPluginTest {
         chainManagerService = new ChainManagerService(logger, shellScriptRunner);
         chainManagerService.startup(PLUGIN_PRODUCT);
         chainManager = (ChainMakerChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
-//        chainManager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile, ChainConfig.ChainMakerChainConfig.chainmakerJsonFile, ChainConfig.ChainMakerChainConfig.cryptoConfigPath);
+//        chainManager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile);
         // 配置 context、bbcService
         bbcContext = new DefaultBBCContext();
         bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
@@ -63,8 +58,6 @@ public class ChainMakerPluginTest {
         bbcService.startup(bbcContext);
         bbcService.setupAuthMessageContract();
         bbcService.setupSDPMessageContract();
-//        bbcService.setupAuthMessageContract();
-//        bbcService.setupSDPMessageContract();
         System.out.println("authMessageContractAddress: " + bbcService.getContext().getAuthMessageContract().getContractAddress());
         System.out.println("sdpMessageContractAddress: " + bbcService.getContext().getSdpContract().getContractAddress());
     }
