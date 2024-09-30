@@ -17,15 +17,21 @@ AntChain Bridge为开发者提供了 SDK、手册和系统合约模板，来帮�
 
 
 
-## 运行命令行
+## 快速启动
 
-编译 `antchain-plugin-test-runner`
+生成 jar 包
 
 ```shell
-cd antchain-plugin-test-runner && maven clean install -Dmaven.test.skip=true
+cd antchain-bridge-plugin-test-framework && maven clean package -Dmaven.test.skip=true
 ```
 
-编译完成之后，进入 `antchain-plugin-test-runner` 目录下，运行 `App.java` ，输入 `help` 可以查看帮助信息。
+运行 `antchain-plugin-test-cli-0.1.0-jar-with-dependencies.jar`
+
+```shell
+java -jar antchain-plugin-test-cli/target/antchain-plugin-test-cli-0.1.0-jar-with-dependencies.jar
+```
+
+运行成功将输出：
 
 ```shell
   ____  _             _         _____         _  _____           _ 
@@ -91,6 +97,7 @@ src/main/resources/
 
 - 启动 chainmaker 测试链（大约需要 1 分钟）
 
+
 ```shell
 chain-manager start -p chainmaker
 ```
@@ -103,11 +110,11 @@ Successfully started chain: chainmaker
 
 >  其他支持的链名为:
 >
-> - fiscobcos
-> - hyperchain2
-> - fabric
-> - eos
-> - simple-ethereum
+>  - fiscobcos
+>  - hyperchain2
+>  - fabric
+>  - eos
+>  - simple-ethereum
 
 
 
