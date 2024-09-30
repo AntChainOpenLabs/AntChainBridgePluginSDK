@@ -8,9 +8,6 @@ import cn.hyperchain.sdk.service.*;
 import lombok.Getter;
 import org.example.plugintestrunner.chainmanager.IChainManager;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-
 @Getter
 public class HyperchainChainManager extends IChainManager {
 
@@ -23,40 +20,27 @@ public class HyperchainChainManager extends IChainManager {
     MQService mqService;
     Account account;
 
-    private String config;
-
     public HyperchainChainManager(String url) {
         // 2. build provider manager
-        defaultHttpProvider = new DefaultHttpProvider.Builder().setUrl(url).build();
-        providerManager = ProviderManager.createManager(defaultHttpProvider);
+        this.defaultHttpProvider = new DefaultHttpProvider.Builder().setUrl(url).build();
+        this.providerManager = ProviderManager.createManager(this.defaultHttpProvider);
         // 3. build service
-        contractService = ServiceManager.getContractService(providerManager);
-        accountService = ServiceManager.getAccountService(providerManager);
-        txService = ServiceManager.getTxService(providerManager);
-        blockService = ServiceManager.getBlockService(providerManager);
-        mqService = ServiceManager.getMQService(providerManager);
+        this.contractService = ServiceManager.getContractService(this.providerManager);
+        this.accountService = ServiceManager.getAccountService(this.providerManager);
+        this.txService = ServiceManager.getTxService(this.providerManager);
+        this.blockService = ServiceManager.getBlockService(this.providerManager);
+        this.mqService = ServiceManager.getMQService(this.providerManager);
         // 4. create account
         String password = "";
-        account = accountService.genAccount(Algo.SMRAW, password);
+        this.account = this.accountService.genAccount(Algo.SMRAW, password);
 
-        config = String.format(
+        this.config = String.format(
                 "{\"url\": \"%s\", \"accountJson\": {\"address\": \"%s\", \"publicKey\": \"%s\", \"privateKey\": \"%s\", \"version\": \"%s\", \"algo\": \"%s\"}, \"password\": \"%s\"}",
-                url, account.getAddress(), account.getPublicKey(), account.getPrivateKey(), account.getVersion().getV(), account.getAlgo().getAlgo(), password
+                url, this.account.getAddress(), this.account.getPublicKey(), this.account.getPrivateKey(), this.account.getVersion().getV(), this.account.getAlgo().getAlgo(), password
         );
     }
 
     @Override
-    public boolean isConnected() throws ExecutionException, InterruptedException, IOException {
-        try {
-            System.out.println(blockService.getLatestBlock().getId());
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
     public void close() {
-
     }
 }

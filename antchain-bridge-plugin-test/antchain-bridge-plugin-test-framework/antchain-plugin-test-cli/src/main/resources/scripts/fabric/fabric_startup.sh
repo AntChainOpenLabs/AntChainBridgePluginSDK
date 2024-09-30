@@ -2,93 +2,186 @@
 
 # https://www.cnblogs.com/biaogejiushibiao/p/12290728.html
 
-
+# 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/../../config.properties"
 CHAIN_TYPE="fabric"
+
+# 引入工具函数
 source "$SCRIPT_DIR"/../utils.sh
 
+# 读取配置文件函数
+read_config() {
+    log "INFO" "Reading configuration file: $CONFIG_FILE"
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        log "ERROR" "Configuration file $CONFIG_FILE does not exist."
+        exit 1
+    fi
+    get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir channel version
+    log "INFO" "Configuration successfully read: data_dir=$data_dir, channel=$channel, version=$version"
+}
 
-# 读取配置文件
-get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir channel wallet_dir version
+# 创建根目录函数
+create_root_directory() {
+    log "INFO" "Creating root directory: ${data_dir}"
+    if mkdir -p "${data_dir}"; then
+        log "INFO" "Root directory created successfully or already exists: ${data_dir}"
+    else
+        log "ERROR" "Failed to create root directory: ${data_dir}"
+        exit 1
+    fi
 
+    if cd "${data_dir}"; then
+        log "INFO" "Navigated to root directory: ${data_dir}"
+    else
+        log "ERROR" "Failed to navigate to root directory: ${data_dir}"
+        exit 1
+    fi
+}
 
-log "INFO" "Creating root directory at ${data_dir} "
-mkdir -p "${data_dir}" && cd "${data_dir}" || exit
+# 下载 install-fabric.sh 脚本函数
+download_install_fabric() {
+    log "INFO" "Downloading install-fabric.sh script..."
+    if [ ! -f "$SCRIPT_DIR/install-fabric.sh" ]; then
+        log "INFO" "install-fabric.sh not found in $SCRIPT_DIR. Starting download..."
+        if curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh; then
+            log "INFO" "install-fabric.sh downloaded successfully."
+            chmod +x install-fabric.sh
+        else
+            log "ERROR" "Failed to download install-fabric.sh."
+            exit 1
+        fi
+    else
+        log "INFO" "install-fabric.sh already exists in $SCRIPT_DIR. Skipping download."
+        if cp "$SCRIPT_DIR/install-fabric.sh" ./; then
+            log "INFO" "Copied install-fabric.sh to the current directory successfully."
+        else
+            log "ERROR" "Failed to copy install-fabric.sh."
+            exit 1
+        fi
+    fi
+}
 
-# 下载 insntall-fabric.sh 脚本
-log "INFO" "Downloading Fabric binaries..."
-if [ ! -f "$SCRIPT_DIR/install-fabric.sh" ]; then
-    log "INFO" "install-fabric.sh not found in $SCRIPT_DIR. Downloading..."
-    curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
-else
-    log "INFO" "install-fabric.sh already exists in $SCRIPT_DIR. Skipping download."
-    cp "$SCRIPT_DIR/install-fabric.sh" ./
-fi
+# 运行 install-fabric.sh 脚本下载样例函数
+run_install_fabric() {
+    log "INFO" "Running install-fabric.sh script..."
+    if [ -d "$data_dir/fabric-samples" ]; then
+        log "INFO" "fabric-samples directory already exists. Skipping installation."
+    else
+        log "INFO" "fabric-samples directory does not exist. Starting installation..."
+        if ./install-fabric.sh -f "$version" samples; then
+            log "INFO" "install-fabric.sh executed successfully."
+        else
+            log "ERROR" "install-fabric.sh execution failed."
+            exit 1
+        fi
+    fi
+}
 
-# 运行 install-fabric.sh 脚本，下载 samples
-log "INFO" "Running the install-fabric.sh script..."
-if [ -d "$data_dir/fabric-samples" ]; then
-    log "INFO" "The fabric-samples directory already exists. Skipping installation."
-else
-    log "INFO" "The fabric-samples directory does not exist. Starting installation..."
-    ./install-fabric.sh -f "$version" samples
-fi
+# 下载并解压 Fabric 二进制文件函数
+setup_fabric_binaries() {
+    log "INFO" "Setting up Fabric binaries..."
+    cd fabric-samples || { log "ERROR" "Failed to navigate to fabric-samples directory."; exit 1; }
 
+    download_and_extract "hyperledger-fabric-linux-amd64-$version.tar.gz" "https://github.com/hyperledger/fabric/releases/download/v$version/hyperledger-fabric-linux-amd64-$version.tar.gz"
+    download_and_extract "hyperledger-fabric-ca-linux-amd64-$version.tar.gz" "https://github.com/hyperledger/fabric-ca/releases/download/v$version/hyperledger-fabric-ca-linux-amd64-$version.tar.gz"
+}
 
-# 进入 fabric-samples 的 scripts 目录
-log "INFO" "Starting the Fabric network..."
-cd fabric-samples || exit
-# 检查文件是否已经存在
-if [ -f "hyperledger-fabric-linux-amd64-$version.tar.gz" ]; then
-    log "INFO" "Fabric archive already exists, extracting and overwriting..."
-else
-    log "INFO" "Fabric archive not found, downloading..."
-    curl -L -O -x http://49.52.27.67:7890 https://github.com/hyperledger/fabric/releases/download/v"$version"/hyperledger-fabric-linux-amd64-"$version".tar.gz
-fi
+# 下载并解压指定文件的辅助函数
+download_and_extract() {
+    local file_name="$1"
+    local url="$2"
 
-tar --overwrite -xvf hyperledger-fabric-linux-amd64-"$version".tar.gz
+    log "INFO" "Processing file: $file_name"
+    if [ -f "$file_name" ]; then
+        log "INFO" "$file_name already exists. Preparing to extract and overwrite."
+    else
+        log "INFO" "$file_name does not exist. Starting download..."
+        if curl -L -O "$url"; then
+            log "INFO" "Downloaded $file_name successfully."
+        else
+            log "ERROR" "Failed to download $file_name."
+            exit 1
+        fi
+    fi
 
-# Check if the fabric-ca archive exists
-if [ -f "hyperledger-fabric-ca-linux-amd64-$version.tar.gz" ]; then
-    log "INFO" "Fabric-CA archive already exists, extracting and overwriting..."
-else
-    log "INFO" "Fabric-CA archive not found, downloading..."
-    curl -L -O -x http://49.52.27.67:7890 https://github.com/hyperledger/fabric-ca/releases/download/v"$version"/hyperledger-fabric-ca-linux-amd64-"$version".tar.gz
-fi
+    log "INFO" "Extracting $file_name..."
+    if tar --overwrite -xvf "$file_name"; then
+        log "INFO" "Extracted $file_name successfully."
+    else
+        log "ERROR" "Failed to extract $file_name."
+        exit 1
+    fi
+}
 
-tar --overwrite -xvf hyperledger-fabric-ca-linux-amd64-"$version".tar.gz
+# 启动 Fabric 网络函数
+start_fabric_network() {
+    log "INFO" "Starting the Fabric network..."
+    cd ./first-network || { log "ERROR" "Failed to navigate to first-network directory."; exit 1; }
+    if yes "" | ./byfn.sh up -c "$channel"; then
+        log "INFO" "Fabric network started successfully."
+    else
+        log "WARNING" "Failed to start Fabric network. Continuing with modify_config_files."
+        log "INFO" "If no error is shown above, ignore this warning."
+    fi
+}
 
+# 修改配置文件函数
+modify_config_files() {
+    log "INFO" "Modifying configuration files..."
+    CRYPTO_CONFIG_FILE="$data_dir/fabric-samples/first-network/crypto-config"
+    CONF_FILE="$SCRIPT_DIR/conf.json"
 
-# 运行测试链
-cd ./first-network || exit
-yes "" | ./byfn.sh up -c mychannel
+    if [ ! -f "$CONF_FILE" ]; then
+        log "ERROR" "Configuration file $CONF_FILE does not exist."
+        exit 1
+    fi
 
+    if cp "$CONF_FILE" "$data_dir/"; then
+        log "INFO" "Copied $CONF_FILE to $data_dir successfully."
+    else
+        log "ERROR" "Failed to copy $CONF_FILE."
+        exit 1
+    fi
 
-# 配置文件修改
-CRYPTO_CONFIG_FILE="$data_dir/fabric-samples/first-network/crypto-config"
-CONF_FILE="$SCRIPT_DIR/conf.json"
-cp "$CONF_FILE" "$data_dir/"
-python3 "$SCRIPT_DIR"/fill_args.py "$data_dir/conf.json" "$CRYPTO_CONFIG_FILE"
+    if python3 "$SCRIPT_DIR"/fill_args.py "$data_dir/conf.json" "$CRYPTO_CONFIG_FILE"; then
+        log "INFO" "Configuration files modified successfully."
+    else
+        log "ERROR" "Failed to modify configuration files."
+        exit 1
+    fi
+}
 
-# CONF_FILE="$SCRIPT_DIR/conf.json"
-# MSP_DIR="$data_dir/fabric-samples/first-network/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp"
-# # 替换 conf.json 中的 key
-# KEY_FILE=$(ls "$MSP_DIR"/keystore/*_sk)
-# if [ -z "$KEY_FILE" ]; then
-#   log "ERROR" "Error: No key file found"
-#   exit 1
-# fi
-# KEY_CONTENT=$(cat "$KEY_FILE")
-# jq --arg key "$KEY_CONTENT" '.user.key = $key' "$CONF_FILE" > tmp_conf.json && mv tmp_conf.json "$CONF_FILE"
+# 检查依赖函数
+check_dependencies() {
+    log "INFO" "Checking for required dependencies..."
+    local dependencies=(curl tar python3 mkdir chmod cp)
+    for cmd in "${dependencies[@]}"; do
+        if ! command -v "$cmd" &>/dev/null; then
+            log "ERROR" "Missing dependency: $cmd. Please install it and retry."
+            exit 1
+        else
+            log "INFO" "Dependency found: $cmd"
+        fi
+    done
+    log "INFO" "All required dependencies are installed."
+}
 
-# # 替换 conf.json 中的 cert
-# CERT_FILE=$(ls "$MSP_DIR"/signcerts/*.pem)
-# if [ -z "$CERT_FILE" ]; then
-#   log "ERROR" "Error: No cert file found"
-#   exit 1
-# fi
-# CERT_CONTENT=$(cat "$CERT_FILE")
-# jq --arg cert "$CERT_CONTENT" '.user.cert = $cert' "$CONF_FILE" > tmp_conf.json && mv tmp_conf.json "$CONF_FILE"
+# 主函数
+main() {
+    log "INFO" "Starting Fabric network deployment script."
 
+    check_dependencies
+    read_config
+    create_root_directory
+    download_install_fabric
+    run_install_fabric
+    setup_fabric_binaries
+    start_fabric_network
+    modify_config_files
 
+    log "INFO" "Fabric network deployment completed successfully."
+}
+
+# 执行主函数
+main

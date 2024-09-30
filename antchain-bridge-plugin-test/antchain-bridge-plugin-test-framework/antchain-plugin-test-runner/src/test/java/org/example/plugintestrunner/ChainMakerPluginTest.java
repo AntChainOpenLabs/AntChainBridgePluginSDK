@@ -29,7 +29,6 @@ public class ChainMakerPluginTest {
 
 
     private ChainMakerChainManager chainManager;
-    private AbstractBBCContext bbcContext;
     private IBBCService bbcService;
 
 
@@ -48,14 +47,14 @@ public class ChainMakerPluginTest {
         chainManager = (ChainMakerChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
 //        chainManager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile);
         // 配置 context、bbcService
-        bbcContext = new DefaultBBCContext();
-        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
+//        bbcContext = new DefaultBBCContext();
+//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 
     @Test
     public void testChainMaker() {
-        bbcService.startup(bbcContext);
+        bbcService.startup(chainManager.getBBCContext());
         bbcService.setupAuthMessageContract();
         bbcService.setupSDPMessageContract();
         System.out.println("authMessageContractAddress: " + bbcService.getContext().getAuthMessageContract().getContractAddress());

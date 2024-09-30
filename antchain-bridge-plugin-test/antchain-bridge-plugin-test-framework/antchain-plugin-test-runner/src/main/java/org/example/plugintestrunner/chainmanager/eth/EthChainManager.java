@@ -6,7 +6,6 @@ import org.example.plugintestrunner.chainmanager.IChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.ChainManagerException.*;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthBlock;
@@ -23,7 +22,6 @@ public class EthChainManager extends IChainManager {
     private String gasPrice;
     private String gasLimit;
     private final Web3j web3j;
-    private String config;
 
     public EthChainManager(String httpUrl, String privateKeyFile) throws ChainManagerException {
         this.httpUrl = httpUrl;
@@ -36,39 +34,29 @@ public class EthChainManager extends IChainManager {
             throw new ChainManagerConstructionException("Failed to set account or gas limit or gas price", e);
         }
         // 构造用于插件测试的配置信息
-        config = String.format("{\"gasLimit\":%s,\"gasPrice\":%s,\"privateKey\":\"%s\",\"url\":\"%s\"}",
-                gasLimit, gasPrice, privateKey, httpUrl);
-    }
-
-    public boolean isConnected() throws IOException {
-        Web3ClientVersion web3ClientVersion;
-        try {
-            web3ClientVersion = web3j.web3ClientVersion().send();
-        } catch (IOException e) {
-            throw new IOException("Failed to connect to the Ethereum node", e);
-        }
-        return web3ClientVersion.getWeb3ClientVersion() != null;
+        this.config = String.format("{\"gasLimit\":%s,\"gasPrice\":%s,\"privateKey\":\"%s\",\"url\":\"%s\"}",
+                this.gasLimit, this.gasPrice, this.privateKey, httpUrl);
     }
 
     // 通过文件获取
     public void setPrivateKey(String privateKeyFile) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(privateKeyFile));
-        privateKey = br.readLine();
+        this.privateKey = br.readLine();
     }
 
     // 通过 web3j 获取
     public void setGasPrice() throws IOException {
-        gasPrice = web3j.ethGasPrice().send().getGasPrice().toString();
+        this.gasPrice = this.web3j.ethGasPrice().send().getGasPrice().toString();
     }
 
     // 通过 web3j 获取
     public void setGasLimit() throws IOException {
-        EthBlock latestBlock = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send();
-        gasLimit = latestBlock.getBlock().getGasLimit().toString();
+        EthBlock latestBlock = this.web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send();
+        this.gasLimit = latestBlock.getBlock().getGasLimit().toString();
     }
 
+    @Override
     public void close() {
-        web3j.shutdown();
+        this.web3j.shutdown();
     }
-
 }

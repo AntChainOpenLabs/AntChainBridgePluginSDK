@@ -46,7 +46,6 @@ public class ChainManagerServiceTest {
         String product = "simple-ethereum";
         chainManagerService.startup(product);
         EthChainManager manager = new EthChainManager(ChainConfig.EthChainConfig.getHttpUrl(), ChainConfig.EthChainConfig.privateKeyFile);
-        assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
 
@@ -55,7 +54,6 @@ public class ChainManagerServiceTest {
         String product = "fiscobcos";
         chainManagerService.startup(product);
         FiscoBcosChainManager manager = new FiscoBcosChainManager(ChainConfig.FiscoBcosChainConfig.confDir);
-        assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
 
@@ -64,7 +62,6 @@ public class ChainManagerServiceTest {
         String product = "eos";
         chainManagerService.startup(product);
         EosChainManager manager = new EosChainManager(ChainConfig.EosChainConfig.getHttpUrl(), ChainConfig.EosChainConfig.privateKeyFile);
-        assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
 
@@ -74,7 +71,6 @@ public class ChainManagerServiceTest {
         String product = "chainmaker";
         chainManagerService.startup(product);
         ChainMakerChainManager manager = new ChainMakerChainManager(ChainConfig.ChainMakerChainConfig.confFile);
-        assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
 
@@ -84,7 +80,6 @@ public class ChainManagerServiceTest {
         String product = "hyperchain";
         chainManagerService.startup(product);
         HyperchainChainManager manager = new HyperchainChainManager(ChainConfig.HyperChainChainConfig.getHttpUrl());
-        assert manager.isConnected();
         chainManagerService.shutdown(product);
     }
 

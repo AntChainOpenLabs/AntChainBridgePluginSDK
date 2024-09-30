@@ -1,15 +1,20 @@
 package org.example.plugintestrunner.chainmanager;
 
+import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
+import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import lombok.Getter;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 @Getter
 public abstract class IChainManager {
 
-    public abstract boolean isConnected() throws ExecutionException, InterruptedException, IOException;
+    public String config;
+
+    public AbstractBBCContext getBBCContext() {
+        AbstractBBCContext bbcContext = new DefaultBBCContext();
+        bbcContext.setConfForBlockchainClient(this.config.getBytes());
+        return bbcContext;
+    }
 
     public abstract void close();
-
 }

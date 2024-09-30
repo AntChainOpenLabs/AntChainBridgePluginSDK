@@ -1,10 +1,8 @@
 package org.example.plugintestrunner.service;
 
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
-import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import lombok.Setter;
-import org.example.plugintestrunner.chainmanager.IChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginTestException;
 import org.example.plugintestrunner.exception.PluginTestException.*;
@@ -23,7 +21,7 @@ public class PluginTestService extends AbstractService{
     private ChainManagerService chainManagerService;
 
     private IBBCService bbcService;
-    private AbstractBBCContext abstractBBCContext;
+    private AbstractBBCContext bbcContext;
     private TestCase testCase;
 
     public PluginTestService(PTRLogger logger, PluginManagerService pluginManagerService, ChainManagerService chainManagerService) {
@@ -64,8 +62,8 @@ public class PluginTestService extends AbstractService{
         this.testCase = testCase;
         // 从 pluginManagerService 中获取 bbcService
         bbcService = pluginManagerService.getBBCService(testCase.getProduct(), testCase.getDomain());
-        // 从 chainManager 中获取链配置信息，然后修改 abstractBBCContext
-//        abstractBBCContext = createAbstractBBCContext(chainManagerService.getChainManager(testCase.getProduct()));
+        // 从 chainManagerService 中获取 abstractBBCContext
+        bbcContext = chainManagerService.getChainManager(testCase.getProduct()).getBBCContext();
         if (testCase.isStartup()) {
             checkDependency("startup", testCase);
             testStartUp();
@@ -120,17 +118,6 @@ public class PluginTestService extends AbstractService{
         }
     }
 
-//    private AbstractBBCContext createAbstractBBCContext(IChainManager chainManager) {
-//        EthereumConfig conf = new EthereumConfig();
-//        conf.setUrl(chainManager.getHttpUrl());
-//        conf.setPrivateKey(chainManager.getPrivateKey());
-//        conf.setGasPrice(2300000000L);
-//        conf.setGasLimit(3000000);
-//        AbstractBBCContext context = new DefaultBBCContext();
-//        context.setConfForBlockchainClient(conf.toJsonString().getBytes());
-//        return context;
-//    }
-
     // 检查每个接口的依赖项，如果依赖项没有执行，则抛出异常
     private void checkDependency(String item, TestCase testCase) throws PluginTestException{
         HashMap<String, List<String>> map = testCase.getPluginInterfaceTestDependency();
@@ -153,7 +140,7 @@ public class PluginTestService extends AbstractService{
     // dependency: none
     public void testStartUp() throws PluginTestException {
         try {
-            bbcService.startup(abstractBBCContext);
+            bbcService.startup(bbcContext);
         } catch (Exception e) {
             throw new StartupException("Failed to run startup test.", e);
         }

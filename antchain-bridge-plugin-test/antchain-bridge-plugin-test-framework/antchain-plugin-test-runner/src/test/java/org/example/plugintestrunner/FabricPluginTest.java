@@ -33,7 +33,6 @@ public class FabricPluginTest {
 
 
     private FabricChainManager chainManager;
-    private AbstractBBCContext bbcContext;
     private IBBCService bbcService;
 
 
@@ -52,15 +51,15 @@ public class FabricPluginTest {
         chainManager = (FabricChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
 //        chainManager = new FabricChainManager(ChainConfig.FabricChainConfig.confFile);
         // 配置 context、bbcService
-        bbcContext = new DefaultBBCContext();
-        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
+//        bbcContext = new DefaultBBCContext();
+//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 
     @Test
     public void testFabric() {
         System.out.println(chainManager.getConfig());
-        bbcService.startup(bbcContext);
+        bbcService.startup(chainManager.getBBCContext());
         bbcService.setupAuthMessageContract();
         bbcService.setupSDPMessageContract();
         System.out.println("latest height: " + bbcService.queryLatestHeight());

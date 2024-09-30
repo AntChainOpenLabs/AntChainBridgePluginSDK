@@ -1,8 +1,14 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+      <groupId>org.example</groupId>
+      <artifactId>antchain-bridge-plugin-test-framework</artifactId>
+      <version>0.1.0</version>
+      <relativePath>../pom.xml</relativePath>
+  </parent>
 
-  <groupId>org.example</groupId>
   <artifactId>antchain-plugin-test-runner</artifactId>
   <version>0.1.0</version>
   <packaging>jar</packaging>
@@ -65,6 +71,11 @@
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>1.2.11</version>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-to-slf4j</artifactId>
+          <version>2.20.0</version>
       </dependency>
       <dependency>
         <groupId>de.vandermeer</groupId>

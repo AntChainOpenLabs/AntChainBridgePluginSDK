@@ -37,7 +37,6 @@ public class EthereumPluginTest {
 
     private EthChainManager chainManager;
     private AppContract appContract;
-    private AbstractBBCContext bbcContext;
     private IBBCService bbcService;
 
 
@@ -55,8 +54,8 @@ public class EthereumPluginTest {
         chainManagerService.startup(PLUGIN_PRODUCT);
         chainManager = (EthChainManager)chainManagerService.getChainManager(PLUGIN_PRODUCT);
         // 配置 context、bbcService
-        bbcContext = new DefaultBBCContext();
-        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
+//        bbcContext = new DefaultBBCContext();
+//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 
@@ -73,7 +72,7 @@ public class EthereumPluginTest {
         ).send();
         System.out.println("contract address: " + appContract.getContractAddress());
         // 调用 bbcService
-        bbcService.startup(bbcContext);
+        bbcService.startup(chainManager.getBBCContext());
         bbcService.setupAuthMessageContract();
         bbcService.setupSDPMessageContract();
         System.out.println("authMessageContract address: " + bbcService.getContext().getAuthMessageContract().getContractAddress());

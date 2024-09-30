@@ -10,7 +10,7 @@
 
     <!-- 定义文件输出 -->
     <appender name="PROCESS_LOGGER" class="ch.qos.logback.classic.sift.SiftingAppender">
-        <discriminator>
+        <discriminator class="ch.qos.logback.classic.sift.MDCBasedDiscriminator">
             <key>logFile</key>
             <defaultValue>app</defaultValue>
         </discriminator>
@@ -24,6 +24,7 @@
             </appender>
         </sift>
     </appender>
+
 
     <!-- 定义其他输出 -->
     <appender name="OTHER_LOGGER" class="ch.qos.logback.core.FileAppender">

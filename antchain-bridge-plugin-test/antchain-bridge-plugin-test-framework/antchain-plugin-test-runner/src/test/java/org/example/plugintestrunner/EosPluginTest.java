@@ -33,7 +33,6 @@ public class EosPluginTest {
 
 
     private EosChainManager chainManager;
-    private AbstractBBCContext bbcContext;
     private IBBCService bbcService;
 
 
@@ -51,15 +50,15 @@ public class EosPluginTest {
         chainManagerService.startup(PLUGIN_PRODUCT);
         chainManager = (EosChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
         // 配置 context、bbcService
-        bbcContext = new DefaultBBCContext();
-        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
+//        bbcContext = new DefaultBBCContext();
+//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 
     @Test
     public void testEos() {
         System.out.println(chainManager.getConfig());
-        bbcService.startup(bbcContext);
+        bbcService.startup(chainManager.getBBCContext());
     }
 
     @AfterEach
