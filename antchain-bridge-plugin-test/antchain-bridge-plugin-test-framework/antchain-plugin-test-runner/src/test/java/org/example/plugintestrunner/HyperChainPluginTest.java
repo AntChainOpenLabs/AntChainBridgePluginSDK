@@ -25,7 +25,7 @@ public class HyperChainPluginTest {
     private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "hyperchain2-bbc-0.1.0-plugin.jar";
     private final String PLUGIN_PRODUCT = "hyperchain2";
-    private final String DOMAIN_NAME = "domain1";
+    private final String DOMAIN_NAME = "hyperchain2-domain";
     private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 

@@ -6,8 +6,8 @@ import org.example.plugintestrunner.util.PTRLogger;
 
 import java.io.IOException;
 
+@Getter
 public abstract class AbstractService {
-    @Getter
     protected final PTRLogger logger;
 
     public AbstractService(PTRLogger logger) {

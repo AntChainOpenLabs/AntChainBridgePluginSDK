@@ -1,6 +1,6 @@
 package org.example;
 
-import org.example.plugintestrunner.exception.TestCaseLoaderException;
+import org.example.plugintestrunner.exception.TestCaseException;
 import org.example.plugintestrunner.service.PluginManagerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,12 +14,12 @@ public class PluginManagerCmdTest {
 
     private PluginManagerService pluginManagerService;
 
-    private final String PRODUCT_NAME = "testchain";
-    private final String JAR_PATH = "plugin-testchain-0.1-SNAPSHOT-plugin.jar";
-    private final String DOMAIN_NAME = "domain1";
+    private final String PRODUCT_NAME = "simple-ethereum";
+    private final String JAR_PATH = "simple-ethereum-bbc-0.2.0-plugin.jar";
+    private final String DOMAIN_NAME = "simple-ethereum-domain";
 
     @BeforeEach
-    public void init() throws IOException, TestCaseLoaderException {
+    public void init() throws IOException, TestCaseException {
         App app = new App();
         app.init();
         pluginManagerService = app.pluginTestRunner.getPluginManagerService();

@@ -11,7 +11,6 @@ import org.example.plugintestrunner.testcase.TestCase;
 import org.example.plugintestrunner.util.LogLevel;
 import org.example.plugintestrunner.util.PTRLogger;
 import com.alipay.antchain.bridge.plugins.manager.pf4j.Pf4jAntChainBridgePluginManager;
-import org.pf4j.DefaultPluginManager;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -20,13 +19,13 @@ import java.nio.file.Paths;
 public class PluginManagerService extends AbstractService{
 
     @Getter
-    private String pluginDirectory;
+    private final String pluginDirectory;
     private final Pf4jAntChainBridgePluginManager manager;
 
     public PluginManagerService(PTRLogger logger, String pluginDirectory) {
         super(logger);
         this.pluginDirectory = pluginDirectory;
-        manager = new Pf4jAntChainBridgePluginManager(pluginDirectory);
+        this.manager = new Pf4jAntChainBridgePluginManager(pluginDirectory);
     }
 
     @Override
@@ -214,22 +213,5 @@ public class PluginManagerService extends AbstractService{
             path = path.toAbsolutePath();
         }
         return path;
-    }
-
-    private void modifyPf4jPluginManager() throws Exception {
-        Field pf4jPluginManagerField = manager.getClass().getDeclaredField("pf4jPluginManager");
-        pf4jPluginManagerField.setAccessible(true);
-        Object pf4jPluginManager = pf4jPluginManagerField.get(manager);
-        Field classLoaderParentFirstField = pf4jPluginManager.getClass().getDeclaredField("pluginClassLoaderParentFirst");
-        classLoaderParentFirstField.setAccessible(true);
-        classLoaderParentFirstField.setBoolean(pf4jPluginManager, false);
-
-        // 如果需要修改 pf4jPluginManager 本身，也可以在这里进行
-        // Field anotherField = pf4jPluginManager.getClass().getDeclaredField("anotherField");
-        // anotherField.setAccessible(true);
-        // anotherField.set(pf4jPluginManager, newValue);
-
-        // 再次设置 pf4jPluginManager 字段的值（如果需要）
-        pf4jPluginManagerField.set(manager, pf4jPluginManager);
     }
 }

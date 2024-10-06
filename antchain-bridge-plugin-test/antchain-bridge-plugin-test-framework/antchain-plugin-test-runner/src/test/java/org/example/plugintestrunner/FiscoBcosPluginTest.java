@@ -23,7 +23,7 @@ public class FiscoBcosPluginTest {
     private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "fiscobcos-bbc-1.0-SNAPSHOT-plugin.jar";
     private final String PLUGIN_PRODUCT = "fiscobcos";
-    private final String DOMAIN_NAME = "domain1";
+    private final String DOMAIN_NAME = "fiscobcos-domain";
     private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 

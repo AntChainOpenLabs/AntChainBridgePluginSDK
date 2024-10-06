@@ -31,8 +31,8 @@ public class ChainConfigManager {
             }
             // 加载properties文件
             config.load(input);
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load config.properties", e);
         }
     }
 

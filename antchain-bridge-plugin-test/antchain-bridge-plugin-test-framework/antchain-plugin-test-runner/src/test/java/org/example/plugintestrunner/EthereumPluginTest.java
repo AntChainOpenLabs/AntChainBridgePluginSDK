@@ -28,7 +28,7 @@ public class EthereumPluginTest {
     private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "simple-ethereum-bbc-0.2.0-plugin.jar";
     private final String PLUGIN_PRODUCT = "simple-ethereum";
-    private final String DOMAIN_NAME = "domain1";
+    private final String DOMAIN_NAME = "simple-ethereum-domain";
     private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 

@@ -2,7 +2,7 @@ package org.example.plugintestrunner.testcase;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.example.plugintestrunner.exception.TestCaseLoaderException;
+import org.example.plugintestrunner.exception.TestCaseException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
 public class TestCaseContainer {
     private List<TestCase> testCases;
 
-    public void init() throws TestCaseLoaderException {
+    public void init() throws TestCaseException {
         for (TestCase testCase : testCases) {
             testCase.setPluginLoadAndStartTestFlag();
             testCase.setPluginInterfaceTestFlag();

@@ -25,7 +25,7 @@ public class EosPluginTest {
     private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "eos-bbc-0.1.2-plugin.jar";
     private final String PLUGIN_PRODUCT = "eos";
-    private final String DOMAIN_NAME = "domain1";
+    private final String DOMAIN_NAME = "eos-domain";
     private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 

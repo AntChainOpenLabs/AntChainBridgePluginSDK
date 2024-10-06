@@ -11,9 +11,9 @@ public class PluginManagerServiceTest {
     private PluginManagerService pluginManagerService;
 
     private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
-    private final String JAR_PATH = "plugin-testchain-0.1-SNAPSHOT-plugin.jar";
-    private final String PLUGIN_PRODUCT = "testchain";
-    private final String DOMAIN_NAME = "domain";
+    private final String JAR_PATH = "simple-ethereum-bbc-0.2.0-plugin.jar";
+    private final String PLUGIN_PRODUCT = "simple-ethereum";
+    private final String DOMAIN_NAME = "simple-ethereum-bbc";
 
 
     @BeforeEach

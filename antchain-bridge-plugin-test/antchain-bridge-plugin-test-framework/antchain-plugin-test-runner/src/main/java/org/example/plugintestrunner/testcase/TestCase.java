@@ -1,16 +1,18 @@
 package org.example.plugintestrunner.testcase;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.plugintestrunner.exception.TestCaseLoaderException;
-import org.example.plugintestrunner.exception.TestCaseLoaderException.*;
+import org.example.plugintestrunner.exception.TestCaseException;
+import org.example.plugintestrunner.exception.TestCaseException.*;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
 @Setter
 @Getter
+@JsonDeserialize(using = TestCaseDeserializer.class)
 public class TestCase {
     // 从 testcase.json 中读取的配置信息
     private String name;
@@ -83,7 +85,7 @@ public class TestCase {
     }
 
     // 检查 pluginLoadAndStartTestList 合法性
-    public void checkPluginLoadAndStartTestList() throws TestCaseLoaderException{
+    public void checkPluginLoadAndStartTestList() throws TestCaseException {
         List<String> invalidFields = new ArrayList<>();
         for (String item : pluginLoadAndStartTestList) {
             if (!ValidPluginLoadAndStartTestList.contains(item)) {
@@ -96,7 +98,7 @@ public class TestCase {
     }
 
     // 检查 pluginInterfaceTestList 合法性
-    public void checkPluginInterfaceTestList() throws TestCaseLoaderException{
+    public void checkPluginInterfaceTestList() throws TestCaseException {
         List<String> invalidFields = new ArrayList<>();
         for (String item : pluginInterfaceTestList) {
             if (!ValidPluginInterfaceTestList.contains(item)) {
@@ -108,7 +110,7 @@ public class TestCase {
         }
     }
 
-    public void setPluginInterfaceTestFlag() throws TestCaseLoaderException {
+    public void setPluginInterfaceTestFlag() throws TestCaseException {
         checkPluginInterfaceTestList();
         startup = pluginInterfaceTestList.contains("startup");
         shutdown = pluginInterfaceTestList.contains("shutdown");
@@ -143,7 +145,7 @@ public class TestCase {
         return map;
     }
 
-    public void setPluginLoadAndStartTestFlag() throws TestCaseLoaderException {
+    public void setPluginLoadAndStartTestFlag() throws TestCaseException {
         checkPluginLoadAndStartTestList();
         loadPlugin = pluginLoadAndStartTestList.contains("loadPlugin");
         startPlugin = pluginLoadAndStartTestList.contains("startPlugin");

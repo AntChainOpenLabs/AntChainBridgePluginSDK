@@ -16,7 +16,6 @@ public class IChainManagerFactory {
         ChainProduct cp = ChainProduct.fromValue(chainProduct);
         switch (cp) {
             case ETH:
-            case TESTCHAIN:
                 return new EthChainManager(ChainConfig.EthChainConfig.getHttpUrl(), ChainConfig.EthChainConfig.privateKeyFile);
             case EOS:
                 return new EosChainManager(ChainConfig.EosChainConfig.getHttpUrl(), ChainConfig.EosChainConfig.privateKeyFile);

@@ -37,13 +37,24 @@ public class ChainManagerService extends AbstractService {
         this.localChainManagers = new java.util.HashMap<>();
     }
 
-    // 根据 testCase 的配置信息，可以分为两种情况：
-    //   1. 测试用例中的 chainConf 为空，或配置信息不完整时，将启动一个临时的测试链，具体分为两种情况：
-    //     1.1. 该类型的链已经存在 tmpChainManagers，不需要重新创建
-    //     1.2. 该类型的链不存在 tmpChainManagers，则直接创建
-    //   2. 测试用例中的 chainConf 不为空，并且信息完整，直接使用该配置信息，又具体分为两种情况：
-    //     2.1. 该类型的链已经存在 localChainManagers，根据配置信息的一致与否，判断是否需要重新创建
-    //     2.2. 该类型的链不存在 localChainManagers，则直接创建
+    /**
+     * 根据 {@code testCase} 的配置信息，可以分为两种情况：
+     * <ul>
+     *   <li>
+     *     1. 测试用例中的 {@code chainConf} 为空，或配置信息不完整时，将启动一个临时的测试链，具体分为两种情况：
+     *     <ul>
+     *       <li>1.1. 该类型的链已经存在 {@code tmpChainManagers}，不需要重新创建</li>
+     *       <li>1.2. 该类型的链不存在 {@code tmpChainManagers}，则直接创建</li>
+     *     </ul>
+     *   </li>
+     *   <li>
+     *     2. 测试用例中的 {@code chainConf} 不为空，并且信息完整，直接使用该配置信息，又具体分为两种情况：
+     *     <ul>
+     *       <li>2.1. 根据 {@code chainConf} 创建 {@code chainManager}，存入 {@code localChainManagers}，无需重新创建</li>
+     *     </ul>
+     *   </li>
+     * </ul>
+     */
     @Override
     public void run(TestCase testCase) {
         // 设置 MDC
@@ -63,19 +74,18 @@ public class ChainManagerService extends AbstractService {
                 logger.plog(LogLevel.ERROR, "Failed to sleep");
             }
         }
-//        else {
-//            // 用户本地启动了测试链，不需要创建一条临时的测试链，但仍然需要和用户的链交互
-//            try {
-//                initializeLocalChain(testCase);
-//                logger.plog(LogLevel.INFO, "Successfully initialized local chain");
-//            } catch (ChainManagerException e) {
-//                logger.plog(LogLevel.ERROR, "Failed to initialize local chain: " + e.getMessage());
-//                if (e.getCause() != null) {
-//                    logger.rlog(LogLevel.ERROR, e.getCause().getMessage());
-//                }
-//
-//            }
-//        }
+        else {
+            try {
+                IChainManager chainManager = testCase.getChainConf().toChainManager();
+                localChainManagers.put(testCase.getProduct(), chainManager);
+                logger.plog(LogLevel.INFO, "Successfully initialized local chain");
+            } catch (Exception e) {
+                logger.plog(LogLevel.ERROR, "Failed to initialize local chain: " + e.getMessage());
+                if (e.getCause() != null) {
+                    logger.rlog(LogLevel.ERROR, e.getCause().getMessage());
+                }
+            }
+        }
 
         // 清除 MDC
         logger.clearMDC();
@@ -99,12 +109,16 @@ public class ChainManagerService extends AbstractService {
     }
 
 
-    /*
-     *
-     * step1. 判断 chainProduct 是否合法
-     * step2. 判断是否已经存在该类型的链
-     * step3. 若不存在，则启动测试链
-     *
+    /**
+     * <p>
+     * Step 1: 判断 {@code chainProduct} 是否合法
+     * </p>
+     * <p>
+     * Step 2: 判断是否已经存在该类型的链
+     * </p>
+     * <p>
+     * Step 3: 若不存在，则启动测试链
+     * </p>
      */
     private void initializeTemporalChain(TestCase testCase) throws ChainManagerException, InterruptedException {
         logger.plog(LogLevel.INFO, "No chain configuration found in test case, start a temporary chain");
@@ -126,61 +140,23 @@ public class ChainManagerService extends AbstractService {
         }
     }
 
-//    private void initializeLocalChain(TestCase testCase) throws ChainManagerException {
-//        String product = testCase.getProduct();
-//        TestCaseChainConf chainConf = testCase.getChainConf();
-//        if (ChainProduct.isInvalid(product)) {
-//            throw new InvalidProductException("Invalid product: " + product);
-//        } else {
-//            // 判断 localChainManagers 中是否已经存在该类型的链
-//            if (localChainManagers.get(product) != null) {
-//                logger.plog(LogLevel.INFO, "Chain for " + product + " already exists");
-////                IChainManager chainManager = localChainManagers.get(product);
-////                // 判断配置信息是否一致
-////                if (chainManager.getHttpUrl().equals(chainConf.getUrl()) &&
-////                        chainManager.getPrivateKey().equals(chainConf.getPrivateKey()) &&
-////                        chainManager.getGasPrice().equals(String.valueOf(chainConf.getGasPrice())) &&
-////                        chainManager.getGasLimit().equals(String.valueOf(chainConf.getGasLimit()))) {
-////                    logger.plog(LogLevel.INFO, "Chain for " + product + " already exists");
-////                }
-////                else {
-////                    logger.plog(LogLevel.INFO, "Chain configuration changed, restart chain for " + product);
-////                    // 先关闭原有的 chainManager 连接
-////                    chainManager.close();
-////                    // 启动新的 chainManager
-////                    try {
-////                        localChainManagers.put(product, IChainManagerFactory.createIChainManager(product,
-////                                chainConf.getUrl(),
-////                                chainConf.getPrivateKey(),
-////                                String.valueOf(chainConf.getGasPrice()),
-////                                String.valueOf(chainConf.getGasLimit())));
-////                    } catch (Exception e) {
-////                        throw new ChainManagerConstructionException("Failed to create chainManager for chain: " + product, e);
-////                    }
-////                }
-//            } else {
-//                try {
-//                    localChainManagers.put(product, IChainManagerFactory.createIChainManager(product,
-//                            chainConf.getUrl(),
-//                            chainConf.getPrivateKey(),
-//                            String.valueOf(chainConf.getGasPrice()),
-//                            String.valueOf(chainConf.getGasLimit())));
-//                } catch (Exception e) {
-//                    throw new ChainManagerConstructionException("Failed to create chainManager for chain: " + product, e);
-//                }
-//            }
-//        }
-//    }
-
-    /*
-     *
-     * step1. 判断 chainProduct 是否合法
+    /**
+     * <p>
+     * step1. 判断 {@code chainProduct} 是否合法
+     * </p>
+     * <p>
      * step2. 判断是否已经存在该类型的链
+     * </p>
+     * <p>
      * step3. 若不存在，运行脚本启动测试链
-     * step4. 创建 ChainConfig
-     * step5. 创建 ChainManager
-     *
-     * */
+     * </p>
+     * <p>
+     * step4. 创建 {@code ChainConfig}
+     * </p>
+     * <p>
+     * step5. 创建 {@code ChainManager}
+     * </p>
+     */
     public void startup(String product) throws ChainManagerException, InterruptedException, IOException {
         if (ChainProduct.isInvalid(product)) {
             throw new InvalidProductException("Invalid product: " + product);
@@ -199,7 +175,6 @@ public class ChainManagerService extends AbstractService {
         Thread.sleep(5000);
 
         // 创建 chainManager
-        // TODO
         IChainManager chainManager;
         try {
             chainManager = IChainManagerFactory.createIChainManager(product);

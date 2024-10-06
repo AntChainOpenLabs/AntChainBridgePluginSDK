@@ -3,7 +3,7 @@ package org.example;
 import java.io.IOException;
 import java.util.Scanner;
 
-import org.example.plugintestrunner.exception.TestCaseLoaderException;
+import org.example.plugintestrunner.exception.TestCaseException;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import org.example.plugintestrunner.PluginTestRunner;
@@ -20,11 +20,11 @@ public class App implements Runnable {
     @Override
     public void run() {}
 
-    public void init() throws IOException, TestCaseLoaderException {
+    public void init() throws IOException, TestCaseException {
         pluginTestRunner = PluginTestRunner.init();
     }
 
-    public static void main(String[] args) throws IOException, TestCaseLoaderException {
+    public static void main(String[] args) throws IOException, TestCaseException {
         App app = new App();
         app.init();
         CommandLine commandLine = new CommandLine(app);

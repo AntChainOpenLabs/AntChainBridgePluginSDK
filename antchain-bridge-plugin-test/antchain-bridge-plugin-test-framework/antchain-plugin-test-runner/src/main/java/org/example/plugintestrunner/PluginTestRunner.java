@@ -2,7 +2,7 @@ package org.example.plugintestrunner;
 
 import lombok.Getter;
 import org.example.plugintestrunner.config.ChainConfigManager;
-import org.example.plugintestrunner.exception.TestCaseLoaderException;
+import org.example.plugintestrunner.exception.TestCaseException;
 import org.example.plugintestrunner.service.ChainManagerService;
 import org.example.plugintestrunner.service.PluginManagerService;
 import org.example.plugintestrunner.service.PluginTestService;
@@ -40,7 +40,7 @@ public class PluginTestRunner {
         this.testCaseContainer = testCaseContainer;
     }
 
-    public static void main(String[] args) throws IOException, TestCaseLoaderException {
+    public static void main(String[] args) throws IOException, TestCaseException {
         PluginTestRunner pluginTestRunner = init();
         pluginTestRunner.run();
     }
@@ -59,7 +59,7 @@ public class PluginTestRunner {
         printTestResult();
     }
 
-    public static PluginTestRunner init() throws IOException, TestCaseLoaderException {
+    public static PluginTestRunner init() throws IOException, TestCaseException {
         ChainConfigManager configManager = ChainConfigManager.getInstance();
         PTRLogger logger = PTRLogger.getInstance();
         ShellScriptRunner shellScriptRunner = new ShellScriptRunner(configManager.getProperty("log.directory"),

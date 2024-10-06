@@ -26,7 +26,7 @@ public class FabricPluginTest {
     private final String PLUGIN_DIRECTORY = "src/test/resources/plugins";
     private final String JAR_PATH = "simple-fabric-bbc-0.1.1-plugin.jar";
     private final String PLUGIN_PRODUCT = "fabric";
-    private final String DOMAIN_NAME = "domain1";
+    private final String DOMAIN_NAME = "fabric-domain";
     private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 

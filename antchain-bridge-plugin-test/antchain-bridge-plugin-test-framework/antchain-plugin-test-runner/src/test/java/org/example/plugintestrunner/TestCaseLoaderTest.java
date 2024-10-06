@@ -2,14 +2,12 @@ package org.example.plugintestrunner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.example.plugintestrunner.exception.TestCaseLoaderException;
+import org.example.plugintestrunner.exception.TestCaseException;
 import org.example.plugintestrunner.testcase.TestCase;
 import org.example.plugintestrunner.testcase.TestCaseContainer;
 import org.example.plugintestrunner.testcase.TestCaseLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 
 public class TestCaseLoaderTest {
@@ -20,7 +18,7 @@ public class TestCaseLoaderTest {
     private TestCaseContainer testCaseContainer;
 
     @BeforeEach
-    public void init() throws TestCaseLoaderException {
+    public void init() throws TestCaseException {
         testCaseContainer = TestCaseLoader.loadTestCasesFromFile(testCasesPath);
     }
 
