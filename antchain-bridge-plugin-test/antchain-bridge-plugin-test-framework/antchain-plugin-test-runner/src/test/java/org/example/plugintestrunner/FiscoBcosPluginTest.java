@@ -1,7 +1,5 @@
 package org.example.plugintestrunner;
 
-import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
-import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.fiscobcos.FiscoBcosChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
@@ -26,7 +24,7 @@ public class FiscoBcosPluginTest {
     private final String JAR_PATH = "fiscobcos-bbc-1.0-SNAPSHOT-plugin.jar";
     private final String PLUGIN_PRODUCT = "fiscobcos";
     private final String DOMAIN_NAME = "domain1";
-    private final String SCRIPT_DIR = "src/test/resources/scripts";
+    private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 
     private FiscoBcosChainManager chainManager;
@@ -48,8 +46,6 @@ public class FiscoBcosPluginTest {
         chainManager = (FiscoBcosChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
 
         // 配置 context、bbcService
-//        bbcContext = new DefaultBBCContext();
-//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 

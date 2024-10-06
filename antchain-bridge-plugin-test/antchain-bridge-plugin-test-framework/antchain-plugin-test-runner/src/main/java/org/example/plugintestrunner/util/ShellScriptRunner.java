@@ -121,7 +121,7 @@ public class ShellScriptRunner {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
                     deleteDirectoryRecursively(finalTempDir);
-                    System.out.println("Temporary directory deleted successfully.");
+//                    System.out.println("Temporary directory deleted successfully.");
                 } catch (IOException e) {
                     System.err.println("Failed to delete temporary directory: " + e.getMessage());
                 }

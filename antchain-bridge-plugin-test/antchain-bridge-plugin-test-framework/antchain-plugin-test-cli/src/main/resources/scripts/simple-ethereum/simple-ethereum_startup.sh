@@ -167,8 +167,6 @@ start_geth() {
           --http.addr "$http_addr" \
           --http.port "$http_port" \
           --http.api "$http_api" \
-          --miner.gasprice "$gas_price" \
-          --miner.gaslimit "$gas_limit" \
           > "$data_dir"/log 2>&1 &
 
     # 获取并保存 Geth 进程ID

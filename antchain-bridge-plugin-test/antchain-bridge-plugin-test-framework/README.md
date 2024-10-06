@@ -18,11 +18,19 @@ AntChain Bridge为开发者提供了 SDK、手册和系统合约模板，来帮�
 
 
 ## 快速启动
+修改 `antchain-bridge-plugin-test-cli` 下的 `config.properties` 文件
 
-生成 jar 包
+```properties
+# 插件目录
+plugin.directory=/path/to/your/plugins
+# 测试用例目录
+testcase.path=/path/to/your/testcase.json
+```
+
+在 `antchain-bridge-plugin-test-framework` 目录下生成 `jar` 包
 
 ```shell
-cd antchain-bridge-plugin-test-framework && mvn clean package -Dmaven.test.skip=true
+mvn clean package -Dmaven.test.skip=true
 ```
 
 运行 `antchain-plugin-test-cli-0.1.0-jar-with-dependencies.jar`

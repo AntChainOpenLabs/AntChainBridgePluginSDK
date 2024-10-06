@@ -42,20 +42,20 @@ stop_cluster() {
 }
 
 # 查找并终止所有 chainmaker 进程
-kill_chainmaker_processes() {
-    log "INFO" "Searching for chainmaker processes..."
-    local pids
-    pids=$(ps aux | grep 'chainmaker' | grep -v 'grep' | awk '{print $2}')
-
-    if [ -z "$pids" ]; then
-        log "INFO" "No chainmaker processes found."
-    else
-        log "INFO" "Found chainmaker processes: $pids"
-        for pid in $pids; do
-            kill -9 "$pid"
-        done
-    fi
-}
+#kill_chainmaker_processes() {
+#    log "INFO" "Searching for chainmaker processes..."
+#    local pids
+#    pids=$(ps aux | grep 'chainmaker' | grep -v 'grep' | awk '{print $2}')
+#
+#    if [ -z "$pids" ]; then
+#        log "INFO" "No chainmaker processes found."
+#    else
+#        log "INFO" "Found chainmaker processes: $pids"
+#        for pid in $pids; do
+#            kill -9 "$pid"
+#        done
+#    fi
+#}
 
 # 检查节点进程
 check_node_processes() {
@@ -86,7 +86,7 @@ main() {
     read_config
     enter_directory
     stop_cluster
-    kill_chainmaker_processes
+#    kill_chainmaker_processes
     check_node_processes
     delete_crypto_config
 

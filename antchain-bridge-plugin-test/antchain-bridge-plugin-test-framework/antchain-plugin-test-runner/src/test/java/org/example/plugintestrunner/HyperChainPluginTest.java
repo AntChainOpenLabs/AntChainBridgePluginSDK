@@ -1,8 +1,6 @@
 package org.example.plugintestrunner;
 
 
-import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
-import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.hyperchain.HyperchainChainManager;
 import org.example.plugintestrunner.exception.ChainManagerException;
@@ -28,7 +26,7 @@ public class HyperChainPluginTest {
     private final String JAR_PATH = "hyperchain2-bbc-0.1.0-plugin.jar";
     private final String PLUGIN_PRODUCT = "hyperchain2";
     private final String DOMAIN_NAME = "domain1";
-    private final String SCRIPT_DIR = "src/test/resources/scripts";
+    private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 
 
@@ -50,8 +48,6 @@ public class HyperChainPluginTest {
         chainManagerService.startup(PLUGIN_PRODUCT);
         chainManager = (HyperchainChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
         // 配置 context、bbcService
-//        bbcContext = new DefaultBBCContext();
-//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 

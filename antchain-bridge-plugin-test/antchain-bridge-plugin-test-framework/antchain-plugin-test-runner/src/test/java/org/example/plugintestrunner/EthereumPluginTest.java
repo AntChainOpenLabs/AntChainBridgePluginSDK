@@ -1,7 +1,5 @@
 package org.example.plugintestrunner;
 
-import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
-import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.ethereum.abi.AppContract;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.eth.EthChainManager;
@@ -31,7 +29,7 @@ public class EthereumPluginTest {
     private final String JAR_PATH = "simple-ethereum-bbc-0.2.0-plugin.jar";
     private final String PLUGIN_PRODUCT = "simple-ethereum";
     private final String DOMAIN_NAME = "domain1";
-    private final String SCRIPT_DIR = "src/test/resources/scripts";
+    private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 
 
@@ -54,8 +52,6 @@ public class EthereumPluginTest {
         chainManagerService.startup(PLUGIN_PRODUCT);
         chainManager = (EthChainManager)chainManagerService.getChainManager(PLUGIN_PRODUCT);
         // 配置 context、bbcService
-//        bbcContext = new DefaultBBCContext();
-//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 

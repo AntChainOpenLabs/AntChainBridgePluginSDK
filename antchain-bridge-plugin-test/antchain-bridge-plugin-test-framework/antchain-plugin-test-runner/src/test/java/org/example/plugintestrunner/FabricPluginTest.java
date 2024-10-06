@@ -1,10 +1,9 @@
 package org.example.plugintestrunner;
 
 
-import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
-import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.fabric.FabricChainManager;
+import org.example.plugintestrunner.config.ChainConfig;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.service.ChainManagerService;
@@ -28,7 +27,7 @@ public class FabricPluginTest {
     private final String JAR_PATH = "simple-fabric-bbc-0.1.1-plugin.jar";
     private final String PLUGIN_PRODUCT = "fabric";
     private final String DOMAIN_NAME = "domain1";
-    private final String SCRIPT_DIR = "src/test/resources/scripts";
+    private final String SCRIPT_DIR = "scripts";
     private final String LOG_DIR = "logs";
 
 
@@ -51,8 +50,6 @@ public class FabricPluginTest {
         chainManager = (FabricChainManager) chainManagerService.getChainManager(PLUGIN_PRODUCT);
 //        chainManager = new FabricChainManager(ChainConfig.FabricChainConfig.confFile);
         // 配置 context、bbcService
-//        bbcContext = new DefaultBBCContext();
-//        bbcContext.setConfForBlockchainClient(chainManager.getConfig().getBytes());
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 
