@@ -22,7 +22,7 @@ AntChain Bridge为开发者提供了 SDK、手册和系统合约模板，来帮�
 生成 jar 包
 
 ```shell
-cd antchain-bridge-plugin-test-framework && maven clean package -Dmaven.test.skip=true
+cd antchain-bridge-plugin-test-framework && mvn clean package -Dmaven.test.skip=true
 ```
 
 运行 `antchain-plugin-test-cli-0.1.0-jar-with-dependencies.jar`
