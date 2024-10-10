@@ -123,41 +123,36 @@ public class ChainMakerBBCService extends AbstractBBCService {
         getBBCLogger().info("[startup] ChainMaker startup with context: {}",
                 new String(abstractBBCContext.getConfForBlockchainClient()));
 
-        try {
-            if (ObjectUtil.isNull(abstractBBCContext)) {
-                throw new RuntimeException("null bbc context");
-            }
-            if (ObjectUtil.isEmpty(abstractBBCContext.getConfForBlockchainClient())) {
-                throw new RuntimeException("empty blockchain client conf");
-            }
+        if (ObjectUtil.isNull(abstractBBCContext)) {
+            throw new RuntimeException("null bbc context");
+        }
+        if (ObjectUtil.isEmpty(abstractBBCContext.getConfForBlockchainClient())) {
+            throw new RuntimeException("empty blockchain client conf");
+        }
 
-            // 1. Obtain the configuration information
-            try {
-                config = ChainMakerConfig.fromJsonString(new String(abstractBBCContext.getConfForBlockchainClient()));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if (StrUtil.isEmpty(config.getSdkConfig())) {
-                throw new RuntimeException("SdkConfig is empty");
-            }
-            if (config.getAdminTlsKeyPaths().isEmpty()) {
-                throw new RuntimeException("AdminTlsKeyPath is empty");
-            }
-            if (config.getAdminTlsKeyPaths().size() != config.getAdminTlsCertPaths().size()) {
-                throw new RuntimeException("AdminTlsCertPaths size not match");
-            }
-            if (config.getAdminKeyPaths().isEmpty()) {
-                throw new RuntimeException("AdminKeyPath is empty");
-            }
-            if (config.getAdminKeyPaths().size() != config.getAdminKeyPaths().size()) {
-                throw new RuntimeException("AdminKeyPaths size not match");
-            }
-            if (config.getOrgIds().isEmpty()) {
-                throw new RuntimeException("OrgId is empty");
-            }
-        } catch (Exception e) {
-            getBBCLogger().error("[startup] Obtain the configuration information exception", e);
-            throw e;
+        // 1. Obtain the configuration information
+        try {
+            config = ChainMakerConfig.fromJsonString(new String(abstractBBCContext.getConfForBlockchainClient()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (StrUtil.isEmpty(config.getSdkConfig())) {
+            throw new RuntimeException("SdkConfig is empty");
+        }
+        if (config.getAdminTlsKeyPaths().isEmpty()) {
+            throw new RuntimeException("AdminTlsKeyPath is empty");
+        }
+        if (config.getAdminTlsKeyPaths().size() != config.getAdminTlsCertPaths().size()) {
+            throw new RuntimeException("AdminTlsCertPaths size not match");
+        }
+        if (config.getAdminKeyPaths().isEmpty()) {
+            throw new RuntimeException("AdminKeyPath is empty");
+        }
+        if (config.getAdminKeyPaths().size() != config.getAdminKeyPaths().size()) {
+            throw new RuntimeException("AdminKeyPaths size not match");
+        }
+        if (config.getOrgIds().isEmpty()) {
+            throw new RuntimeException("OrgId is empty");
         }
 
         // 2. Connect to the chainmaker network
@@ -180,9 +175,8 @@ public class ChainMakerBBCService extends AbstractBBCService {
 
             chainClient = chainManager.createChainClient(sdkConfig);
         } catch (ChainClientException | RpcServiceClientException | UtilsException | ChainMakerCryptoSuiteException |
-                 IllegalAccessException e) {
-            getBBCLogger().error("[startup] Connect to the chainmaker network exception", e);
-            throw new RuntimeException(e);
+                 IllegalAccessException ex) {
+            throw new RuntimeException(ex);
         }
 
         // 3. get client address of chainClient
@@ -191,7 +185,6 @@ public class ChainMakerBBCService extends AbstractBBCService {
                     chainClient.getClientUser().getCertificate(),
                     ChainConfigOuterClass.AddrType.ETHEREUM);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            getBBCLogger().error("[startup] fail to get client address", e);
             throw new RuntimeException("fail to get client address", e);
         }
 
@@ -207,7 +200,6 @@ public class ChainMakerBBCService extends AbstractBBCService {
                                 config.getAdminTlsKeyPaths().get(i),
                                 config.getAdminTlsCertPaths().get(i)));
             } catch (ChainMakerCryptoSuiteException e) {
-                getBBCLogger().error("[startup] fail to create admin user for endorsement", e);
                 throw new RuntimeException("fail to create admin user for endorsement", e);
             }
         }
