@@ -37,20 +37,27 @@
           <version>5.7.1</version>
           <scope>test</scope>
       </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>4.3.1</version>
-      </dependency>
+<!--      <dependency>-->
+<!--        <groupId>com.squareup.okhttp3</groupId>-->
+<!--        <artifactId>okhttp</artifactId>-->
+<!--        <version>4.3.1</version>-->
+<!--      </dependency>-->
       <dependency>
         <groupId>org.web3j</groupId>
         <artifactId>core</artifactId>
         <version>4.9.8</version>
+          <scope>provided</scope>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.slf4j</groupId>
+                  <artifactId>slf4j-api</artifactId>
+              </exclusion>
+          </exclusions>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>2.12.5</version>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+          <version>2.14.2</version>
       </dependency>
       <dependency>
         <groupId>com.alipay.antchain.bridge</groupId>
@@ -150,6 +157,11 @@
           <groupId>io.grpc</groupId>
           <artifactId>grpc-netty</artifactId>
           <version>1.43.1</version>
+      </dependency>
+      <dependency>
+          <groupId>com.ali.antchain</groupId>
+          <artifactId>antchain-bridge-plugin-tester</artifactId>
+          <version>0.1.0</version>
       </dependency>
     </dependencies>
 
