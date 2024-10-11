@@ -44,5 +44,16 @@
     <root level="info">
         <appender-ref ref="OTHER_LOGGER" />
     </root>
+<!--    <logger name="resultLogger" level="info" additivity="false">-->
+<!--        <appender-ref ref="RESULT_LOGGER" />-->
+<!--    </logger>-->
+
+<!--    <logger name="processLogger" level="info" additivity="false">-->
+<!--        <appender-ref ref="RESULT_LOGGER" /> &lt;!&ndash; 修改为 RESULT_LOGGER &ndash;&gt;-->
+<!--    </logger>-->
+
+<!--    <root level="info">-->
+<!--        <appender-ref ref="RESULT_LOGGER" /> &lt;!&ndash; 修改为 RESULT_LOGGER &ndash;&gt;-->
+<!--    </root>-->
 
 </configuration>

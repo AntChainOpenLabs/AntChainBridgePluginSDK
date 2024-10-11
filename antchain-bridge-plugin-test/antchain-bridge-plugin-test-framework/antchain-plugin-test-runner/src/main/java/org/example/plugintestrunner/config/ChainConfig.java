@@ -8,6 +8,8 @@ public class ChainConfig {
         public static final int httpPort;
         public static final String httpApi;
         public static final String privateKeyFile;
+        public static final String gasPrice;
+        public static final String gasLimit;
 
         static {
             ChainConfigManager config = ChainConfigManager.getInstance();
@@ -16,6 +18,8 @@ public class ChainConfig {
             httpPort = Integer.parseInt(config.getProperty("ethereum.http_port"));
             httpApi = config.getProperty("ethereum.http_api");
             privateKeyFile = config.getProperty("ethereum.private_key_file");
+            gasPrice = config.getProperty("ethereum.gas_price");
+            gasLimit = config.getProperty("ethereum.gas_limit");
         }
 
         public static String getHttpUrl() {

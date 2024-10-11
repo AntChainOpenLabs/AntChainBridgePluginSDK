@@ -27,7 +27,7 @@ public abstract class TestCaseChainConf {
         ChainProduct cp = ChainProduct.fromValue(product);
         switch (cp) {
             case ETH:
-                return new EthChainManager(((TestCaseEthConf) this).getHttpUrl(), ((TestCaseEthConf) this).getPrivateKeyFile());
+                return new EthChainManager(((TestCaseEthConf) this).getHttpUrl(), ((TestCaseEthConf) this).getPrivateKeyFile(), ((TestCaseEthConf) this).getGasPrice(), ((TestCaseEthConf) this).getGasLimit());
             case EOS:
                 return new EosChainManager(((TestCaseEosConf) this).getHttpUrl(), ((TestCaseEosConf) this).getPrivateKeyFile());
             case BCOS:
@@ -79,6 +79,8 @@ public abstract class TestCaseChainConf {
     public static class TestCaseEthConf extends TestCaseChainConf {
         private String httpUrl;
         private String privateKeyFile;
+        private String gasPrice;
+        private String gasLimit;
 
         public TestCaseEthConf() {
             setProduct("TestCaseEthConf");
@@ -86,7 +88,7 @@ public abstract class TestCaseChainConf {
 
         @Override
         public boolean isValid() {
-            return httpUrl != null && privateKeyFile != null;
+            return httpUrl != null && privateKeyFile != null && gasPrice != null && gasLimit != null;
         }
     }
 
