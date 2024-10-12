@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.example</groupId>
+    <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-plugin-test-framework</artifactId>
     <version>0.1.0</version>
     <relativePath>../pom.xml</relativePath>
@@ -22,7 +22,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.example</groupId>
+      <groupId>com.alipay.antchain.bridge</groupId>
       <artifactId>antchain-plugin-test-runner</artifactId>
       <version>0.1.0</version>
     </dependency>
@@ -75,7 +75,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.example.App</mainClass>
+              <mainClass>com.alipay.antchain.bridge.App</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

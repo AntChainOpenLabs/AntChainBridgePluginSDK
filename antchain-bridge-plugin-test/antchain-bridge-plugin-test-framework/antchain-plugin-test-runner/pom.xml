@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   
   <parent>
-      <groupId>org.example</groupId>
+      <groupId>com.alipay.antchain.bridge</groupId>
       <artifactId>antchain-bridge-plugin-test-framework</artifactId>
       <version>0.1.0</version>
       <relativePath>../pom.xml</relativePath>
@@ -88,6 +88,12 @@
         <artifactId>asciitable</artifactId>
         <version>0.3.2</version>
       </dependency>
+      <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <version>1.18.24</version> <!-- 使用最新的Lombok版本 -->
+          <scope>provided</scope>
+      </dependency>
 <!--      grpc-protobuf,grpc-stub,grpc-netty-->
       <dependency>
           <groupId>org.chainmaker</groupId>
@@ -156,11 +162,11 @@
           <artifactId>grpc-netty</artifactId>
           <version>1.43.1</version>
       </dependency>
-      <dependency>
-          <groupId>com.alipay.antchain.bridge</groupId>
-          <artifactId>antchain-bridge-plugin-tester</artifactId>
-          <version>0.1.0</version>
-      </dependency>
+<!--      <dependency>-->
+<!--          <groupId>com.alipay.antchain.bridge</groupId>-->
+<!--          <artifactId>antchain-bridge-plugin-tester</artifactId>-->
+<!--          <version>0.1.0</version>-->
+<!--      </dependency>-->
     </dependencies>
 
     <build>

@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
+    <groupId>com.alipay.antchain.bridge</groupId>
     <artifactId>antchain-bridge-plugin-test-framework</artifactId>
     <version>0.1.0</version>
     <packaging>pom</packaging>
@@ -12,4 +12,12 @@
         <module>antchain-plugin-test-cli</module>
         <module>antchain-plugin-test-runner</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.alipay.antchain.bridge</groupId>
+            <artifactId>antchain-bridge-plugin-tester</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+    </dependencies>
 </project>

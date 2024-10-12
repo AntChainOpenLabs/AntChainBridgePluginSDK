@@ -206,4 +206,11 @@ Successfully created BBC service for chainmaker with domain domain-chainmaker
 
 ## 插件测试模块
 
-> 还未联调，可以单独运行 `antchain-plugin-test-runner `下的单元测试
+### 命令行
+
+- 加载 simple-ethereum 插件
+
+```shell
+plugin test -j simple-ethereum-bbc-0.2.0-plugin.jar -p simple-ethereum -f readCrossChainMessagesByHeight
+```
+
