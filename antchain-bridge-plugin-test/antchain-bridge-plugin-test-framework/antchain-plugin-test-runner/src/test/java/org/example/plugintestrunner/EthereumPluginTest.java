@@ -1,28 +1,18 @@
 package org.example.plugintestrunner;
 
-//import com.ali.antchain.EthPluginTestTool;
-//import com.ali.antchain.EthPluginTestTool;
-import com.alipay.antchain.bridge.plugins.ethereum.abi.AppContract;
-//import com.alipay.antchain.bridge.plugins.ethereum.EthereumBBCService;
-import com.ali.antchain.EthPluginTestTool;
+import com.alipay.antchain.bridge.EthPluginTestTool;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import org.example.plugintestrunner.chainmanager.eth.EthChainManager;
-import org.example.plugintestrunner.config.ChainConfig;
 import org.example.plugintestrunner.exception.ChainManagerException;
 import org.example.plugintestrunner.exception.PluginManagerException;
 import org.example.plugintestrunner.service.ChainManagerService;
 import org.example.plugintestrunner.service.PluginManagerService;
 import org.example.plugintestrunner.util.PTRLogger;
+import org.example.plugintestrunner.util.ShellScriptRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.web3j.crypto.Credentials;
-import org.web3j.tx.RawTransactionManager;
-//import org.web3j.crypto.Credentials;
-//import org.web3j.protocol.Web3j;
-//import org.web3j.tx.RawTransactionManager;
-import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.io.IOException;
 
@@ -42,8 +32,9 @@ public class EthereumPluginTest {
 
 
     private EthChainManager chainManager;
-    private AppContract appContract;
     private IBBCService bbcService;
+    EthPluginTestTool ethPluginTestTool;
+
 
 
     @BeforeEach
@@ -55,106 +46,98 @@ public class EthereumPluginTest {
         pluginManagerService.testStartPlugin(JAR_PATH);
         pluginManagerService.testCreateBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
         // 创建测试链
-//        ShellScriptRunner shellScriptRunner = new ShellScriptRunner(LOG_DIR, SCRIPT_DIR);
-//        chainManagerService = new ChainManagerService(logger, shellScriptRunner);
-//        chainManagerService.startup(PLUGIN_PRODUCT);
-//        chainManager = (EthChainManager)chainManagerService.getChainManager(PLUGIN_PRODUCT);
-        chainManager = new EthChainManager(ChainConfig.EthChainConfig.getHttpUrl(), ChainConfig.EthChainConfig.privateKeyFile, ChainConfig.EthChainConfig.gasPrice, ChainConfig.EthChainConfig.gasLimit);;
-//        chainManager = new EthChainManager("http://172.31.154.210:8545", "/tmp/ethereum/private_key.txt", "4100000000", "10000000");
+        ShellScriptRunner shellScriptRunner = new ShellScriptRunner(LOG_DIR, SCRIPT_DIR);
+        chainManagerService = new ChainManagerService(logger, shellScriptRunner);
+        chainManagerService.startup(PLUGIN_PRODUCT);
+        chainManager = (EthChainManager)chainManagerService.getChainManager(PLUGIN_PRODUCT);
+        // 如果使用本地测试环境，将创建测试链的代码注释，同时打开下面的代码，修改相应参数
+        // chainManager = new EthChainManager(ChainConfig.EthChainConfig.getHttpUrl(), ChainConfig.EthChainConfig.privateKeyFile, ChainConfig.EthChainConfig.gasPrice, ChainConfig.EthChainConfig.gasLimit);
         // 配置 context、bbcService
         bbcService = pluginManagerService.getBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
+        ethPluginTestTool = new EthPluginTestTool(chainManager.getBBCContext(), (AbstractBBCService) bbcService);
     }
 
     @Test
-    public void testEth() throws Exception {
-        System.out.println(chainManager.getConfig());
-        System.out.println(chainManager.getWeb3j().ethChainId().send().getChainId().toString());
-        // 部署合约
-        Credentials credentials = Credentials.create(chainManager.getPrivateKey());
-        RawTransactionManager rawTransactionManager = new RawTransactionManager(
-                chainManager.getWeb3j(), credentials, chainManager.getWeb3j().ethChainId().send().getChainId().longValue());
-        appContract = AppContract.deploy(
-                chainManager.getWeb3j(),
-                rawTransactionManager,
-                new DefaultGasProvider()
-        ).send();
-
-        System.out.println("contract address: " + appContract.getContractAddress());
-//        // 调用 bbcService
+    public void testEthBBCServiceInterface() {
         bbcService.startup(chainManager.getBBCContext());
+
         bbcService.setupAuthMessageContract();
-        bbcService.setupSDPMessageContract();
         System.out.println("authMessageContract address: " + bbcService.getContext().getAuthMessageContract().getContractAddress());
-        System.out.println("sdpMessageContract address: " + bbcService.getContext().getSdpContract().getContractAddress());
-    }
 
-    @Test
-    public void testServiceInterface() throws Exception {
-        // 部署合约
-        Credentials credentials = Credentials.create(chainManager.getPrivateKey());
-        RawTransactionManager rawTransactionManager = new RawTransactionManager(
-                chainManager.getWeb3j(), credentials, chainManager.getWeb3j().ethChainId().send().getChainId().longValue());
-        appContract = AppContract.deploy(
-                chainManager.getWeb3j(),
-                rawTransactionManager,
-                new DefaultGasProvider()
-        ).send();
-        System.out.println("contract address: " + appContract.getContractAddress());
-//        // 调用 bbcService
-        bbcService.startup(chainManager.getBBCContext());
-        System.out.println("startup pass");
-
-        bbcService.setupAuthMessageContract();
-        System.out.println("setupAuthMessageContract pass");
-
-        // set up sdp
         bbcService.setupSDPMessageContract();
-        System.out.println("setupSDPMessageContract pass");
+        System.out.println("sdpMessageContract address: " + bbcService.getContext().getSdpContract().getContractAddress());
 
+        bbcService.setProtocol(bbcService.getContext().getSdpContract().getContractAddress(),"0");
 
-        // set protocol to am (sdp type: 0)
-        bbcService.setProtocol(
-                bbcService.getContext().getSdpContract().getContractAddress(),
-                "0");
-        System.out.println("setProtocol pass");
-
-        // set am to sdp
         bbcService.setAmContract(bbcService.getContext().getAuthMessageContract().getContractAddress());
-        System.out.println("setAmContract pass");
 
-
-        // set local domain to sdp
         bbcService.setLocalDomain("receiverDomain");
-        System.out.println("setLocalDomain pass");
+
+        bbcService.shutdown();
     }
 
     @Test
-    public void testEthPluginTestTool() throws Exception {
-        EthPluginTestTool ethPluginTestTool = new EthPluginTestTool(chainManager.getBBCContext(), (AbstractBBCService) bbcService);
-
-//        ethPluginTestTool.startupTest();
-//        ethPluginTestTool.shutdownTest();
-//        ethPluginTestTool.getcontextTest();
-//        ethPluginTestTool.setupamcontractTest();
-//        ethPluginTestTool.setupsdpcontractTest();
-//        ethPluginTestTool.setprotocolTest();
-//        ethPluginTestTool.querysdpmessageseqTest();
-//        ethPluginTestTool.setamcontractandlocaldomainTest();
-
-
-//        ethPluginTestTool.readcrosschainmessagereceiptTest();
-        ethPluginTestTool.readcrosschainmessagebyheightTest();
-//        ethPluginTestTool.relayauthmessageTest();
+    public void testTestToolStartup() {
+        ethPluginTestTool.startupTest();
     }
 
+    @Test
+    public void testTestToolShutdown() {
+        ethPluginTestTool.shutdownTest();
+    }
+
+    @Test
+    public void tetTestToolGetContext() {
+        ethPluginTestTool.getContextTest();
+    }
+
+    @Test
+    public void testTestToolSetupAmContractTest() {
+        ethPluginTestTool.setupAmContractTest();
+    }
+
+    @Test
+    public void testTestToolSetupSdpContractTest() {
+        ethPluginTestTool.setupSdpContractTest();
+    }
+
+    @Test
+    public void testTestToolSetProtocolTest() throws Exception {
+        ethPluginTestTool.setProtocolTest();
+    }
+
+    @Test
+    public void testTestToolQuerySdpMessageSeqTest() {
+        ethPluginTestTool.querySdpMessageSeqTest();
+    }
+
+    @Test
+    public void testTestToolSetAmContractAndLocalDomainTest() {
+        ethPluginTestTool.setAmContractAndLocalDomainTest();
+    }
+
+    @Test
+    public void testTestToolReadCrossChainMessageReceiptTest() {
+        ethPluginTestTool.readCrossChainMessageReceiptTest();
+    }
+
+    @Test
+    public void testTestToolReadCrossChainMessageByHeightTest() {
+        ethPluginTestTool.readCrossChainMessageByHeightTest();
+    }
+
+    @Test
+    public void testTestToolRelayAuthMessageTest() {
+        ethPluginTestTool.relayAuthMessageTest();
+    }
 
     @AfterEach
     public void close() {
-//        if (chainManagerService != null) {
-//            chainManagerService.close();
-//        }
-//        if (pluginManagerService != null) {
-//            pluginManagerService.close();
-//        }
+        if (chainManagerService != null) {
+            chainManagerService.close();
+        }
+        if (pluginManagerService != null) {
+            pluginManagerService.close();
+        }
     }
 }

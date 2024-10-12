@@ -11,7 +11,7 @@ source "$SCRIPT_DIR"/../utils.sh
 # 读取配置文件的函数
 read_config() {
     log "INFO" "Reading configuration from $CONFIG_FILE for chain type $CHAIN_TYPE"
-    get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir http_addr http_port http_api private_key_file gas_price gas_limit ganache_cmd_path
+    get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir http_addr http_port http_api private_key_file gas_price gas_limit
 }
 
 # 创建数据目录的函数
@@ -26,7 +26,9 @@ create_data_directory() {
 # 启动Ganache的函数
 start_ganache() {
     log "INFO" "Starting Ganache..."
-    $(eval echo "$ganache_cmd_path") --db "$data_dir" --host "$http_addr" --port "$http_port" --gasPrice "$gas_price" --gasLimit "$gas_limit" > "$data_dir/ganache_log.txt" 2>&1 &
+    # 加载 nvm 环境
+    source ~/.nvm/nvm.sh
+    ganache --db "$data_dir" --host "$http_addr" --port "$http_port" --gasPrice "$gas_price" --gasLimit "$gas_limit" > "$data_dir/ganache_log.txt" 2>&1 &
 }
 
 # 检查Ganache是否成功启动的函数

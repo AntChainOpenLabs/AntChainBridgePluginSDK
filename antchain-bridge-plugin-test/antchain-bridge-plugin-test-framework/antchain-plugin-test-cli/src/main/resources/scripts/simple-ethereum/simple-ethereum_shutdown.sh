@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# 确保脚本以 root 用户运行（可选，根据需要保留）
-#if [[ "$EUID" -ne 0 ]]; then
-#    echo "ERROR: 这个脚本必须以 root 用户运行。" >&2
-#    exit 1
-#fi
-
 # 设置脚本目录和配置文件路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/../../config.properties"
@@ -14,70 +8,45 @@ CHAIN_TYPE="ethereum"
 # 引入工具脚本
 source "$SCRIPT_DIR"/../utils.sh
 
-# 全局变量（可选，根据需要使用）
-# data_dir 和其他配置项将通过 read_config 函数设置
 
 # 读取配置文件的函数
 read_config() {
     log "INFO" "Reading configuration from $CONFIG_FILE for chain type $CHAIN_TYPE"
-    get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir
-}
-
-# 检查 PID 文件是否存在的函数
-check_pid_file() {
-    pid_file="$data_dir/geth.pid"
-    log "INFO" "Checking if PID file exists at $pid_file..."
-    if [ -f "$pid_file" ]; then
-        GETH_PID=$(cat "$pid_file")
-        log "INFO" "Found PID file with PID $GETH_PID."
-        return 0
-    else
-        log "ERROR" "PID file not found at $pid_file. Is Geth running?"
-        return 1
-    fi
-}
-
-# 检查 Geth 进程是否在运行的函数
-is_geth_running() {
-    local pid=$1
-    if ps -p "$pid" > /dev/null 2>&1; then
-        return 0
-    else
-        return 1
-    fi
+    get_config_values "$CONFIG_FILE" "$CHAIN_TYPE" data_dir http_port
 }
 
 # 停止 Geth 进程的函数
 stop_geth_process() {
-    local pid=$1
-    log "INFO" "Stopping Geth process with PID $pid..."
+    # 查找占用 http_port 且 command 为 node 的进程
+    PIDS=$(lsof -t -i:"$http_port" | xargs -I {} sh -c 'ps -p {} -o comm= | grep -q "^node$" && echo {}')
 
-    kill -15 "$pid" || {
-        log "WARNING" "Failed to send SIGTERM to Geth process with PID $pid."
-    }
+    # 检查是否找到占用端口且为 node 的进程
+    if [ -n "$PIDS" ]; then
+        for PID in $PIDS; do
+            log "INFO" "Trying to kill process $PID (command: node)..."
 
-    sleep 5
+            # 尝试优雅地终止进程
+            kill "$PID"
 
-    if is_geth_running "$pid"; then
-        log "WARNING" "Geth process with PID $pid did not stop, sending SIGKILL..."
-        kill -9 "$pid" || {
-            log "ERROR" "Failed to send SIGKILL to Geth process with PID $pid."
-            return 1
-        }
+            # 检查进程是否仍然存在
+            sleep 2
+            if kill -0 "$PID" &> /dev/null; then
+                log "WARNING" "Process $PID did not stop, forcing termination..."
+
+                # 强制终止
+                kill -9 "$PID"
+                if [ $? -eq 0 ]; then
+                    log "INFO" "Process $PID (command: node) was killed."
+                else
+                    log "ERROR" "Failed to kill process $PID (command: node)."
+                fi
+            else
+                log "INFO" "Process $PID (command: node) stopped gracefully."
+            fi
+        done
     else
-        log "INFO" "Geth process with PID $pid stopped successfully."
+        log "INFO" "No node process found on port $http_port."
     fi
-
-    return 0
-}
-
-# 移除 PID 文件的函数
-remove_pid_file() {
-    local pid_file=$1
-    log "INFO" "Removing PID file at $pid_file..."
-    rm -f "$pid_file" || {
-        log "WARNING" "Failed to remove PID file at $pid_file."
-    }
 }
 
 # 移除数据目录的函数
@@ -92,19 +61,7 @@ remove_data_dir() {
 
 # 执行清理操作的主函数
 cleanup() {
-    if check_pid_file; then
-        if is_geth_running "$GETH_PID"; then
-            if stop_geth_process "$GETH_PID"; then
-                remove_pid_file "$pid_file"
-            else
-                log "ERROR" "Failed to stop Geth process with PID $GETH_PID."
-                exit 1
-            fi
-        else
-            log "WARNING" "No Geth process found with PID $GETH_PID. Removing stale PID file."
-            remove_pid_file "$pid_file"
-        fi
-    fi
+    stop_geth_process
 
     remove_data_dir
 
