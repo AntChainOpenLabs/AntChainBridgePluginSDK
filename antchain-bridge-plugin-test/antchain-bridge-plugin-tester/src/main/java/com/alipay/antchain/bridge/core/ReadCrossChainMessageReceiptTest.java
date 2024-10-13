@@ -131,6 +131,8 @@ import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
+import com.alipay.antchain.bridge.exception.PluginTestToolException.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -152,43 +154,38 @@ public class ReadCrossChainMessageReceiptTest {
         this.tester = tester;
     }
 
-    public static void run(AbstractBBCService service, AbstractTester tester) {
+    public static void run(AbstractBBCService service, AbstractTester tester) throws PluginTestToolException {
         ReadCrossChainMessageReceiptTest test = new ReadCrossChainMessageReceiptTest(service, tester);
         test.relayAuthMessageReceipt_success();
     }
 
-    public void relayAuthMessageReceipt_success() {
+    public void relayAuthMessageReceipt_success() throws PluginTestToolException{
 
-        log.info("Start preparing for relay auth message receipt");
         // 部署AM、SDP合约
         prepare();
-        log.info("Preparation for relay auth message receipt completed");
 
         try {
             // relay am msg
             AbstractBBCContext curCtx = service.getContext();
 
-            log.info("sdpContract: {}", curCtx.getSdpContract().getContractAddress());
-
             byte[] targetIdentity = tester.deployApp(curCtx.getSdpContract().getContractAddress());
 
-            log.info("Deployed app with identity: {}", Arrays.toString(targetIdentity));
-
             CrossChainMessageReceipt receipt = service.relayAuthMessage(getRawMsgFromRelayer(targetIdentity));
+
             tester.waitForTxConfirmed(receipt.getTxhash());
 
             // read receipt by txHash
             CrossChainMessageReceipt receipt1 = service.readCrossChainMessageReceipt(receipt.getTxhash());
 
-            log.info("Read receipt with txHash: {}", receipt.getTxhash());
+            if (!receipt1.isConfirmed()) {
+                throw new CrossChainMessageReceiptNotConfirmedException("ReadCrossChainMessageReceiptTest failed, not confirmed");
+            }
+            if (receipt.isSuccessful() != receipt1.isSuccessful()) {
+                throw new CrossChainMessageReceiptSuccessStatusMismatchException("ReadCrossChainMessageReceiptTest failed, success status mismatch");
+            }
 
-            System.out.println("============================================");
-            System.out.println(receipt1.isConfirmed());
-            System.out.println("============================================");
         } catch (Exception e) {
-            // 异常处理
-            log.error("Error occurred during relay auth message receipt", e);
-            throw new RuntimeException("Error occurred during relay auth message receipt", e);
+            throw new ReadCrossChainMessageReceiptTestException("ReadCrossChainMessageReceiptTest failed", e);
         }
     }
 

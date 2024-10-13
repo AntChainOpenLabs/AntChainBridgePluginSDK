@@ -12,6 +12,8 @@ import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
+import com.alipay.antchain.bridge.exception.PluginTestToolException.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -32,12 +34,12 @@ public class RelayAuthMessageTest {
         this.tester = tester;
     }
 
-    public static void run(AbstractBBCService service, AbstractTester tester) {
+    public static void run(AbstractBBCService service, AbstractTester tester) throws PluginTestToolException {
         RelayAuthMessageTest relayAuthMessageTest = new RelayAuthMessageTest(service, tester);
         relayAuthMessageTest.relayAuthMessage_success();
     }
 
-    public void relayAuthMessage_success() {
+    public void relayAuthMessage_success() throws PluginTestToolException {
         // 部署AM、SDP合约
         prepare();
 
@@ -46,13 +48,20 @@ public class RelayAuthMessageTest {
 
         byte[] targetIdentity = tester.deployApp(curCtx.getSdpContract().getContractAddress());
 
+        // relay am msg
         CrossChainMessageReceipt receipt = service.relayAuthMessage(getRawMsgFromRelayer(targetIdentity));
 
-        System.out.println("======================================");
-        System.out.println(receipt.isSuccessful());
-        System.out.println("======================================");
+        if (!receipt.isSuccessful()) {
+            throw new CrossChainMessageReceiptFailedException("RelayAuthMessageTest failed, receipt is not successful");
+        }
 
         tester.waitForTxConfirmed(receipt.getTxhash());
+
+        try {
+            tester.checkTransactionReceipt(service, receipt.getTxhash());
+        } catch (Exception e) {
+            throw new CrossChainMessageReceiptFailedException("RelayAuthMessageTest failed, checkTransactionReceipt failed", e);
+        }
     }
 
 

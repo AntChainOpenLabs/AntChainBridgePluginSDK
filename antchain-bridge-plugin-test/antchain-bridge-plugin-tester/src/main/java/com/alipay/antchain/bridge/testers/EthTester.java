@@ -6,10 +6,12 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.alipay.antchain.bridge.abi.AppContract;
 import com.alipay.antchain.bridge.abi.AuthMsg;
+import com.alipay.antchain.bridge.abi.SDPMsg;
 import com.alipay.antchain.bridge.abstarct.AbstractTester;
 
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import lombok.Getter;
 import org.web3j.abi.FunctionEncoder;
@@ -42,6 +44,8 @@ public class EthTester extends AbstractTester {
     private static final String WEB3J = "web3j";
     private static final String CREDENTIALS = "credentials";
     private static final String TRANSACTIONMANAGER = "rawTransactionManager";
+    private static final Long GAS_PRICE = 4100000000L;
+    private static final Long GAS_LIMIT = 10000000L;
 
     private String remote_app_contract;
 
@@ -93,7 +97,7 @@ public class EthTester extends AbstractTester {
 
 
     @Override
-    public String getProtocol(String amContractAddr) {
+    public String getProtocol(String amContractAddr) throws PluginTestToolException {
         try {
             return AuthMsg.load(
                             amContractAddr,
@@ -103,7 +107,7 @@ public class EthTester extends AbstractTester {
                     .getProtocol(BigInteger.ZERO)
                     .send();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new PluginTestToolException("failed to get protocol", e);
         }
     }
 
@@ -152,7 +156,7 @@ public class EthTester extends AbstractTester {
 
 
     @Override
-    public void sendMsg(AbstractBBCService service) {
+    public void sendMsgUnordered(AbstractBBCService service) throws Exception {
 
         String txhash = "";
         // 3. query latest height
@@ -175,30 +179,9 @@ public class EthTester extends AbstractTester {
             );
             String encodedFunc = FunctionEncoder.encode(function);
 
-            // 获取service的class
-            Class<?> serviceClazz = service.getClass();
+            setWeb3jClient(service);
 
-            // 2.1 从 service 中获取 web3j
-            Field web3jField = null;
-            web3jField = serviceClazz.getDeclaredField(WEB3J);
-
-            // 允许访问私有字段
-            web3jField.setAccessible(true);
-            Object web3jObj = null;
-            web3jObj = web3jField.get(service);
-            if (web3jObj instanceof Web3j) {
-                web3jClient = (Web3j) web3jObj;
-            }
-
-            // 2.2 从 service 中获取 credentials
-            Field credentialsField = serviceClazz.getDeclaredField(CREDENTIALS);
-            credentialsField.setAccessible(true);
-            Object credentialsObj = credentialsField.get(service);
-
-            if (credentialsObj instanceof Credentials) {
-                credentials = (Credentials) credentialsObj;
-            }
-
+            setCredentials(service);
 
             // 2.4 调用ethcall
             EthCall call = web3jClient.ethCall(
@@ -210,18 +193,12 @@ public class EthTester extends AbstractTester {
                     DefaultBlockParameterName.LATEST
             ).send();
 
-            // 2.5 获取rawTransactionManager
-            Field rawTransactionManagerField = serviceClazz.getDeclaredField(TRANSACTIONMANAGER);
-            rawTransactionManagerField.setAccessible(true);
-            Object rawTransactionManagerObj = rawTransactionManagerField.get(service);
-            if (rawTransactionManagerObj instanceof TransactionManager) {
-                rawTransactionManager = (RawTransactionManager) rawTransactionManagerObj;
-            }
+            GetRawTransactionManager(service);
 
             // 2.6 发送交易
             EthSendTransaction ethSendTransaction = rawTransactionManager.sendTransaction(
-                    BigInteger.valueOf(4100000000L),
-                    BigInteger.valueOf(10000000L),
+                    BigInteger.valueOf(GAS_PRICE),
+                    BigInteger.valueOf(GAS_LIMIT),
                     appContract.getContractAddress(),
                     encodedFunc,
                     BigInteger.ZERO
@@ -230,31 +207,178 @@ public class EthTester extends AbstractTester {
             getBbcLogger().info("send unordered msg tx {}", ethSendTransaction.getTransactionHash());
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new Exception("failed to send msg", e);
         }
 
         waitForTxConfirmed(txhash);
 
         long height2 = service.queryLatestHeight();
 
+        // 4. read cc msg
+        List<CrossChainMessage> messageList = ListUtil.toList();
+        for (long i = height1; i <= height2; i++) {
+            messageList.addAll(service.readCrossChainMessagesByHeight(i));
+        }
+
+        if (messageList.size() != 1 || messageList.get(0).getType() != CrossChainMessage.CrossChainMessageType.AUTH_MSG) {
+            throw new RuntimeException("messageList.size() != 1 || messageList.get(0).getType() != CrossChainMessage.CrossChainMessageType.AUTH_MSG");
+        }
+
+        System.out.println("txHash: "+txhash);
+
+    }
+
+    @Override
+    public void sendMsgOrdered(AbstractBBCService service) throws Exception{
+
+        String txhash = "";
+        long height1 = service.queryLatestHeight();
+        try {
+            // !!部署APP合约
+            AbstractBBCContext curCtx = service.getContext();
+            deployApp(curCtx.getSdpContract().getContractAddress());
+
+            // 2.1 create function
+            List<Type> inputParameters = new ArrayList<>();
+            inputParameters.add(new Utf8String("remoteDomain"));
+            inputParameters.add(new Bytes32(DigestUtil.sha256(remote_app_contract)));
+            inputParameters.add(new DynamicBytes("CrossChainMessage".getBytes()));
+            Function function = new Function(
+                    AppContract.FUNC_SENDMESSAGE, // function name
+                    inputParameters, // inputs
+                    Collections.emptyList() // outputs
+            );
+            String encodedFunc = FunctionEncoder.encode(function);
+
+            setWeb3jClient(service);
+
+            setCredentials(service);
+
+            // 2.2 pre-execute before commit tx
+            EthCall call = web3jClient.ethCall(
+                    Transaction.createEthCallTransaction(
+                            credentials.getAddress(),
+                            appContract.getContractAddress(),
+                            encodedFunc
+                    ),
+                    DefaultBlockParameterName.LATEST
+            ).send();
+
+            GetRawTransactionManager(service);
+
+            // 2.3 async send tx
+            EthSendTransaction ethSendTransaction = rawTransactionManager.sendTransaction(
+                    BigInteger.valueOf(GAS_PRICE),
+                    BigInteger.valueOf(GAS_LIMIT),
+                    appContract.getContractAddress(),
+                    encodedFunc,
+                    BigInteger.ZERO
+            );
+
+            txhash = ethSendTransaction.getTransactionHash();
+            getBbcLogger().info("send unordered msg tx {}", ethSendTransaction.getTransactionHash());
+
+        } catch (Exception e) {
+            throw new Exception("failed to send msg", e);
+        }
+
+        waitForTxConfirmed(txhash);
+
+        long height2 = service.queryLatestHeight();
 
         // 4. read cc msg
         List<CrossChainMessage> messageList = ListUtil.toList();
         for (long i = height1; i <= height2; i++) {
             messageList.addAll(service.readCrossChainMessagesByHeight(i));
         }
-//        System.out.println("height1: "+height1);
-//        System.out.println("height2: "+height2);
-//        System.out.println("size of messageList: "+messageList.size());
 
-//        Assert.assertEquals(1, messageList.size());
-//        Assert.assertEquals(CrossChainMessage.CrossChainMessageType.AUTH_MSG, messageList.get(0).getType());
         if (messageList.size() != 1 || messageList.get(0).getType() != CrossChainMessage.CrossChainMessageType.AUTH_MSG) {
-            throw new RuntimeException("failed to send msg");
+            throw new Exception("messageList.size() != 1 || messageList.get(0).getType() != CrossChainMessage.CrossChainMessageType.AUTH_MSG");
         }
 
         System.out.println("txHash: "+txhash);
 
+    }
+
+    public void setWeb3jClient(AbstractBBCService service) throws NoSuchFieldException, IllegalAccessException {
+        // 获取service的class
+        Class<?> serviceClazz = service.getClass();
+
+        // 2.1 从 service 中获取 web3j
+        Field web3jField = null;
+        web3jField = serviceClazz.getDeclaredField(WEB3J);
+
+        // 允许访问私有字段
+        web3jField.setAccessible(true);
+        Object web3jObj = null;
+        web3jObj = web3jField.get(service);
+        if (web3jObj instanceof Web3j) {
+            web3jClient = (Web3j) web3jObj;
+        }
+    }
+
+    public void setCredentials(AbstractBBCService service) throws NoSuchFieldException, IllegalAccessException {
+        // 获取service的class
+        Class<?> serviceClazz = service.getClass();
+        // 2.2 从 service 中获取 credentials
+        Field credentialsField = serviceClazz.getDeclaredField(CREDENTIALS);
+        credentialsField.setAccessible(true);
+        Object credentialsObj = credentialsField.get(service);
+
+        if (credentialsObj instanceof Credentials) {
+            credentials = (Credentials) credentialsObj;
+        }
+    }
+
+    public void GetRawTransactionManager(AbstractBBCService service) throws NoSuchFieldException, IllegalAccessException {
+        // 获取service的class
+        Class<?> serviceClazz = service.getClass();
+        // 2.5 获取rawTransactionManager
+        Field rawTransactionManagerField = serviceClazz.getDeclaredField(TRANSACTIONMANAGER);
+        rawTransactionManagerField.setAccessible(true);
+        Object rawTransactionManagerObj = rawTransactionManagerField.get(service);
+        if (rawTransactionManagerObj instanceof TransactionManager) {
+            rawTransactionManager = (RawTransactionManager) rawTransactionManagerObj;
+        }
+    }
+
+    @Override
+    public String getAmAddress(AbstractBBCService service) throws Exception {
+        setWeb3jClient(service);
+        setCredentials(service);
+        String amAddr = SDPMsg.load(
+                service.getContext().getSdpContract().getContractAddress(),
+                web3jClient,
+                credentials,
+                new DefaultGasProvider()
+        ).getAmAddress().send();
+        return amAddr;
+    }
+
+    @Override
+    public byte[] getLocalDomain(AbstractBBCService service) throws Exception {
+        setWeb3jClient(service);
+        setCredentials(service);
+        byte[] rawDomain = SDPMsg.load(
+                service.getContext().getSdpContract().getContractAddress(),
+                web3jClient,
+                credentials,
+                new DefaultGasProvider()
+        ).getLocalDomain().send();
+        return rawDomain;
+    }
+
+    @Override
+    public void checkTransactionReceipt(AbstractBBCService service, String txHash) throws Exception {
+        setWeb3jClient(service);
+        EthGetTransactionReceipt ethGetTransactionReceipt = web3jClient.ethGetTransactionReceipt(txHash).send();
+        TransactionReceipt transactionReceipt = ethGetTransactionReceipt.getTransactionReceipt().get();
+        if (transactionReceipt == null) {
+            throw new Exception("transaction receipt is null");
+        }
+        if (!transactionReceipt.isStatusOK()) {
+            throw new Exception("transaction receipt status is not ok");
+        }
     }
 
     @Override
