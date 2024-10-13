@@ -100,6 +100,7 @@ public class ChainManagerService extends AbstractService {
             // 执行关闭脚本
             try {
                 shutdown(product);
+                logger.rlog(LogLevel.INFO, "Successfully shutting down: " + product);
             } catch (ChainManagerException | IOException | InterruptedException e) {
                 logger.plog(LogLevel.ERROR, "Failed to shutdown chain: " + product);
                 if (e.getCause() != null) {

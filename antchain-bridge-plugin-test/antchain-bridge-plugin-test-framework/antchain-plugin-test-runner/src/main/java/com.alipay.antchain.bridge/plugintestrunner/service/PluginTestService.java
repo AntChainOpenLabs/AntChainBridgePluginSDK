@@ -15,6 +15,7 @@ import com.alipay.antchain.bridge.plugintestrunner.util.PTRLogger;
 import com.alipay.antchain.bridge.plugintestrunner.exception.PluginTestException.*;
 
 import lombok.Setter;
+import org.aspectj.weaver.ast.Test;
 
 import java.util.List;
 
@@ -27,12 +28,15 @@ public class PluginTestService extends AbstractService{
 
     private IBBCService bbcService;
     private AbstractBBCContext bbcContext;
-    private TestCase testCase;
 
     public PluginTestService(PTRLogger logger, PluginManagerService pluginManagerService, ChainManagerService chainManagerService) {
         super(logger);
         this.pluginManagerService = pluginManagerService;
         this.chainManagerService = chainManagerService;
+    }
+
+    public String getSupportedInterfaces() {
+        return TestOperation.getAllOperationNames();
     }
 
     @Override
@@ -69,17 +73,19 @@ public class PluginTestService extends AbstractService{
         if (pluginManagerService.hasPlugin(product)) {
             try {
                 pluginManagerService.testStopPlugin(product);
+                pluginManagerService.testStartPluginFromStop(product);
+                pluginManagerService.testCreateBBCService(product, domain);
             } catch (Exception e) {
                 throw new PluginTestException("Failed to stop plugin: " + product, e);
             }
-        }
-        // 关闭后，重新加载插件
-        try {
-            pluginManagerService.testLoadPlugin(jarPath);
-            pluginManagerService.testStartPlugin(jarPath);
-            pluginManagerService.testCreateBBCService(product, domain);
-        } catch (Exception e) {
-            throw new PluginTestException("Failed to create BBC service for: " + product, e);
+        } else {
+            try {
+                pluginManagerService.testLoadPlugin(jarPath);
+                pluginManagerService.testStartPlugin(jarPath);
+                pluginManagerService.testCreateBBCService(product, domain);
+            } catch (Exception e) {
+                throw new PluginTestException("Failed to create BBC service for: " + product, e);
+            }
         }
         IBBCService bbcService = pluginManagerService.getBBCService(product, domain);
         IChainManager chainManager;
@@ -201,7 +207,6 @@ public class PluginTestService extends AbstractService{
 
     // 运行每个测试用例的接口测试
     private void runTest(TestCase testCase) throws PluginTestException, ChainManagerException {
-        this.testCase = testCase;
         // 从 pluginManagerService 中获取 bbcService
         bbcService = pluginManagerService.getBBCService(testCase.getProduct(), testCase.getDomain());
         // 从 chainManagerService 中获取 abstractBBCContext
@@ -613,5 +618,17 @@ public class PluginTestService extends AbstractService{
             // 如果没有匹配项，可以抛出异常或返回 null
             throw new IllegalArgumentException("No enum constant for operation: " + operationName);
         }
+
+        public static String getAllOperationNames() {
+            StringBuilder operationNames = new StringBuilder();
+            for (TestOperation operation : TestOperation.values()) {
+                if (operationNames.length() > 0) {
+                    operationNames.append(", ");
+                }
+                operationNames.append(operation.getOperationName());
+            }
+            return operationNames.toString();
+        }
+
     }
 }

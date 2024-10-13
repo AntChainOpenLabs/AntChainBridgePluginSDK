@@ -2,6 +2,7 @@ package com.alipay.antchain.bridge.plugintestrunner;
 
 
 import com.alipay.antchain.bridge.EthPluginTestTool;
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 import com.alipay.antchain.bridge.plugins.spi.bbc.IBBCService;
 import com.alipay.antchain.bridge.plugintestrunner.chainmanager.eth.EthChainManager;
@@ -78,27 +79,27 @@ public class EthereumPluginTest {
     }
 
     @Test
-    public void testTestToolStartup() {
+    public void testTestToolStartup() throws PluginTestToolException {
         ethPluginTestTool.startupTest();
     }
 
     @Test
-    public void testTestToolShutdown() {
+    public void testTestToolShutdown() throws PluginTestToolException {
         ethPluginTestTool.shutdownTest();
     }
 
     @Test
-    public void tetTestToolGetContext() {
+    public void tetTestToolGetContext() throws PluginTestToolException {
         ethPluginTestTool.getContextTest();
     }
 
     @Test
-    public void testTestToolSetupAmContractTest() {
+    public void testTestToolSetupAmContractTest() throws PluginTestToolException {
         ethPluginTestTool.setupAmContractTest();
     }
 
     @Test
-    public void testTestToolSetupSdpContractTest() {
+    public void testTestToolSetupSdpContractTest() throws PluginTestToolException {
         ethPluginTestTool.setupSdpContractTest();
     }
 
@@ -108,27 +109,27 @@ public class EthereumPluginTest {
     }
 
     @Test
-    public void testTestToolQuerySdpMessageSeqTest() {
+    public void testTestToolQuerySdpMessageSeqTest() throws PluginTestToolException {
         ethPluginTestTool.querySdpMessageSeqTest();
     }
 
     @Test
-    public void testTestToolSetAmContractAndLocalDomainTest() {
+    public void testTestToolSetAmContractAndLocalDomainTest() throws PluginTestToolException {
         ethPluginTestTool.setAmContractAndLocalDomainTest();
     }
 
     @Test
-    public void testTestToolReadCrossChainMessageReceiptTest() {
+    public void testTestToolReadCrossChainMessageReceiptTest() throws PluginTestToolException {
         ethPluginTestTool.readCrossChainMessageReceiptTest();
     }
 
     @Test
-    public void testTestToolReadCrossChainMessageByHeightTest() {
+    public void testTestToolReadCrossChainMessageByHeightTest() throws PluginTestToolException {
         ethPluginTestTool.readCrossChainMessageByHeightTest();
     }
 
     @Test
-    public void testTestToolRelayAuthMessageTest() {
+    public void testTestToolRelayAuthMessageTest() throws PluginTestToolException {
         ethPluginTestTool.relayAuthMessageTest();
     }
 

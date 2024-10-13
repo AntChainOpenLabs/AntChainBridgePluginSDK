@@ -50,9 +50,9 @@ public class PluginTestRunner {
             logger.rlog(LogLevel.INFO, "Running " + testCase.getName());
             chainManagerService.run(testCase);
             pluginManagerService.run(testCase);
-//            pluginTestService.run(testCase);
+            pluginTestService.run(testCase);
         }
-//        pluginTestService.close();
+        pluginTestService.close();
         pluginManagerService.close();
         chainManagerService.close();
 
@@ -69,6 +69,12 @@ public class PluginTestRunner {
         PluginTestService pluginTestService = new PluginTestService(logger, pluginManagerService, chainManagerService);
         TestCaseContainer testCaseContainer = TestCaseLoader.loadTestCasesFromFile(configManager.getProperty("testcase.path"));
         return new PluginTestRunner(logger, pluginManagerService, pluginTestService, chainManagerService, testCaseContainer);
+    }
+
+    public void close() {
+        pluginTestService.close();
+        pluginManagerService.close();
+        chainManagerService.close();
     }
 
     private void printTestResult() {

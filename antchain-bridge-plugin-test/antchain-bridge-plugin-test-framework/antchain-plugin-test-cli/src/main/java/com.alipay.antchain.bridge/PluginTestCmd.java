@@ -14,6 +14,7 @@ import picocli.CommandLine.ParentCommand;
     PluginTestCmd.SinglePluginTest.class,
 //    PluginTestCmd.MultiPluginTest.class,
 //    PluginTestCmd.ConfigBasedPluginTest.class
+      PluginTestCmd.SupportedInterfaceList.class
 })
 public class PluginTestCmd implements Runnable {
 
@@ -23,6 +24,21 @@ public class PluginTestCmd implements Runnable {
     @Override
     public void run() {
     }
+
+    @Command(name = "list", mixinStandardHelpOptions = true,description = "Supported interfaces.")
+    public static class SupportedInterfaceList implements Runnable {
+
+        @ParentCommand
+        private PluginTestCmd parentCommand;
+
+        @Override
+        public void run() {
+            PluginTestService pluginTestService = parentCommand.parentCommand.pluginTestRunner.getPluginTestService();
+            PTRLogger logger = pluginTestService.getLogger();
+            logger.rlog(LogLevel.INFO, "Supported interfaces: " + pluginTestService.getSupportedInterfaces());
+        }
+    }
+
 
     @Command(name = "test", mixinStandardHelpOptions = true,description = "Test sinlge plugin.")
     public static class SinglePluginTest implements Runnable {
@@ -67,7 +83,7 @@ public class PluginTestCmd implements Runnable {
                 }
             }
         }
-    } 
+    }
 
 
 //    @Command(name = "test-multi-plugin", mixinStandardHelpOptions = true,description = "Test multiple plugins.")

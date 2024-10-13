@@ -12,7 +12,8 @@ import picocli.CommandLine.Command;
     PluginTestCmd.class,
     PluginManagerCmd.class,
     ChainManagerCmd.class,
-    HelpCmd.class})
+    HelpCmd.class,
+    ExitCmd.class})
 public class App implements Runnable {
 
     public PluginTestRunner pluginTestRunner;
@@ -27,6 +28,7 @@ public class App implements Runnable {
     public static void main(String[] args) throws IOException, TestCaseException {
         App app = new App();
         app.init();
+
         CommandLine commandLine = new CommandLine(app);
 
         printHelloInfo();
@@ -38,9 +40,6 @@ public class App implements Runnable {
             while (true) {
                 System.out.print("cmd> ");
                 String input = scanner.nextLine();
-                if ("exit".equalsIgnoreCase(input)) {
-                    break;
-                }
                 commandLine.execute(input.split("\\s+"));
             }
         }
@@ -55,5 +54,11 @@ public class App implements Runnable {
         System.out.println("                |___/                                               ");
         System.out.println("                        Plugin TestTool CLI 0.1.0");
         System.out.println(">>> type help to see all commands...");
+    }
+
+    public void close() {
+        if (pluginTestRunner != null) {
+            pluginTestRunner.close();
+        }
     }
 }

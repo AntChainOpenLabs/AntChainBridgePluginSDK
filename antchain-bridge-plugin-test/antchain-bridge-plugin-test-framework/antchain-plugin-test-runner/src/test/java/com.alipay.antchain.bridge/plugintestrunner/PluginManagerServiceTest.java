@@ -6,6 +6,7 @@ import com.alipay.antchain.bridge.plugintestrunner.service.PluginManagerService;
 import com.alipay.antchain.bridge.plugintestrunner.util.PTRLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.pf4j.Plugin;
 
 public class PluginManagerServiceTest {
 
@@ -62,5 +63,9 @@ public class PluginManagerServiceTest {
         assert pluginManagerService.hasPlugin(PLUGIN_PRODUCT);
         pluginManagerService.testCreateBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
         assert pluginManagerService.hasBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
+        // 测试停止插件后重新创建 BBCService
+        pluginManagerService.testStopPlugin(PLUGIN_PRODUCT);
+        pluginManagerService.testStartPluginFromStop(PLUGIN_PRODUCT);
+        pluginManagerService.testCreateBBCService(PLUGIN_PRODUCT, DOMAIN_NAME);
     }
 }
