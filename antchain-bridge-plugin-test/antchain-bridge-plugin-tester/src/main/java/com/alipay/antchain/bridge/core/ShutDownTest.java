@@ -1,5 +1,7 @@
 package com.alipay.antchain.bridge.core;
 
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
+import com.alipay.antchain.bridge.exception.PluginTestToolException.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
@@ -14,25 +16,17 @@ public class ShutDownTest {
         this.service = service;
     }
 
-    public static void run(AbstractBBCContext context, AbstractBBCService service){
+    public static void run(AbstractBBCContext context, AbstractBBCService service) throws PluginTestToolException {
         ShutDownTest shutdown = new ShutDownTest(service);
         shutdown.shutdown_success(context);
-        shutdown.shutdown_fail(context);
     }
 
-    public void shutdown_success(AbstractBBCContext context){
+    public void shutdown_success(AbstractBBCContext context) throws PluginTestToolException {
         try {
-            // 调用 shutdown关闭服务
             service.startup(context);
             service.shutdown();
         } catch (Exception e) {
-            log.error("Failed to setup authentication message contract", e);
-            throw new RuntimeException(e);
+            throw new ShutDownTestException("ShutDownTest failed", e);
         }
-    }
-
-    public void shutdown_fail(AbstractBBCContext context){
-        //TODO
-        System.out.println("shutdown fail...");
     }
 }

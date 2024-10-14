@@ -1,8 +1,13 @@
 package com.alipay.antchain.bridge.core;
+import com.alipay.antchain.bridge.commons.bbc.syscontract.AuthMessageContract;
+import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
+import com.alipay.antchain.bridge.exception.PluginTestToolException.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
+
 
 public class StartUpTest {
 
@@ -13,33 +18,30 @@ public class StartUpTest {
         this.service = service;
     }
 
-    public static void runBefore(AbstractBBCContext context, AbstractBBCService service){
+    public static void runBefore(AbstractBBCContext context, AbstractBBCService service) throws PluginTestToolException {
         StartUpTest startUpTest = new StartUpTest(service);
-        startUpTest.startup_success(context);
-        startUpTest.startup_fail(context);
-    }
-
-    public static void run(AbstractBBCContext context, AbstractBBCService service){
-        StartUpTest startUpTest = new StartUpTest(service);
-
         startUpTest.startup_success(context);
     }
 
-    public void startup_success(AbstractBBCContext context) {
+    public static void run(AbstractBBCContext context, AbstractBBCService service) throws PluginTestToolException {
+        StartUpTest startUpTest = new StartUpTest(service);
+        startUpTest.startup_success(context);
+    }
+
+    public void startup_success(AbstractBBCContext context) throws PluginTestToolException {
         try {
             service.startup(context);
-            // 使用日志框架记录信息
-            log.info("Context: {}", service.getContext());
-            log.info("AuthMessageContract: {}", service.getContext().getAuthMessageContract());
-            log.info("SdpContract: {}", service.getContext().getSdpContract());
+            AbstractBBCContext ctx = service.getContext();
+            AuthMessageContract authMessageContract = ctx.getAuthMessageContract();
+            if (authMessageContract != null) {
+                throw new AuthMessageContractNotNullException("StartUpTest failed, authMessageContract is null");
+            }
+            SDPContract sdpContract = ctx.getSdpContract();
+            if (sdpContract != null) {
+                throw new AuthMessageContractNotNullException("StartUpTest failed, sdpContract is null");
+            }
         } catch (Exception e) {
-            // 异常处理
-            log.error("Error during startup test", e);
-            throw new RuntimeException(e);
+            throw new StartUpTestException("StartUpTest failed", e);
         }
-    }
-    public void startup_fail(AbstractBBCContext context) {
-        //TODO
-        System.out.println("startup fail...");
     }
 }

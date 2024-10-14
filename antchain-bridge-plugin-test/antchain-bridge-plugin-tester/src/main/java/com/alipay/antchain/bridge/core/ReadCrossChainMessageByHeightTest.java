@@ -3,6 +3,8 @@ package com.alipay.antchain.bridge.core;
 import com.alipay.antchain.bridge.abstarct.AbstractTester;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
+import com.alipay.antchain.bridge.exception.PluginTestToolException.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,16 +19,20 @@ public class ReadCrossChainMessageByHeightTest {
         this.tester = tester;
     }
 
-    public static void run(AbstractBBCService service, AbstractTester tester) {
+    public static void run(AbstractBBCService service, AbstractTester tester) throws PluginTestToolException {
         ReadCrossChainMessageByHeightTest test = new ReadCrossChainMessageByHeightTest(service, tester);
         test.readCrossChainMessageByHeight_success();
     }
 
-    private void readCrossChainMessageByHeight_success() {
+    private void readCrossChainMessageByHeight_success() throws PluginTestToolException {
         // 对应 relayAmPrepare
         prepare();
 
-        tester.sendMsg(service);
+        try {
+            tester.sendMsgUnordered(service);
+        } catch (Exception e) {
+            throw new ReadCrossChainMessageByHeightTestException("ReadCrossChainMessageByHeightTest failed", e);
+        }
     }
 
 

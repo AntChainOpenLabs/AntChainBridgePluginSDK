@@ -1,5 +1,6 @@
 package com.alipay.antchain.bridge.abstarct;
 
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
 
 // 需要不同测试工具实现的定制化测试操作
@@ -11,7 +12,7 @@ public interface ITester {
      * @param amContractAddr
      * @return
      */
-    public String getProtocol(String amContractAddr);
+    public String getProtocol(String amContractAddr) throws PluginTestToolException;
 
     /**
      * 向链上部署app合约，并设置app合约中的protocol合约地址，返回app合约地址
@@ -26,5 +27,13 @@ public interface ITester {
      */
     public void waitForTxConfirmed(String txHash);
 
-    public void sendMsg(AbstractBBCService service);
+    public void sendMsgUnordered(AbstractBBCService service) throws Exception;
+
+    public void sendMsgOrdered(AbstractBBCService service) throws Exception;
+
+    public String getAmAddress(AbstractBBCService service) throws Exception;
+
+    public byte[] getLocalDomain(AbstractBBCService service) throws Exception;
+
+    public void checkTransactionReceipt(AbstractBBCService service, String txHash) throws Exception;
 }

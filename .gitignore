@@ -19,3 +19,4 @@ pluginset/eos/**.abi
 /conf-local/
 config_cloud.toml
 config_local.toml
+plugins/

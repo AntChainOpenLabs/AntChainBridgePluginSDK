@@ -27,6 +27,11 @@
             <version>0.2.3</version>
         </dependency>
         <dependency>
+            <groupId>com.alipay.antchain.bridge</groupId>
+            <artifactId>antchain-bridge-commons</artifactId>
+            <version>0.2.3</version>
+        </dependency>
+        <dependency>
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
             <version>4.9.8</version>

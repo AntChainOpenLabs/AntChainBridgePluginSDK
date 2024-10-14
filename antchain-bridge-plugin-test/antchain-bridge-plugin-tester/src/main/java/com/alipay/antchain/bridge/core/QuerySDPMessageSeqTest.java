@@ -3,6 +3,8 @@ package com.alipay.antchain.bridge.core;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.plugins.spi.bbc.AbstractBBCService;
+import com.alipay.antchain.bridge.exception.PluginTestToolException;
+import com.alipay.antchain.bridge.exception.PluginTestToolException.*;
 
 public class QuerySDPMessageSeqTest {
 
@@ -13,43 +15,43 @@ public class QuerySDPMessageSeqTest {
     }
 
 
-    public static void run(AbstractBBCService _bbcService) {
+    public static void run(AbstractBBCService _bbcService) throws PluginTestToolException {
         QuerySDPMessageSeqTest querySDPMessageSeqTest = new QuerySDPMessageSeqTest(_bbcService);
-
         querySDPMessageSeqTest.querySdpMessageSeq_success();
     }
 
-    public void querySdpMessageSeq_success()  {
-        // 部署AM、SDP合约
-        prepare();
+    public void querySdpMessageSeq_success() throws PluginTestToolException {
+        try {
+            // 部署AM、SDP合约
+            prepare();
 
-        // query seq
-        long seq = bbcService.querySDPMessageSeq(
-                "senderDomain",
-                DigestUtil.sha256Hex("senderID"),
-                "receiverDomain",
-                DigestUtil.sha256Hex("receiverID")
-        );
+            // query seq
+            long seq = bbcService.querySDPMessageSeq(
+                    "senderDomain",
+                    DigestUtil.sha256Hex("senderID"),
+                    "receiverDomain",
+                    DigestUtil.sha256Hex("receiverID")
+            );
+//            Assert.assertEquals(0L, seq);
+            if (seq != 0L) {
+                throw new QuerySDPMessageSeqTestException("QuerySDPMessageSeqTest failed, seq is not 0");
+            }
+        } catch (Exception e) {
+            throw new QuerySDPMessageSeqTestException("QuerySDPMessageSeqTest failed", e);
+        }
     }
 
-
     private void prepare() {
-        // set up am
         bbcService.setupAuthMessageContract();
 
-        // set up sdp
         bbcService.setupSDPMessageContract();
 
         AbstractBBCContext curCtx = bbcService.getContext();
 
-        // set protocol to am (sdp type: 0)
         bbcService.setProtocol(curCtx.getSdpContract().getContractAddress(), "0");
 
-        // set am to sdp
         bbcService.setAmContract(curCtx.getAuthMessageContract().getContractAddress());
 
-        // set local domain to sdp
         bbcService.setLocalDomain("receiverDomain");
     }
-
 }
