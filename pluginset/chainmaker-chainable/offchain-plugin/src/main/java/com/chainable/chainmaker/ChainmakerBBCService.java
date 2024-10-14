@@ -86,7 +86,7 @@ public class ChainmakerBBCService implements IBBCService {
     @Override
     public void setupAuthMessageContract() {
         AuthMessageContract am = new AuthMessageContract();
-        am.setContractAddress(am.getContractAddress());
+        am.setContractAddress(sdk.getAmContractAddress));
         am.setStatus(ContractStatusEnum.CONTRACT_READY);
 
         this.bbcContext.setAuthMessageContract(am);
@@ -97,7 +97,7 @@ public class ChainmakerBBCService implements IBBCService {
     @Override
     public void setupSDPMessageContract() {
         SDPContract sdpContract = new SDPContract();
-        sdpContract.setContractAddress(sdpContract.getContractAddress());
+        sdpContract.setContractAddress(sdk.getSdpContractAddress());
         sdpContract.setStatus(ContractStatusEnum.CONTRACT_READY);
 
         this.bbcContext.setSdpContract(sdpContract);

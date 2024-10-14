@@ -60,8 +60,10 @@ public class ChainmakerSDK {
     static final String CONTRACT_ARGS_EVM_PARAM = "data";
 
     static String SDK_CONFIG = "src/main/resources/sdk_config.yml";
+    static String PLUGIN_CONFIG = "src/main/resources/plugin_config.yml";
 
     public static ChainClient chainClient;
+    public PluginConfig pluginConfig;
     static ChainManager chainManager;
     static User user;
 
@@ -72,6 +74,7 @@ public class ChainmakerSDK {
     public void initSDK(byte[] conf) throws Exception {
         LOGGER.info("sdk init with: " + new String(conf));
         inItChainClient();
+        initSystemContractAddress();
         LOGGER.info("sdk init success");
     }
 
@@ -121,6 +124,18 @@ public class ChainmakerSDK {
                 FileUtils.getResourceFileBytes(USER1_TLS_CERT_PATH), false);
 
         LOGGER.info("[init chainclient] user init success");
+    }
+
+    public static void initSystemContractAddress() throws Exception {
+        Yaml yaml = new Yaml();
+        Path path = Paths.get(PLUGIN_CONFIG);
+        InputStream in = Files.newInputStream(path);
+
+        pluginConfig = yaml.loadAs(in, pluginConfig.class);
+        assert in != null;
+        in.close();
+
+        LOGGER.info("[init contract address] parse yaml file success");
     }
 
     public BlockInfo queryABlock(Long height) {
@@ -202,5 +217,34 @@ public class ChainmakerSDK {
         }
 
         return response;
+    }
+
+    public class PluginConfig {
+        String AMContractAddress;
+        String SDPContractAddress;
+
+        public String getAMContractAddress() {
+            return AMContractAddress;
+        }
+
+        public void setAMContractAddress(String AMContractAddress) {
+            this.AMContractAddress = AMContractAddress;
+        }
+
+        public String getSDPContractAddress() {
+            return SDPContractAddress;
+        }
+
+        public void setSDPContractAddress(String SDPContractAddress) {
+            this.SDPContractAddress = SDPContractAddress;
+        }
+    }
+
+    public String getAmContractAddress() {
+        return this.pluginConfig.getAMContractAddress();
+    }
+
+    public String getSdpContractAddress() {
+        return this.pluginConfig.getSDPContractAddress();
     }
 }
