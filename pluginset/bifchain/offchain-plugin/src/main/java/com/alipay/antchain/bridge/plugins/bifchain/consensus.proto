@@ -1,0 +1,127 @@
+syntax = "proto3";
+package protocol;
+
+message PbftPrePrepare
+{
+  int64 view_number = 1;
+  int64 sequence = 2;
+  int64 replica_id = 3;
+  bytes value = 4;
+  bytes value_digest = 5;
+}
+
+message PbftPrepare
+{
+  int64 view_number = 1;
+  int64 sequence = 2;
+  int64 replica_id = 3;
+  bytes value_digest = 4;
+}
+
+message PbftCommit
+{
+  int64 view_number = 1;
+  int64 sequence = 2;
+  int64 replica_id = 3;
+  bytes value_digest = 4;
+}
+
+message PbftPreparedSet
+{
+  PbftEnv pre_block = 1;
+  PbftEnv pre_prepare = 2;
+  repeated PbftEnv prepare = 3;
+}
+
+message PbftViewChange
+{
+  int64 view_number = 1; //v+1
+  int64 sequence = 2;     //last execution seq
+  bytes prepred_value_digest = 3; //prepared value hash
+  int64 replica_id = 4;
+}
+
+message PbftViewChangeWithRawValue
+{
+  PbftEnv view_change_env = 1; // view change env
+  PbftPreparedSet prepared_set = 2;  //prepared messages larger than n
+}
+
+message PbftNewView
+{
+  int64 view_number = 1; //v+1
+  int64 sequence = 2;     //sequence
+  int64 replica_id = 3;
+  repeated PbftEnv view_changes = 4;     //V
+  PbftEnv pre_prepare = 5;  //O
+  PbftEnv pre_block = 6;
+}
+
+enum PbftMessageType {
+  PBFT_TYPE_PREPREPARE = 0;
+  PBFT_TYPE_PREPARE = 1;
+  PBFT_TYPE_COMMIT = 2;
+  PBFT_TYPE_VIEWCHANGE = 3;
+  PBFT_TYPE_NEWVIEW = 4;
+  PBFT_TYPE_VIEWCHANG_WITH_RAWVALUE = 5;
+  PBFT_TYPE_PREBLOCK = 6;
+}
+
+enum PbftValueType {
+  PBFT_VALUE_TX = 0;
+  PBFT_VALUE_TXSET = 1;
+}
+
+message Pbft
+{
+  int64 round_number = 1; //for sending again
+  PbftMessageType type = 2;
+  PbftPrePrepare pre_prepare = 3;
+  PbftPrepare prepare = 4;
+  PbftCommit commit = 5;
+  PbftViewChange view_change = 6;
+  PbftNewView new_view = 7;
+  PbftViewChangeWithRawValue view_change_with_rawvalue = 8;
+  int64 chain_id = 9;
+}
+
+message Signature {
+  string public_key = 1;
+  bytes sign_data = 2;
+}
+
+message PbftEnv
+{
+  Pbft pbft = 1;
+  Signature signature = 2;
+}
+
+message ValidatorSetV3{
+  repeated string validators = 1;
+}
+
+
+message PbftProof
+{
+  repeated PbftEnv commits = 1;
+}
+
+message PbftViewChangeStore {
+  int64 sequence = 1;
+  int64 view_number = 2;
+  int32 view_change_round = 3;
+  int64 start_time = 4;
+  int64 end_time = 5;
+  int64 last_propose_time = 6;
+  int64 last_newview_time = 7;
+  int32 new_view_round = 8;
+  bytes view_change_msg = 9;
+  PbftEnv new_view = 10;
+  bytes msg_buffer = 11;
+  repeated PbftViewChange view_changes = 12;
+}
+
+
+
+
+

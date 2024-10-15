@@ -34,16 +34,31 @@ public class BifchainConfig {
     private String address;
 
     @JSONField
-    private long gasLimit = 100;
+    private long gasLimit = 50000000L;
 
     @JSONField
-    private long gasPrice = 100;
+    private long gasPrice = 1L;
+
+    @JSONField
+    private long amount = 0L;
 
     @JSONField
     private String amContractAddressDeployed;
 
     @JSONField
     private String sdpContractAddressDeployed;
+
+    @JSONField
+    private String ptcContractAddressDeployed;
+
+    @JSONField
+    private String ptcContractInitInput;
+
+    @JSONField
+    private short csVersion;
+
+    @JSONField
+    private String domainName;
 
 
     /**
