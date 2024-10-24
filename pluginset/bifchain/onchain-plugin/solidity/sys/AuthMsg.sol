@@ -33,7 +33,7 @@ contract AuthMsg is IAuthMessage, Ownable, Initializable {
 
     event SubProtocolUpdate(uint32 indexed protocolType, address protocolAddress);
 
-    event recvAuthMessage(string recvDomain, bytes rawMsg);
+    event recvAuthMessage(string sendDomain, bytes rawMsg);
 
     modifier onlySubProtocols {
         require(
@@ -112,19 +112,20 @@ contract AuthMsg is IAuthMessage, Ownable, Initializable {
     //   of SDP contract ）, but no uniqueness check is done for unordered cross-chain messages!!!
     // By default, the relayer's replay control mechanism is trusted, that is, we trust the relay
     //   not to replay the message.
-    function recvPkgFromRelayer(bytes memory pkg) override external onlyRelayer{
+    function recvPkgFromRelayer(bytes memory pkg) override external onlyRelayer {
         _beforeReceive(pkg);
 
-        ThirdPartyProof memory tpProof = PtcLib.decodeThirdPartyProofFrom(pkg);
+        MessageFromRelayer memory msgFromRelayer = AMLib.decodeMessageFromRelayer(pkg);
+        ThirdPartyProof memory tpProof = PtcLib.decodeThirdPartyProofFrom(msgFromRelayer.proofData);
         string memory domain;
         bytes memory rawResp;
         if (tpProof.rawProof.length > 0) {
             require(ptcHubAddr != address(0x0), "ptc hub not set yet");
-            IPtcHub(ptcHubAddr).verifyProof(pkg);
+            IPtcHub(ptcHubAddr).verifyProof(msgFromRelayer.proofData);
             domain = tpProof.tpbtaCrossChainLane.channel.senderDomain;
             rawResp = tpProof.resp.body;
         } else {
-            (domain, rawResp) = AMLib.decodeMessageFromRelayer(pkg);
+            (domain, rawResp) = AMLib._decodeProof(msgFromRelayer.proofData);
         }
 
         emit recvAuthMessage(domain, rawResp);

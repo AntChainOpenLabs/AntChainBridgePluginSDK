@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "../utils/TypesToBytes.sol";
 import "../utils/BytesToTypes.sol";
 import "../utils/SizeOf.sol";
+import "../utils/TLVUtils.sol";
 
 struct SDPMessage {
     string receiveDomain;
@@ -24,7 +25,31 @@ struct SDPMessageV2 {
     string errorMsg;
 }
 
+struct SDPMessageV3 {
+    uint32 version;
+    bytes32 messageId;
+    string receiveDomain;
+    bytes32 receiver;
+    uint8 atomicFlag;
+    uint64 nonce;
+    uint32 sequence;
+    uint8 timeoutMeasure;
+    uint256 timeout;
+    bytes message;
+    string errorMsg;
+}
+
+struct BlockState {
+    uint16 version;
+    string domain;
+    bytes32 blockHash;
+    uint256 blockHeight;
+    uint64 blockTimestamp;
+}
+
 library SDPLib {
+    using TLVUtils for TLVPacket;
+    using TLVUtils for TLVItem;
 
     uint8 constant SDP_V2_ATOMIC_FLAG_NONE_ATOMIC = 0;
 
@@ -37,6 +62,22 @@ library SDPLib {
     uint8 constant SDP_V2_ATOMIC_FLAG_ACK_RECEIVE_TX_FAILED = 4;
 
     uint8 constant SDP_V2_ATOMIC_FLAG_ACK_UNKNOWN_EXCEPTION = 5;
+
+    // SDP v3
+
+    uint8 constant SDP_V3_ATOMIC_FLAG_NONE_ATOMIC = 0;
+
+    uint8 constant SDP_V3_ATOMIC_FLAG_ATOMIC_REQUEST = 1;
+
+    uint8 constant SDP_V3_ATOMIC_FLAG_ACK_SUCCESS = 2;
+
+    uint8 constant SDP_V3_ATOMIC_FLAG_ACK_ERROR = 3;
+
+    uint8 constant SDP_V3_ATOMIC_FLAG_ACK_OFF_CHAIN_EXCEPTION = 4;
+
+    uint8 constant SDP_V3_ATOMIC_FLAG_ACK_RECEIVE_TX_FAILED = 5;
+
+    uint8 constant SDP_V3_ATOMIC_FLAG_ACK_UNKNOWN_EXCEPTION = 6;
 
     uint32 constant UNORDERED_SEQUENCE = 0xffffffff;
 
@@ -128,6 +169,7 @@ library SDPLib {
             "encodeSDPMessage: zero message id"
         );
 
+        // 4 + 32 + (4 + domain) + 32 + 1 + 8 + 4 + (4 + payload) + [ (4 + errMsg) ]
         uint total_size;
         bool withErrorMsg = sdpMessage.atomicFlag > SDP_V2_ATOMIC_FLAG_ACK_SUCCESS;
         if (withErrorMsg) {
@@ -241,8 +283,174 @@ library SDPLib {
         offset -= 4 + sdpMessage.message.length;
 
         TypesToBytes.addressToBytes(offset, msg.sender, pkg);
+        offset -= SizeOf.sizeOfBytes32();
+
+        TypesToBytes.bytes32ToBytes(offset, localDomainHash, pkg);
+        offset -= SizeOf.sizeOfBytes32();
+        
+        sdpMessage.messageId = keccak256(pkg);
+    }
+
+    function encode(SDPMessageV3 memory sdpMessage) internal pure returns (bytes memory) {
+        require(
+            sdpMessage.version == 3,
+            "encodeSDPMessage: wrong version"
+        );
+        require(
+            sdpMessage.message.length <= 0xFFFFFFFF,
+            "encodeSDPMessage: body length overlimit"
+        );
+        require(
+            sdpMessage.messageId != bytes32(0),
+            "encodeSDPMessage: zero message id"
+        );
+
+        // 4 + 32 + (4 + domain) + 32 + 1 + 8 + 4 + 1 + (4 + timeout) + (4 + payload) + [ (4 + errMsg) ]
+        uint total_size;
+        bool withErrorMsg = sdpMessage.atomicFlag > SDP_V3_ATOMIC_FLAG_ACK_SUCCESS;
+        bytes memory rawTimeOut = TypesToBytes.uint256ToVarBytes(sdpMessage.timeout);
+
+        if (withErrorMsg) {
+            total_size = 94 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length + rawTimeOut.length + 4 + bytes(sdpMessage.errorMsg).length;
+        } else {
+            total_size = 94 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length + rawTimeOut.length;
+        }
+
+        bytes memory pkg = new bytes(total_size);
+        uint offset = total_size;
+
+        TypesToBytes.uint32ToBytes(offset, sdpMessage.version + 0xff000000, pkg);
+        offset -= SizeOf.sizeOfInt(32);
+
+        TypesToBytes.bytes32ToBytes(offset, sdpMessage.messageId, pkg);
+        offset -= SizeOf.sizeOfBytes32();
+
+        bytes memory raw_recv_domain = bytes(sdpMessage.receiveDomain);
+        TypesToBytes.varBytesToBytes(offset, raw_recv_domain, pkg);
+        offset -= 4 + raw_recv_domain.length;
+
+        TypesToBytes.bytes32ToBytes(offset, sdpMessage.receiver, pkg);
+        offset -= SizeOf.sizeOfBytes32();
+
+        TypesToBytes.byteToBytes(offset, sdpMessage.atomicFlag, pkg);
+        offset -= 1;
+
+        TypesToBytes.uint64ToBytes(offset, sdpMessage.nonce, pkg);
+        offset -= SizeOf.sizeOfInt(64);
+
+        TypesToBytes.uint32ToBytes(offset, sdpMessage.sequence, pkg);
+        offset -= SizeOf.sizeOfInt(32);
+
+        TypesToBytes.byteToBytes(offset, sdpMessage.timeoutMeasure, pkg);
+        offset -= 1;
+
+        TypesToBytes.varBytesToBytes(offset, rawTimeOut, pkg);
+        offset -= 4 + rawTimeOut.length;
+
+        TypesToBytes.varBytesToBytes(offset, sdpMessage.message, pkg);
+        offset -= 4 + sdpMessage.message.length;
+
+        if (withErrorMsg) {
+            TypesToBytes.varBytesToBytes(offset, bytes(sdpMessage.errorMsg), pkg);
+            offset -= 4 + bytes(sdpMessage.errorMsg).length;
+        }
+
+        return pkg;
+    }
+
+    function decode(SDPMessageV3 memory sdpMessage, bytes memory rawMessage) internal pure {
+        uint256 offset = rawMessage.length;
+
+        sdpMessage.version = getSDPVersionFrom(rawMessage);
+        offset -= SizeOf.sizeOfUint(32);
+
+        sdpMessage.messageId = BytesToTypes.bytesToBytes32(offset, rawMessage);
+        offset -= SizeOf.sizeOfBytes32();
+
+        bytes memory raw_recv_domain = BytesToTypes.bytesToVarBytes(offset, rawMessage);
+        sdpMessage.receiveDomain = string(raw_recv_domain);
+        offset -= 4 + raw_recv_domain.length;
+
+        sdpMessage.receiver = BytesToTypes.bytesToBytes32(offset, rawMessage);
+        offset -= SizeOf.sizeOfBytes32();
+
+        sdpMessage.atomicFlag = BytesToTypes.bytesToUint8(offset, rawMessage);
+        offset -= 1;
+
+        sdpMessage.nonce = BytesToTypes.bytesToUint64(offset, rawMessage);
+        offset -= 8;
+
+        sdpMessage.sequence = BytesToTypes.bytesToUint32(offset, rawMessage);
+        offset -= 4;
+
+        sdpMessage.timeoutMeasure = BytesToTypes.bytesToUint8(offset, rawMessage);
+        offset -= 1;
+
+        bytes memory rawTimeOut = BytesToTypes.bytesToVarBytes(offset, rawMessage);
+        sdpMessage.timeout = TLVUtils.getUint256FromBytes(rawTimeOut);
+        offset -= 4 + rawTimeOut.length;
+
+        sdpMessage.message = BytesToTypes.bytesToVarBytes(offset, rawMessage);
+        offset -= 4 + sdpMessage.message.length;
+
+        if (sdpMessage.atomicFlag > SDP_V3_ATOMIC_FLAG_ACK_SUCCESS) {
+            sdpMessage.errorMsg = string(BytesToTypes.bytesToVarBytes(offset, rawMessage));
+            offset -= 4 + bytes(sdpMessage.errorMsg).length;
+        }
+    }
+
+    function calcMessageId(SDPMessageV3 memory sdpMessage, bytes32 localDomainHash) internal view {
+        require(
+            sdpMessage.version == 3,
+            "encodeSDPMessage: wrong version"
+        );
+        require(
+            sdpMessage.message.length <= 0xFFFFFFFF,
+            "encodeSDPMessage: body length overlimit"
+        );
+
+        bytes memory rawTimeOut = TypesToBytes.uint256ToVarBytes(sdpMessage.timeout);
+        // 4 + (4 + domain) + 32 + 1 + 8 + 4 + 1 + (4 + timeout) + (4 + payload) + 32 + 32
+        uint total_size = 126 + bytes(sdpMessage.receiveDomain).length + sdpMessage.message.length + rawTimeOut.length;
+        bytes memory pkg = new bytes(total_size);
+        uint offset = total_size;
+
+        TypesToBytes.uint32ToBytes(offset, sdpMessage.version + 0xff000000, pkg);
+        offset -= SizeOf.sizeOfInt(32);
+
+        bytes memory raw_recv_domain = bytes(sdpMessage.receiveDomain);
+        TypesToBytes.varBytesToBytes(offset, raw_recv_domain, pkg);
+        offset -= 4 + raw_recv_domain.length;
+        
+
+        TypesToBytes.bytes32ToBytes(offset, sdpMessage.receiver, pkg);
+        offset -= SizeOf.sizeOfBytes32();
+
+        TypesToBytes.byteToBytes(offset, sdpMessage.atomicFlag, pkg);
+        offset -= 1;
+
+        TypesToBytes.uint64ToBytes(offset, sdpMessage.nonce, pkg);
+        offset -= SizeOf.sizeOfInt(64);
+
+        TypesToBytes.uint32ToBytes(offset, sdpMessage.sequence, pkg);
+        offset -= SizeOf.sizeOfInt(32);
+
+        TypesToBytes.byteToBytes(offset, sdpMessage.timeoutMeasure, pkg);
+        offset -= 1;
+
+        TypesToBytes.varBytesToBytes(offset, rawTimeOut, pkg);
+        offset -= 4 + rawTimeOut.length;
+
+        TypesToBytes.varBytesToBytes(offset, sdpMessage.message, pkg);
+        offset -= 4 + sdpMessage.message.length;
+
+        TypesToBytes.addressToBytes(offset, msg.sender, pkg);
+        offset -= SizeOf.sizeOfBytes32();
+
         TypesToBytes.bytes32ToBytes(offset, localDomainHash, pkg);
         
+        offset -= SizeOf.sizeOfBytes32();
+
         sdpMessage.messageId = keccak256(pkg);
     }
 
@@ -267,5 +475,29 @@ library SDPLib {
 
     function getReceiverAddress(SDPMessage memory sdpMessage) pure internal returns (address) {
         return encodeCrossChainIDIntoAddress(sdpMessage.receiver);
+    }
+
+    function getReceiverAddress(SDPMessageV3 memory sdpMessage) pure internal returns (address) {
+        return encodeCrossChainIDIntoAddress(sdpMessage.receiver);
+    }
+
+    function decodeBlockStateFrom(bytes memory rawBs) internal pure returns (BlockState memory) {
+        BlockState memory result;
+        TLVPacket memory packet = TLVUtils.decodePacket(rawBs);
+        for (uint256 i = 0; i < packet.items.length; i++) {
+            TLVItem memory currItem = packet.items[i];
+            if (currItem.tag == 0) {
+                result.version = currItem.toUint16();
+            } else if (currItem.tag == 1) {
+                result.domain = currItem.toString();
+            } else if (currItem.tag == 2) {
+                result.blockHash = BytesToTypes.bytesToBytes32(32, currItem.toBytes());
+            } else if (currItem.tag == 3) {
+                result.blockHeight = TLVUtils.getUint256FromBytes(currItem.toBytes());
+            } else if (currItem.tag == 4) {
+                result.blockTimestamp = currItem.toUint64();
+            }
+        }
+        return result;
     }
 }

@@ -2,17 +2,10 @@ package com.alipay.antchain.bridge.plugins.bifchain;
 
 import cn.bif.api.BIFSDK;
 import cn.bif.common.JsonUtils;
-import cn.bif.model.request.BIFBlockGetInfoRequest;
-import cn.bif.model.request.BIFBlockGetTransactionsRequest;
 import cn.bif.model.request.BIFTransactionGetInfoRequest;
-import cn.bif.model.response.BIFBlockGetInfoResponse;
-import cn.bif.model.response.BIFBlockGetTransactionsResponse;
 import cn.bif.model.response.BIFTransactionGetInfoResponse;
 import cn.bif.module.encryption.key.PublicKeyManager;
 import cn.bif.utils.generator.response.Log;
-import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.util.HexUtil;
-import com.alibaba.fastjson.JSON;
 import com.alipay.antchain.bridge.commons.core.base.ConsensusState;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
 import com.alipay.antchain.bridge.commons.core.bta.IBlockchainTrustAnchor;
@@ -21,15 +14,11 @@ import com.alipay.antchain.bridge.plugins.spi.ptc.AbstractHCDVSService;
 import com.alipay.antchain.bridge.plugins.spi.ptc.core.VerifyResult;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @HeteroChainDataVerifierService(products = "bifchain", pluginId = "plugin-bifchain-hcdvsservice")
 public class BifchainHCDVSService extends AbstractHCDVSService {

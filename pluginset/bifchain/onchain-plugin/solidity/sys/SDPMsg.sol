@@ -14,6 +14,8 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
 
     using SDPLib for SDPMessage;
     using SDPLib for SDPMessageV2;
+    using SDPLib for SDPMessageV3;
+    using SDPLib for BlockState;
 
     address public amAddress;
 
@@ -23,6 +25,16 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
     mapping(bytes32 => uint32) recvSeq;
 
     mapping(bytes32 => uint32) sendNonce;
+
+    /**
+    * ����������֤�߶ȣ�������������ϣ -> ����֤������Ϣ
+    */
+    mapping(bytes32 => BlockState) recvValidatedBlockState;
+
+    /**
+    * ��¼�ѷ���ԭ������Ϣ�Ĺ�ϣ
+    */
+    mapping(bytes32 => bool) sendSDPV3Msgs;
 
     modifier onlyAM() {
         require(
@@ -143,6 +155,73 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
         return sdpMessage.messageId;
     }
 
+    // ����������Ϣ SDPv3
+    function sendMessageV3(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message,
+        uint8 _timeoutMeasure, uint256 _timeout) public returns (bytes32) {
+
+        _beforeSendUnordered(receiverDomain, receiverID, message);
+
+        bytes32 receiver = bytes32(receiverID);
+        SDPMessageV3 memory sdpMessage = SDPMessageV3(
+            {
+                version: 3,
+                messageId: bytes32(0),
+                receiveDomain: receiverDomain,
+                receiver: receiver,
+                atomicFlag: atomic ? SDPLib.SDP_V3_ATOMIC_FLAG_ATOMIC_REQUEST : SDPLib.SDP_V3_ATOMIC_FLAG_NONE_ATOMIC,
+                nonce: SDPLib.MAX_NONCE,
+                sequence: _getAndUpdateSendSeq(receiverDomain, msg.sender, receiver),
+                message: message,
+                errorMsg: "",
+                timeoutMeasure: _timeoutMeasure,
+                timeout: _timeout
+            }
+        );
+        sdpMessage.calcMessageId(localDomainHash);
+
+        // v3��Ϣ���еļ�¼�����ڳ�ʱ�ع�ǰ����֤
+        sendSDPV3Msgs[sdpMessage.messageId] = true;
+
+        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encode());
+
+        _afterSend();
+
+        return sdpMessage.messageId;
+    }
+
+    // ����������Ϣ SDPv3
+    function sendUnorderedMessageV3(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message,
+        uint8 _timeoutMeasure, uint256 _timeout) public returns (bytes32) {
+
+        _beforeSendUnordered(receiverDomain, receiverID, message);
+
+        bytes32 receiver = bytes32(receiverID);
+        SDPMessageV3 memory sdpMessage = SDPMessageV3(
+            {
+                version: 3,
+                messageId: bytes32(0),
+                receiveDomain: receiverDomain,
+                receiver: receiver,
+                atomicFlag: atomic ? SDPLib.SDP_V3_ATOMIC_FLAG_ATOMIC_REQUEST : SDPLib.SDP_V3_ATOMIC_FLAG_NONE_ATOMIC,
+                nonce: _getAndUpdateSendNonce(receiverDomain, msg.sender, receiver),
+                sequence: SDPLib.UNORDERED_SEQUENCE,
+                message: message,
+                errorMsg: "",
+                timeoutMeasure: _timeoutMeasure,
+                timeout: _timeout
+            }
+        );
+        sdpMessage.calcMessageId(localDomainHash);
+
+        sendSDPV3Msgs[sdpMessage.messageId] = true;
+
+        IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encode());
+
+        _afterSend();
+
+        return sdpMessage.messageId;
+    }
+
     function recvMessage(string calldata senderDomain, bytes32 senderID, bytes calldata pkg) override external onlyAM {
         _beforeRecv(senderDomain, senderID, pkg);
 
@@ -151,8 +230,10 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
             _processSDPv1(senderDomain, senderID, pkg);
         } else if (version == 2) {
             _processSDPv2(senderDomain, senderID, pkg);
+        } else if (version == 3) {
+            _processSDPv3(senderDomain, senderID, pkg);
         } else {
-            revert("unsupport sdp version");
+            revert("unsupported sdp version");
         }
 
         _afterRecv();
@@ -378,6 +459,268 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
             true, 
             sdpMessage.errorMsg
         );
+    }
+
+    function _processSDPv3(string calldata senderDomain, bytes32 senderID, bytes memory pkg) internal {
+        SDPMessageV3 memory sdpMessage;
+        sdpMessage.decode(pkg);
+
+        require(
+            keccak256(abi.encodePacked(sdpMessage.receiveDomain)) == localDomainHash,
+            "SDP_Msg: wrong receiving domain"
+        );
+
+        if (
+            sdpMessage.atomicFlag == SDPLib.SDP_V3_ATOMIC_FLAG_NONE_ATOMIC
+            || sdpMessage.atomicFlag == SDPLib.SDP_V3_ATOMIC_FLAG_ATOMIC_REQUEST
+        ) {
+            _processSDPv3Request(senderDomain, senderID, sdpMessage);
+        } else if (sdpMessage.atomicFlag == SDPLib.SDP_V3_ATOMIC_FLAG_ACK_SUCCESS) {
+            _processSDPv3AckSuccess(senderDomain, senderID, sdpMessage);
+        } else if (sdpMessage.atomicFlag == SDPLib.SDP_V3_ATOMIC_FLAG_ACK_ERROR) {
+            _processSDPv3AckError(senderDomain, senderID, sdpMessage);
+        } else if (sdpMessage.atomicFlag == SDPLib.SDP_V3_ATOMIC_FLAG_ACK_OFF_CHAIN_EXCEPTION) {
+            _processSDPv3AckOffChainException(senderDomain, senderID, sdpMessage);
+        } else {
+            revert("SDP_MSG_ERROR: unexpected atomic flag");
+        }
+    }
+
+    function _processSDPv3Request(string calldata senderDomain, bytes32 senderID, SDPMessageV3 memory sdpMessage) internal {
+
+        bool res;
+        string memory errMsg;
+        if (sdpMessage.sequence == SDPLib.UNORDERED_SEQUENCE) {
+            (res, errMsg) = _routeUnorderedMessageV3(senderDomain, senderID, sdpMessage);
+            if (sdpMessage.atomicFlag == SDPLib.SDP_V3_ATOMIC_FLAG_NONE_ATOMIC) {
+                require(res, errMsg);
+            }
+        } else {
+            (res, errMsg) = _routeOrderedMessageV3(senderDomain, senderID, sdpMessage);
+        }
+
+        emit ReceiveMessageV3(
+            sdpMessage.messageId,
+            senderDomain,
+            senderID,
+            sdpMessage.receiveDomain,
+            sdpMessage.getReceiverAddress(),
+            sdpMessage.sequence,
+            sdpMessage.nonce,
+            sdpMessage.atomicFlag,
+            res,
+            errMsg
+        );
+
+        emit MessageV3TimeoutInfo(
+            sdpMessage.messageId,
+            sdpMessage.timeoutMeasure,
+            sdpMessage.timeout
+        );
+
+        if (sdpMessage.atomicFlag == SDPLib.SDP_V3_ATOMIC_FLAG_ATOMIC_REQUEST) {
+            _ackSDPv3Request(sdpMessage, senderDomain, senderID, res, errMsg);
+        }
+    }
+
+    function _routeUnorderedMessageV3(string calldata senderDomain, bytes32 senderID, SDPMessageV3 memory sdpMessage) internal returns (bool, string memory) {
+        bool res = false;
+        string memory errMsg;
+        if (sdpMessage.getReceiverAddress().code.length == 0) {
+            res = false;
+            errMsg = "receiver has no code";
+        } else {
+            try
+                IContractUsingSDP(sdpMessage.getReceiverAddress()).recvUnorderedMessage(senderDomain, senderID, sdpMessage.message)
+            {
+                res = true;
+            } catch Error(
+                string memory reason
+            ) {
+                errMsg = reason;
+            } catch (
+                bytes memory /*lowLevelData*/
+            ) {}
+        }
+
+        return (res, errMsg);
+    }
+
+    function _routeOrderedMessageV3(string calldata senderDomain, bytes32 senderID, SDPMessageV3 memory sdpMessage) internal returns (bool, string memory) {
+        uint32 seqExpected = _getAndUpdateRecvSeq(senderDomain, senderID, sdpMessage.receiver);
+        require(sdpMessage.sequence == seqExpected, "SDP_MSG_ERROR: sequence not equal");
+
+        bool res = false;
+        string memory errMsg;
+        address receiver = sdpMessage.getReceiverAddress();
+        if (receiver.code.length == 0) {
+            res = false;
+            errMsg = "receiver has no code";
+        } else {
+            try
+                IContractUsingSDP(receiver).recvMessage(senderDomain, senderID, sdpMessage.message)
+            {
+                res = true;
+            } catch Error(
+                string memory reason
+            ) {
+                errMsg = reason;
+            } catch (
+                bytes memory /*lowLevelData*/
+            ) {}
+        }
+
+        return (res, errMsg);
+    }
+
+    function _ackSDPv3Request(SDPMessageV3 memory sdpMessage, string calldata senderDomain, bytes32 senderID, bool res, string memory errMsg) internal {
+        address receiverAddr = sdpMessage.getReceiverAddress();
+
+        sdpMessage.receiveDomain = senderDomain;
+        sdpMessage.receiver = senderID;
+        sdpMessage.atomicFlag = res ? SDPLib.SDP_V3_ATOMIC_FLAG_ACK_SUCCESS : SDPLib.SDP_V3_ATOMIC_FLAG_ACK_ERROR;
+        sdpMessage.errorMsg = res ? "" : errMsg;
+
+        IAuthMessage(amAddress).recvFromProtocol(receiverAddr, sdpMessage.encode());
+    }
+
+    function _processSDPv3AckSuccess(string calldata senderDomain, bytes32 senderID, SDPMessageV3 memory sdpMessage) internal {
+        IContractWithAcks(sdpMessage.getReceiverAddress()).ackOnSuccess(
+            sdpMessage.messageId,
+            senderDomain,
+            senderID,
+            sdpMessage.sequence,
+            sdpMessage.nonce,
+            sdpMessage.message
+        );
+
+        emit ReceiveMessageV3(
+            sdpMessage.messageId,
+            senderDomain,
+            senderID,
+            sdpMessage.receiveDomain,
+            sdpMessage.getReceiverAddress(),
+            sdpMessage.sequence,
+            sdpMessage.nonce,
+            sdpMessage.atomicFlag,
+            true,
+            "success"
+        );
+
+        emit MessageV3TimeoutInfo(
+            sdpMessage.messageId,
+            sdpMessage.timeoutMeasure,
+            sdpMessage.timeout
+        );
+    }
+
+    function _processSDPv3AckError(string calldata senderDomain, bytes32 senderID, SDPMessageV3 memory sdpMessage) internal {
+        IContractWithAcks(sdpMessage.getReceiverAddress()).ackOnError(
+            sdpMessage.messageId,
+            senderDomain,
+            senderID,
+            sdpMessage.sequence,
+            sdpMessage.nonce,
+            sdpMessage.message,
+            sdpMessage.errorMsg
+        );
+
+        emit ReceiveMessageV3(
+            sdpMessage.messageId,
+            senderDomain,
+            senderID,
+            sdpMessage.receiveDomain,
+            sdpMessage.getReceiverAddress(),
+            sdpMessage.sequence,
+            sdpMessage.nonce,
+            sdpMessage.atomicFlag,
+            true,
+            sdpMessage.errorMsg
+        );
+        emit MessageV3TimeoutInfo(
+            sdpMessage.messageId,
+            sdpMessage.timeoutMeasure,
+            sdpMessage.timeout
+        );
+
+    }
+
+    /**
+     * - senderDomain �쳣������
+     * - senderID �쳣��Լ��ַ
+     * - sdpMessage �����µ��쳣������֤������Ϣ
+     */
+    function _processSDPv3AckOffChainException(
+        string calldata senderDomain,
+        bytes32 senderID,
+        SDPMessageV3 memory sdpMessage
+    ) internal {
+
+        BlockState memory blockState = SDPLib.decodeBlockStateFrom(sdpMessage.message);
+
+        recvValidatedBlockState[keccak256(abi.encodePacked(senderDomain))].blockHash = blockState.blockHash;
+        recvValidatedBlockState[keccak256(abi.encodePacked(senderDomain))].blockTimestamp = blockState.blockTimestamp;
+        recvValidatedBlockState[keccak256(abi.encodePacked(senderDomain))].blockHeight = blockState.blockHeight;
+
+        emit ReceiveMessageV3(
+            sdpMessage.messageId,
+            senderDomain,
+            senderID,
+            sdpMessage.receiveDomain,
+            sdpMessage.getReceiverAddress(),
+            sdpMessage.sequence,
+            sdpMessage.nonce,
+            sdpMessage.atomicFlag,
+            true,
+            sdpMessage.errorMsg
+        );
+        emit MessageV3TimeoutInfo(
+            sdpMessage.messageId,
+            sdpMessage.timeoutMeasure,
+            sdpMessage.timeout
+        );
+    }
+
+    /*
+     * �м̵��ã������쳣����ʱ���ص��� SDPv3�ӿ�
+    */
+    function recvOffChainException(bytes32 exceptionMsgAuthor, bytes calldata exceptionMsgPkg) external onlyOwner {
+        SDPMessageV3 memory sdpMessage;
+        sdpMessage.decode(exceptionMsgPkg);
+
+        if (0 == sdpMessage.timeoutMeasure) {
+            // �޳�ʱ���ƣ���Ӧ�ô��������쳣
+            revert("SDP_MSG_ERROR: the message timeoutMeasure is 0");
+        } else if (2 == sdpMessage.timeoutMeasure) {
+            // �������߶ȳ�ʱ����
+            if (recvValidatedBlockState[keccak256(abi.encodePacked(sdpMessage.receiveDomain))].blockHeight > sdpMessage.timeout) {
+                // ����֤�߶��Ѿ����˳�ʱ�߶ȣ�˵����Ϣȷʵ�ѳ�ʱ
+                // ��֤��Ϣԭ�Ĵ���
+                if (!sendSDPV3Msgs[sdpMessage.messageId]) {
+                    revert("SDP_MSG_ERROR: exception message hash does not exist");
+                }
+
+                // ����onError�ӿ�
+                IContractWithAcks(SDPLib.encodeCrossChainIDIntoAddress(exceptionMsgAuthor)).ackOnError(
+                    sdpMessage.messageId,
+                    sdpMessage.receiveDomain,
+                    sdpMessage.receiver,
+                    sdpMessage.sequence,
+                    sdpMessage.nonce,
+                    sdpMessage.message,
+                    sdpMessage.errorMsg
+                );
+            } else {
+                revert("SDP_MSG_ERROR: the message is not timeout with timeoutMeasure 2");
+            }
+        } else {
+            revert("SDP_MSG_ERROR: unsupported timeout measure");
+        }
+    }
+
+    function queryValidatedBlockStateByDomain(string calldata recvDomain) external view returns (bytes32, uint256, uint64) {
+        BlockState storage s = recvValidatedBlockState[keccak256(abi.encodePacked(recvDomain))];
+        return (s.blockHash, s.blockHeight, s.blockTimestamp);
     }
 
     function _getAndUpdateSendSeq(string memory receiveDomain, address sender, bytes32 receiver) internal returns (uint32) {

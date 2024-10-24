@@ -50,7 +50,7 @@ library AMLib {
 
     uint16 constant VERSION_SIMPLE_PROOF = 1;
 
-    function decodeMessageFromRelayer(bytes memory rawMessage) internal pure returns (string memory, bytes memory) {
+    function decodeMessageFromRelayer(bytes memory rawMessage) internal pure returns (MessageFromRelayer memory msgFromRelayer) {
         uint offset = 0;
 
         bytes memory hintsLenBytes = Utils.bytesCopy(offset, rawMessage, 4); // 4 bytes for hints length
@@ -65,9 +65,7 @@ library AMLib {
         bytes memory proof = Utils.bytesCopy(offset, rawMessage, proofLen);
         offset += proofLen;
 
-        MessageFromRelayer memory msgFromRelayer = MessageFromRelayer({hints: hints, proofData: proof});
-
-        return _decodeProof(msgFromRelayer.proofData);
+        return MessageFromRelayer({hints: hints, proofData: proof});
     }
 
     function _decodeProof(bytes memory rawProof) internal pure returns (string memory, bytes memory) {
