@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-@HeteroChainDataVerifierService(products = "bifchain", pluginId = "plugin-bifchain-hcdvsservice")
+@HeteroChainDataVerifierService(products = "bifchain", pluginId = "plugin-simple-bifchain")
 public class BifchainHCDVSService extends AbstractHCDVSService {
 
     private static final Logger log = LoggerFactory.getLogger(BifchainHCDVSService.class);
