@@ -1,5 +1,11 @@
 package com.alipay.antchain.bridge.plugins.bifchain;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import cn.bif.api.BIFSDK;
 import cn.bif.common.JsonUtils;
 import cn.bif.exception.EncException;
@@ -8,11 +14,10 @@ import cn.bif.model.response.*;
 import cn.bif.module.encryption.key.PrivateKeyManager;
 import cn.bif.utils.generator.response.Log;
 import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.io.resource.ResourceUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.digest.DigestUtil;
 import com.alibaba.fastjson.JSON;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.AuthMessageContract;
@@ -40,12 +45,6 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import lombok.Getter;
-
-import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @BBCService(products = "bifchain", pluginId = "plugin-simple-bifchain")
 @Getter
@@ -211,7 +210,9 @@ public class BifchainBBCService extends AbstractBBCService {
         // 2. deploy contract
         String txHash;
         try {
-            BIFContractCreateRequest request = createBIFContractCreateRequest(ResourceUtil.readStr("am.bin", Charset.defaultCharset()));
+            BIFContractCreateRequest request = createBIFContractCreateRequest(
+                    FileUtil.readString(this.getClass().getClassLoader().getResource("am.bin"), Charset.defaultCharset())
+            );
             BIFContractCreateResponse response = sdk.getBIFContractService().contractCreate(request);
             if (response.getErrorCode() == 0) {
                 txHash = response.getResult().getHash();
@@ -264,7 +265,9 @@ public class BifchainBBCService extends AbstractBBCService {
         // 2. deploy contract
         String txHash;
         try {
-            BIFContractCreateRequest request = createBIFContractCreateRequest(ResourceUtil.readStr("sdp.bin", Charset.defaultCharset()));
+            BIFContractCreateRequest request = createBIFContractCreateRequest(
+                    FileUtil.readString(this.getClass().getClassLoader().getResource("sdp.bin"), Charset.defaultCharset())
+            );
             BIFContractCreateResponse response = sdk.getBIFContractService().contractCreate(request);
             if (response.getErrorCode() == 0) {
                 txHash = response.getResult().getHash();
@@ -319,7 +322,9 @@ public class BifchainBBCService extends AbstractBBCService {
         try {
             //todo:check input root cert
             String initInput = StrUtil.format("{\"function\":\"constructor(bytes)\",\"args\":\"'{}'\"}", this.config.getPtcContractInitInput());
-            BIFContractCreateRequest request = createBIFContractCreateRequest(ResourceUtil.readStr("ptchub.bin", Charset.defaultCharset()));
+            BIFContractCreateRequest request = createBIFContractCreateRequest(
+                    FileUtil.readString(this.getClass().getClassLoader().getResource("ptchub.bin"), Charset.defaultCharset())
+            );
             request.setInitInput(initInput);
             BIFContractCreateResponse response = sdk.getBIFContractService().contractCreate(request);
             if (response.getErrorCode() == 0) {
@@ -359,20 +364,23 @@ public class BifchainBBCService extends AbstractBBCService {
 
     @Override
     public ConsensusState readConsensusState(BigInteger height) {
-        ConsensusState consensusState = new ConsensusState();
-        consensusState.setCsVersion(this.getConfig().getCsVersion());
-        consensusState.setDomain(new CrossChainDomain(this.getConfig().getDomainName()));
-        consensusState.setHeight(height);
+        byte[] hash;
+        byte[] parentHash;
+        long stateTimestamp;
+        byte[] stateData;
+        byte[] consensusNodeInfo;
+        byte[] endorsements;
+
         try {
             BIFBlockGetInfoRequest request = new BIFBlockGetInfoRequest();
             request.setBlockNumber(height.longValue());
 
             BIFBlockGetInfoResponse response = sdk.getBIFBlockService().getBlockInfo(request);
             if (response.getErrorCode() == 0) {
-                consensusState.setHash(HexUtil.decodeHex(response.getResult().getHeader().getHash()));
-                consensusState.setParentHash(HexUtil.decodeHex(response.getResult().getHeader().getPreviousHash()));
-                consensusState.setStateTimestamp(response.getResult().getHeader().getConfirmTime());
-                consensusState.setStateData(HexUtil.decodeHex(response.getResult().getHeader().getConsensusValueHash()));
+                hash = HexUtil.decodeHex(response.getResult().getHeader().getHash());
+                parentHash = HexUtil.decodeHex(response.getResult().getHeader().getPreviousHash());
+                stateTimestamp = response.getResult().getHeader().getConfirmTime();
+                stateData = HexUtil.decodeHex(response.getResult().getHeader().getConsensusValueHash());
             } else {
                 throw new RuntimeException("failed to get block info");
             }
@@ -387,7 +395,7 @@ public class BifchainBBCService extends AbstractBBCService {
             if (response.getErrorCode() == 0) {
                 String[] validators = response.getResult().getValidators();
                 String joinedString = String.join(",", validators);
-                consensusState.setConsensusNodeInfo(joinedString.getBytes());
+                consensusNodeInfo = joinedString.getBytes();
             } else {
                 throw new RuntimeException("failed to get validator info");
             }
@@ -407,12 +415,22 @@ public class BifchainBBCService extends AbstractBBCService {
             if (jsonObject.get("error_code").getAsInt() == 0) {
                 JsonObject consensusHeader = jsonObject.getAsJsonObject("result").getAsJsonObject("consensus_value").getAsJsonObject("consensus_header");
                 String previousProof = consensusHeader.get("previous_proof").getAsString();
-                consensusState.setEndorsements(HexUtil.decodeHex(previousProof));
+                endorsements = HexUtil.decodeHex(previousProof);
+            } else {
+                throw new RuntimeException("failed to get consensus value");
             }
         } catch (Exception e) {
             throw new RuntimeException("failed to get consensus value", e);
         }
-        return consensusState;
+        return new ConsensusState(
+                height,
+                hash,
+                parentHash,
+                stateTimestamp,
+                stateData,
+                consensusNodeInfo,
+                endorsements
+        );
     }
 
     @Override
@@ -523,7 +541,7 @@ public class BifchainBBCService extends AbstractBBCService {
         // 3. set ptc to am
         try {
             String contractAddress = this.bbcContext.getAuthMessageContract().getContractAddress();
-            String invokeInput = StrUtil.format("{\"function\":\"setPtcContract(address)\",\"args\":\"{}\"}", ptcContractAddress);
+            String invokeInput = StrUtil.format("{\"function\":\"setPtcHub(address)\",\"args\":\"{}\"}", ptcContractAddress);
             BIFContractInvokeRequest request = createBIFContractInvokeRequest(contractAddress, invokeInput);
             BIFContractInvokeResponse response = sdk.getBIFContractService().contractInvoke(request);
             if (response.getErrorCode() == 0) {
@@ -1366,7 +1384,7 @@ public class BifchainBBCService extends AbstractBBCService {
         CrossChainMessageReceipt crossChainMessageReceipt = new CrossChainMessageReceipt();
         try {
             String contractAddress = this.bbcContext.getSdpContract().getContractAddress();
-            String invokeInput = StrUtil.format("{\"function\":\"recvOffChainException(bytes32,bytes)\",\"args\":\"'{}','{}'\"}", HexUtil.encodeHexStr(DigestUtil.sha256(exceptionMsgAuthor)), HexUtil.encodeHexStr(exceptionMsgPkg));
+            String invokeInput = StrUtil.format("{\"function\":\"recvOffChainException(bytes32,bytes)\",\"args\":\"'{}','{}'\"}", exceptionMsgAuthor, HexUtil.encodeHexStr(exceptionMsgPkg));
             BIFContractInvokeRequest request = createBIFContractInvokeRequest(contractAddress, invokeInput);
             BIFContractInvokeResponse response = sdk.getBIFContractService().contractInvoke(request);
             if (response.getErrorCode() == 0) {

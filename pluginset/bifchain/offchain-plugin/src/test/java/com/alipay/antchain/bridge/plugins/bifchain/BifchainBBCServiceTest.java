@@ -1,5 +1,11 @@
 package com.alipay.antchain.bridge.plugins.bifchain;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.List;
+
 import cn.ac.caict.bid.model.BIDDocumentOperation;
 import cn.ac.caict.bid.model.BIDpublicKeyOperation;
 import cn.bif.api.BIFSDK;
@@ -31,14 +37,12 @@ import com.alipay.antchain.bridge.commons.bbc.syscontract.AuthMessageContract;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
 import com.alipay.antchain.bridge.commons.bcdns.*;
-import com.alipay.antchain.bridge.commons.bcdns.utils.CrossChainCertificateUtil;
 import com.alipay.antchain.bridge.commons.core.am.AuthMessageFactory;
 import com.alipay.antchain.bridge.commons.core.am.IAuthMessage;
 import com.alipay.antchain.bridge.commons.core.base.*;
 import com.alipay.antchain.bridge.commons.core.ptc.PTCTrustRoot;
 import com.alipay.antchain.bridge.commons.core.ptc.PTCTypeEnum;
 import com.alipay.antchain.bridge.commons.core.ptc.PTCVerifyAnchor;
-import com.alipay.antchain.bridge.commons.core.ptc.ThirdPartyBlockchainTrustAnchor;
 import com.alipay.antchain.bridge.commons.core.sdp.ISDPMessage;
 import com.alipay.antchain.bridge.commons.core.sdp.SDPMessageFactory;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
@@ -51,13 +55,6 @@ import lombok.Setter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.PrivateKey;
-import java.util.Date;
-import java.util.List;
 
 public class BifchainBBCServiceTest {
 
@@ -796,7 +793,6 @@ public class BifchainBBCServiceTest {
         mockConf.setUrl(VALID_URL);
         mockConf.setPrivateKey(PRIVATE_KEY);
         mockConf.setAddress(ADDDRESS);
-        mockConf.setDomainName(".com");
         AbstractBBCContext mockCtx = new DefaultBBCContext();
         mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
         return mockCtx;
