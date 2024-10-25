@@ -27,12 +27,12 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
     mapping(bytes32 => uint32) sendNonce;
 
     /**
-    * ����������֤�߶ȣ�������������ϣ -> ����֤������Ϣ
+    * 接收链已验证高度：接收链域名哈希 -> 已验证区块信息
     */
     mapping(bytes32 => BlockState) recvValidatedBlockState;
 
     /**
-    * ��¼�ѷ���ԭ������Ϣ�Ĺ�ϣ
+    * 记录已发送原子性消息的哈希
     */
     mapping(bytes32 => bool) sendSDPV3Msgs;
 
@@ -155,7 +155,7 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
         return sdpMessage.messageId;
     }
 
-    // ����������Ϣ SDPv3
+    // 发送有序消息 SDPv3
     function sendMessageV3(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message,
         uint8 _timeoutMeasure, uint256 _timeout) public returns (bytes32) {
 
@@ -179,7 +179,7 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
         );
         sdpMessage.calcMessageId(localDomainHash);
 
-        // v3��Ϣ���еļ�¼�����ڳ�ʱ�ع�ǰ����֤
+        // v3消息才有的记录，用于超时回滚前的验证
         sendSDPV3Msgs[sdpMessage.messageId] = true;
 
         IAuthMessage(amAddress).recvFromProtocol(msg.sender, sdpMessage.encode());
@@ -189,7 +189,7 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
         return sdpMessage.messageId;
     }
 
-    // ����������Ϣ SDPv3
+    // 发送无序消息 SDPv3
     function sendUnorderedMessageV3(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message,
         uint8 _timeoutMeasure, uint256 _timeout) public returns (bytes32) {
 
@@ -490,6 +490,16 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
 
         bool res;
         string memory errMsg;
+        require(
+            sdpMessage.timeoutMeasure == 0 || sdpMessage.timeoutMeasure == 2 || sdpMessage.timeoutMeasure == 4,
+            "only support timeout measure 0, 2 and 4 for now"
+        );
+        if (sdpMessage.timeoutMeasure == 2) {
+            require(sdpMessage.timeout > block.number, "msg is timeout");
+        } else if (sdpMessage.timeoutMeasure == 4) {
+            require(sdpMessage.timeout > block.timestamp, "msg is timeout");
+        }
+
         if (sdpMessage.sequence == SDPLib.UNORDERED_SEQUENCE) {
             (res, errMsg) = _routeUnorderedMessageV3(senderDomain, senderID, sdpMessage);
             if (sdpMessage.atomicFlag == SDPLib.SDP_V3_ATOMIC_FLAG_NONE_ATOMIC) {
@@ -646,9 +656,9 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
     }
 
     /**
-     * - senderDomain �쳣������
-     * - senderID �쳣��Լ��ַ
-     * - sdpMessage �����µ��쳣������֤������Ϣ
+     * - senderDomain 异常链域名
+     * - senderID 异常合约地址
+     * - sdpMessage 待更新的异常链已验证区块信息
      */
     function _processSDPv3AckOffChainException(
         string calldata senderDomain,
@@ -682,25 +692,25 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
     }
 
     /*
-     * �м̵��ã������쳣����ʱ���ص��� SDPv3�ӿ�
+     * 中继调用，触发异常（超时）回调， SDPv3接口
     */
     function recvOffChainException(bytes32 exceptionMsgAuthor, bytes calldata exceptionMsgPkg) external onlyOwner {
         SDPMessageV3 memory sdpMessage;
         sdpMessage.decode(exceptionMsgPkg);
 
         if (0 == sdpMessage.timeoutMeasure) {
-            // �޳�ʱ���ƣ���Ӧ�ô��������쳣
+            // 无超时限制，不应该触发链下异常
             revert("SDP_MSG_ERROR: the message timeoutMeasure is 0");
         } else if (2 == sdpMessage.timeoutMeasure) {
-            // �������߶ȳ�ʱ����
+            // 接收链高度超时限制
             if (recvValidatedBlockState[keccak256(abi.encodePacked(sdpMessage.receiveDomain))].blockHeight > sdpMessage.timeout) {
-                // ����֤�߶��Ѿ����˳�ʱ�߶ȣ�˵����Ϣȷʵ�ѳ�ʱ
-                // ��֤��Ϣԭ�Ĵ���
+                // 已验证高度已经过了超时高度，说明消息确实已超时
+                // 验证消息原文存在
                 if (!sendSDPV3Msgs[sdpMessage.messageId]) {
                     revert("SDP_MSG_ERROR: exception message hash does not exist");
                 }
 
-                // ����onError�ӿ�
+                // 调用onError接口
                 IContractWithAcks(SDPLib.encodeCrossChainIDIntoAddress(exceptionMsgAuthor)).ackOnError(
                     sdpMessage.messageId,
                     sdpMessage.receiveDomain,
