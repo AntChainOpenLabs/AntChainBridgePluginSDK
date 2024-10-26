@@ -1,11 +1,15 @@
 package com.alipay.antchain.bridge.plugins.bifchain;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
 import cn.bif.api.BIFSDK;
 import cn.bif.common.JsonUtils;
 import cn.bif.model.request.BIFTransactionGetInfoRequest;
 import cn.bif.model.response.BIFTransactionGetInfoResponse;
 import cn.bif.module.encryption.key.PublicKeyManager;
 import cn.bif.utils.generator.response.Log;
+import cn.hutool.core.util.ArrayUtil;
 import com.alipay.antchain.bridge.commons.core.base.ConsensusState;
 import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
 import com.alipay.antchain.bridge.commons.core.bta.IBlockchainTrustAnchor;
@@ -16,9 +20,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 @HeteroChainDataVerifierService(products = "bifchain", pluginId = "plugin-simple-bifchain")
 public class BifchainHCDVSService extends AbstractHCDVSService {
@@ -163,13 +164,13 @@ public class BifchainHCDVSService extends AbstractHCDVSService {
             }
 
             if (bifTransactionGetInfoResponse.getResult().getTransactions()[0].getConfirmTime() != currState.getStateTimestamp() ||
-                    bifTransactionGetInfoResponse.getResult().getTransactions()[0].getConfirmTime() != message.getProvableData().getTimestamp()) {
+                    bifTransactionGetInfoResponse.getResult().getTransactions()[0].getConfirmTime() / 1000 != message.getProvableData().getTimestamp()) {
                 verifyResultBuilder.success(false);
                 verifyResultBuilder.errorMsg("cross chain message timestamp is not equal");
                 return verifyResultBuilder.build();
             }
 
-            if (currState.getHash() != message.getProvableData().getBlockHash()) {
+            if (!ArrayUtil.equals(currState.getHash(), message.getProvableData().getBlockHash())) {
                 verifyResultBuilder.success(false);
                 verifyResultBuilder.errorMsg("cross chain message block hash is not equal");
                 return verifyResultBuilder.build();

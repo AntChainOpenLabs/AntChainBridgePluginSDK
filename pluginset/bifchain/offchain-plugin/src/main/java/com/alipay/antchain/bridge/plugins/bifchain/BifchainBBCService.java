@@ -11,8 +11,11 @@ import cn.bif.common.JsonUtils;
 import cn.bif.exception.EncException;
 import cn.bif.model.request.*;
 import cn.bif.model.response.*;
+import cn.bif.model.response.result.data.BIFLogInfo;
+import cn.bif.model.response.result.data.BIFOperation;
 import cn.bif.module.encryption.key.PrivateKeyManager;
 import cn.bif.utils.generator.response.Log;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.HexUtil;
@@ -712,7 +715,7 @@ public class BifchainBBCService extends AbstractBBCService {
 
         try {
             // 2. verify PTC sign
-            ThirdPartyProof thirdPartyProof = ThirdPartyProof.decode(rawMessage);
+            ThirdPartyProof thirdPartyProof = decodeTpProofFromMsg(rawMessage);
             if (!hasTpBta(thirdPartyProof.getTpbtaCrossChainLane(), thirdPartyProof.getTpbtaVersion())) {
                 throw new RuntimeException("tb-bta not found");
             }
@@ -728,7 +731,7 @@ public class BifchainBBCService extends AbstractBBCService {
 
             CommitteeEndorseRoot committeeEndorseRoot = CommitteeEndorseRoot.decode(thirdPartyBlockchainTrustAnchor.getEndorseRoot());
             CommitteeEndorseProof committeeEndorseProof = CommitteeEndorseProof.decode(thirdPartyProof.getRawProof());
-            if (committeeEndorseRoot.getCommitteeId().equals(committeeEndorseProof.getCommitteeId())) {
+            if (!StrUtil.equals(committeeEndorseRoot.getCommitteeId(), committeeEndorseProof.getCommitteeId())) {
                 throw new RuntimeException("committee id in proof not equal with the one in endorse root");
             }
 
@@ -741,7 +744,7 @@ public class BifchainBBCService extends AbstractBBCService {
                     if (info.getNodeId().equals(committeeEndorseProof.getSigs().get(j).getNodeId())) {
                         res = SignAlgoEnum.getByName(committeeEndorseProof.getSigs().get(j).getSignAlgo().getName())
                                 .getSigner()
-                                .verify(info.getPublicKey().getPublicKey(), encodedToSign, committeeEndorseProof.getSigs().get(j).getSignature().getBytes());
+                                .verify(info.getPublicKey().getPublicKey(), encodedToSign, committeeEndorseProof.getSigs().get(j).getSig());
                         if (res && !info.isRequired()) {
                             optinalCorrect++;
                             break;
@@ -808,39 +811,48 @@ public class BifchainBBCService extends AbstractBBCService {
             //获取区块信息
             BIFBlockGetInfoRequest blockGetInfoRequest = new BIFBlockGetInfoRequest();
             blockGetInfoRequest.setBlockNumber(height);
-            BIFBlockGetInfoResponse lockGetInfoResponse = sdk.getBIFBlockService().getBlockInfo(blockGetInfoRequest);
+            BIFBlockGetInfoResponse blockGetInfoResponse = sdk.getBIFBlockService().getBlockInfo(blockGetInfoRequest);
 
             List<CrossChainMessage> messageList = ListUtil.toList();
             Arrays.stream(response.getResult().getTransactions()).forEach(
                     transaction -> {
-                        if (Objects.nonNull(transaction.getContractTxHashes()) && transaction.getContractTxHashes().length > 0) {
-                            BIFTransactionGetInfoRequest bifTransactionGetInfoRequest = new BIFTransactionGetInfoRequest();
-                            bifTransactionGetInfoRequest.setHash(transaction.getContractTxHashes()[0]);
-                            BIFTransactionGetInfoResponse bifTransactionGetInfoResponse = sdk.getBIFTransactionService().getTransactionInfo(bifTransactionGetInfoRequest);
-                            String topic = bifTransactionGetInfoResponse.getResult().getTransactions()[0].getTransaction().getOperations()[0].getLog().getTopic();
-                            if (topic.equals("79b7516b1b7a6a39fb4b7b22e8667cd3744e5c27425292f8a9f49d1042c0c651") && bifTransactionGetInfoResponse.getResult().getTransactions()[0].getTransaction().getSourceAddress().equals(this.bbcContext.getAuthMessageContract().getContractAddress())) {
-                                String json = JsonUtils.toJSONString(bifTransactionGetInfoResponse.getResult().getTransactions()[0].getTransaction().getOperations()[0].getLog());
-                                AuthMsg authMsg = new AuthMsg();
-                                Log log = authMsg.jsonToLog(json);
-                                AuthMsg.SendAuthMessageEventResponse sendAuthMessageEventResponse = AuthMsg.getSendAuthMessageEventFromLog(log);
+                        BIFTransactionGetInfoRequest bifTransactionGetInfoRequest = new BIFTransactionGetInfoRequest();
+                        bifTransactionGetInfoRequest.setHash(transaction.getHash());
+                        BIFTransactionGetInfoResponse bifTransactionGetInfoResponse = sdk.getBIFTransactionService().getTransactionInfo(bifTransactionGetInfoRequest);
 
-                                JsonObject jsonObject = new JsonObject();
-                                jsonObject.addProperty("url", this.config.getUrl());
-                                jsonObject.addProperty("txHash", transaction.getContractTxHashes()[0]);
+                        BIFOperation[] bifOperations = bifTransactionGetInfoResponse.getResult().getTransactions()[0].getTransaction().getOperations();
+                        if (ObjectUtil.isEmpty(bifOperations)) {
+                            return;
+                        }
 
-                                //构建跨链信息
-                                CrossChainMessage crossChainMessage = CrossChainMessage.createCrossChainMessage(
-                                        CrossChainMessage.CrossChainMessageType.AUTH_MSG,
-                                        bifTransactionGetInfoResponse.getResult().getTransactions()[0].getLedgerSeq(),
-                                        bifTransactionGetInfoResponse.getResult().getTransactions()[0].getConfirmTime(),
-                                        HexUtil.decodeHex(lockGetInfoResponse.getResult().getHeader().getHash()),
-                                        sendAuthMessageEventResponse.result.pkg,
-                                        jsonObject.toString().getBytes(),
-                                        "".getBytes(),
-                                        HexUtil.decodeHex(transaction.getHash())
-                                );
-                                messageList.add(crossChainMessage);
-                            }
+                        BIFLogInfo logInfo = bifOperations[0].getLog();
+                        if (ObjectUtil.isNull(logInfo)) {
+                            return;
+                        }
+
+                        if (StrUtil.equals(logInfo.getTopic(), "79b7516b1b7a6a39fb4b7b22e8667cd3744e5c27425292f8a9f49d1042c0c651")
+                                && transaction.getTransaction().getSourceAddress().equals(this.bbcContext.getAuthMessageContract().getContractAddress())) {
+                            String json = JsonUtils.toJSONString(logInfo);
+                            AuthMsg authMsg = new AuthMsg();
+                            Log log = authMsg.jsonToLog(json);
+                            AuthMsg.SendAuthMessageEventResponse sendAuthMessageEventResponse = AuthMsg.getSendAuthMessageEventFromLog(log);
+
+                            JsonObject jsonObject = new JsonObject();
+                            jsonObject.addProperty("url", this.config.getUrl());
+                            jsonObject.addProperty("txHash", transaction.getHash());
+
+                            //构建跨链信息
+                            CrossChainMessage crossChainMessage = CrossChainMessage.createCrossChainMessage(
+                                    CrossChainMessage.CrossChainMessageType.AUTH_MSG,
+                                    height,
+                                    transaction.getConfirmTime() / 1000,
+                                    HexUtil.decodeHex(blockGetInfoResponse.getResult().getHeader().getHash()),
+                                    sendAuthMessageEventResponse.result.pkg,
+                                    jsonObject.toString().getBytes(),
+                                    "".getBytes(),
+                                    HexUtil.decodeHex(transaction.getHash())
+                            );
+                            messageList.add(crossChainMessage);
                         }
                     }
             );
@@ -1042,7 +1054,7 @@ public class BifchainBBCService extends AbstractBBCService {
         boolean result;
         try {
             String contractAddress = this.bbcContext.getPtcContract().getContractAddress();
-            String callInput = StrUtil.format("{\"function\":\"hasTpBta(bytes,uint32)\",\"args\":\"'{}'\",\"return\":\"returns(bool)\"}", HexUtil.encodeHexStr(tpbtaLane.encode()), tpBtaVersion);
+            String callInput = StrUtil.format("{\"function\":\"hasTpBta(bytes,uint32)\",\"args\":\"'{}',{}\",\"return\":\"returns(bool)\"}", HexUtil.encodeHexStr(tpbtaLane.encode()), tpBtaVersion);
             BIFContractCallRequest request = new BIFContractCallRequest();
             request.setContractAddress(contractAddress);
             request.setInput(callInput);
@@ -1143,7 +1155,7 @@ public class BifchainBBCService extends AbstractBBCService {
 
             CommitteeVerifyAnchor committeeVerifyAnchor = CommitteeVerifyAnchor.decode(ptcVerifyAnchor.getAnchor());
             CommitteeEndorseProof committeeEndorseProof = CommitteeEndorseProof.decode(tpbta.getEndorseProof());
-            if (committeeVerifyAnchor.getCommitteeId().equals(committeeEndorseProof.getCommitteeId())) {
+            if (!StrUtil.equals(committeeVerifyAnchor.getCommitteeId(), committeeEndorseProof.getCommitteeId())) {
                 throw new RuntimeException("committee id in proof not equal with the one in verify anchor");
             }
 
@@ -1152,12 +1164,12 @@ public class BifchainBBCService extends AbstractBBCService {
             for (int i = 0; i < committeeEndorseProof.getSigs().size(); i++) {
                 CommitteeNodeProof info = committeeEndorseProof.getSigs().get(i);
                 for (int j = 0; j < committeeVerifyAnchor.getAnchors().size(); j++) {
-                    if (info.getNodeId().equals(committeeVerifyAnchor.getAnchors().get(j).getNodeId())) {
+                    if (StrUtil.equals(info.getNodeId(), committeeVerifyAnchor.getAnchors().get(j).getNodeId())) {
                         boolean res = false;
                         for (int k = 0; k < committeeVerifyAnchor.getAnchors().get(j).getNodePublicKeys().size(); k++) {
                             res = SignAlgoEnum.getByName(info.getSignAlgo().getName())
                                     .getSigner()
-                                    .verify(committeeVerifyAnchor.getAnchors().get(j).getNodePublicKeys().get(k).getPublicKey(), encodedToSign, info.getSignature().getBytes());
+                                    .verify(committeeVerifyAnchor.getAnchors().get(j).getNodePublicKeys().get(k).getPublicKey(), encodedToSign, info.getSig());
                             if (res) {
                                 break;
                             }
@@ -1206,31 +1218,32 @@ public class BifchainBBCService extends AbstractBBCService {
         }
 
         // 2. query ptc type
-        try {
-            String contractAddress = this.bbcContext.getPtcContract().getContractAddress();
-            String callInput = StrUtil.format("{\"function\":\"getSupportedPTCType()\",\"args\":\"\"}");
-            BIFContractCallRequest request = new BIFContractCallRequest();
-            request.setContractAddress(contractAddress);
-            request.setInput(callInput);
-
-            BIFContractCallResponse response = sdk.getBIFContractService().contractQuery(request);
-            if (response.getErrorCode() == 0) {
-                Map<String, Map<String, String>> resMap = (Map<String, Map<String, String>>) (response.getResult().getQueryRets().get(0));
-                String res = resMap.get("result").get("data").trim();
-                res = res.substring(2,res.length() - 2);
-                String[] strArray = res.split(",");
-                List<BigInteger> bigIntegerList = new ArrayList<>();
-                for (String numStr : strArray) {
-                    bigIntegerList.add(new BigInteger(numStr));
-                }
-                getBBCLogger().info("get support ptc type: {}", bigIntegerList);
-                return bigIntegerList.stream().map(x -> PTCTypeEnum.valueOf(x.byteValueExact())).collect(Collectors.toSet());
-            } else {
-                throw new RuntimeException("failed to query PTC type");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("failed to query PTC type", e);
-        }
+//        try {
+//            String contractAddress = this.bbcContext.getPtcContract().getContractAddress();
+//            String callInput = StrUtil.format("{\"function\":\"getSupportedPTCType()\",\"args\":\"\"}");
+//            BIFContractCallRequest request = new BIFContractCallRequest();
+//            request.setContractAddress(contractAddress);
+//            request.setInput(callInput);
+//
+//            BIFContractCallResponse response = sdk.getBIFContractService().contractQuery(request);
+//            if (response.getErrorCode() == 0) {
+//                Map<String, Map<String, String>> resMap = (Map<String, Map<String, String>>) (response.getResult().getQueryRets().get(0));
+//                String res = resMap.get("result").get("data").trim();
+//                res = res.substring(2,res.length() - 2);
+//                String[] strArray = res.split(",");
+//                List<BigInteger> bigIntegerList = new ArrayList<>();
+//                for (String numStr : strArray) {
+//                    bigIntegerList.add(new BigInteger(numStr));
+//                }
+//                getBBCLogger().info("get support ptc type: {}", bigIntegerList);
+//                return bigIntegerList.stream().map(x -> PTCTypeEnum.valueOf(x.byteValueExact())).collect(Collectors.toSet());
+//            } else {
+//                throw new RuntimeException("failed to query PTC type");
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException("failed to query PTC type", e);
+//        }
+        return CollectionUtil.newHashSet(PTCTypeEnum.COMMITTEE);
     }
 
     @Override
@@ -1247,7 +1260,7 @@ public class BifchainBBCService extends AbstractBBCService {
         boolean result;
         try {
             String contractAddress = this.bbcContext.getPtcContract().getContractAddress();
-            String callInput = StrUtil.format("{\"function\":\"hasPTCVerifyAnchor(bytes,uint256)\",\"args\":\"'{}'\",\"return\":\"returns(bool)\"}", HexUtil.encodeHexStr(ptcOwnerOid.encode()), version.longValue());
+            String callInput = StrUtil.format("{\"function\":\"hasPTCVerifyAnchor(bytes,uint256)\",\"args\":\"'{}',{}\",\"return\":\"returns(bool)\"}", HexUtil.encodeHexStr(ptcOwnerOid.encode()), version.longValue());
             BIFContractCallRequest request = new BIFContractCallRequest();
             request.setContractAddress(contractAddress);
             request.setInput(callInput);
@@ -1410,5 +1423,40 @@ public class BifchainBBCService extends AbstractBBCService {
     @Override
     public CrossChainMessageReceipt reliableRetry(ReliableCrossChainMessage msg) {
         return new CrossChainMessageReceipt();
+    }
+
+    private ThirdPartyProof decodeTpProofFromMsg(byte[] proofsData) {
+        int _len = proofsData.length;
+        int _offset = 0;
+        // hints len
+        byte[] hints_len_bytes = new byte[4];
+        System.arraycopy(proofsData, _offset, hints_len_bytes, 0, 4);
+        _offset += 4;
+        int hints_len = (int) extractUint32(hints_len_bytes, 4);
+        // hints
+        byte[] hints = new byte[hints_len];
+        System.arraycopy(proofsData, _offset, hints, 0, hints_len);
+        _offset += hints_len;
+
+        // proof lens
+        byte[] proof_len_bytes = new byte[4];
+        System.arraycopy(proofsData, _offset, proof_len_bytes, 0, 4);
+        _offset += 4;
+        int proof_len = (int) extractUint32(proof_len_bytes, 4);
+        // proof
+        byte[] proof = new byte[proof_len];
+        System.arraycopy(proofsData, _offset, proof, 0, proof_len);
+        _offset += proof_len;
+
+        return ThirdPartyProof.decode(proof);
+    }
+
+    private long extractUint32(byte[] b, int offset) {
+        long l = 0;
+        for (int bit = 4; bit > 0; bit--) {
+            l <<= 8;
+            l |= b[offset - bit] & 0xFF;
+        }
+        return l;
     }
 }
