@@ -1,16 +1,15 @@
 package com.alipay.antchain.bridge.plugins.bifchain;
 
+import java.math.BigInteger;
+
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.commons.core.base.ConsensusState;
 import com.alipay.antchain.bridge.commons.core.bta.BlockchainTrustAnchorV1;
-import com.alipay.antchain.bridge.commons.core.bta.IBlockchainTrustAnchor;
 import com.alipay.antchain.bridge.plugins.spi.ptc.core.VerifyResult;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.math.BigInteger;
 
 public class BifchainHCDVSServiceTest {
 
@@ -44,7 +43,6 @@ public class BifchainHCDVSServiceTest {
         BifchainConfig mockConf = new BifchainConfig();
         mockConf.setUrl("http://test.bifcore.bitfactory.cn");
         mockConf.setPrivateKey("priSPKgxGjV3kCJbSDCYAjY7iETF7UtJcba8XpMKZNsxTQBRkU");
-        mockConf.setDomainName(".com");
         AbstractBBCContext mockCtx = new DefaultBBCContext();
         mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
 
@@ -63,7 +61,6 @@ public class BifchainHCDVSServiceTest {
         BifchainConfig mockConf = new BifchainConfig();
         mockConf.setUrl("http://test.bifcore.bitfactory.cn");
         mockConf.setPrivateKey("priSPKgxGjV3kCJbSDCYAjY7iETF7UtJcba8XpMKZNsxTQBRkU");
-        mockConf.setDomainName(".com");
         AbstractBBCContext mockCtx = new DefaultBBCContext();
         mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
 

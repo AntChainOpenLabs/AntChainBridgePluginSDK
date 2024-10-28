@@ -54,13 +54,6 @@ public class BifchainConfig {
     @JSONField
     private String ptcContractInitInput;
 
-    @JSONField
-    private short csVersion;
-
-    @JSONField
-    private String domainName;
-
-
     /**
      * json序列化为字符串
      */
