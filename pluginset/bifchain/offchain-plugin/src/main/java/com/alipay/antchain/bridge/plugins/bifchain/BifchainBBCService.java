@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.bif.api.BIFSDK;
+import cn.bif.common.Constant;
 import cn.bif.common.JsonUtils;
 import cn.bif.exception.EncException;
 import cn.bif.model.request.*;
@@ -194,6 +195,7 @@ public class BifchainBBCService extends AbstractBBCService {
         request.setInput(invokeInput);
         request.setFeeLimit(this.config.getGasLimit());
         request.setGasPrice(this.config.getGasPrice());
+        request.setNonceType(Constant.INIT_ONE);
         return request;
     }
 
@@ -382,7 +384,7 @@ public class BifchainBBCService extends AbstractBBCService {
             if (response.getErrorCode() == 0) {
                 hash = HexUtil.decodeHex(response.getResult().getHeader().getHash());
                 parentHash = HexUtil.decodeHex(response.getResult().getHeader().getPreviousHash());
-                stateTimestamp = response.getResult().getHeader().getConfirmTime();
+                stateTimestamp = response.getResult().getHeader().getConfirmTime() / 1000;
                 stateData = HexUtil.decodeHex(response.getResult().getHeader().getConsensusValueHash());
             } else {
                 throw new RuntimeException("failed to get block info");
@@ -685,10 +687,10 @@ public class BifchainBBCService extends AbstractBBCService {
                 crossChainMessageReceipt.setTxhash(response.getResult().getTransactions()[0].getHash());
                 crossChainMessageReceipt.setErrorMsg(response.getResult().getTransactions()[0].getErrorDesc());
             } else {
-                crossChainMessageReceipt.setConfirmed(false);
+                crossChainMessageReceipt.setConfirmed(response.getResult().getTransactions()[0].getConfirmTime() > 0);
                 crossChainMessageReceipt.setSuccessful(false);
-                crossChainMessageReceipt.setTxhash("");
-                crossChainMessageReceipt.setErrorMsg("");
+                crossChainMessageReceipt.setTxhash(response.getResult().getTransactions()[0].getHash());
+                crossChainMessageReceipt.setErrorMsg(response.getResult().getTransactions()[0].getErrorDesc());
             }
         } catch (Exception e) {
             throw new RuntimeException(
@@ -1403,6 +1405,8 @@ public class BifchainBBCService extends AbstractBBCService {
             if (response.getErrorCode() == 0) {
                 if (queryTxResult(response.getResult().getHash())) {
                     crossChainMessageReceipt.setTxhash(response.getResult().getHash());
+                    crossChainMessageReceipt.setConfirmed(true);
+                    crossChainMessageReceipt.setSuccessful(true);
                     return crossChainMessageReceipt;
                 } else {
                     throw new RuntimeException("failed to recv off-chain exception, transaction executing failed");

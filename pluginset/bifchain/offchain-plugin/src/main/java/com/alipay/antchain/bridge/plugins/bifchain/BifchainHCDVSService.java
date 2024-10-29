@@ -163,7 +163,7 @@ public class BifchainHCDVSService extends AbstractHCDVSService {
                 return verifyResultBuilder.build();
             }
 
-            if (bifTransactionGetInfoResponse.getResult().getTransactions()[0].getConfirmTime() != currState.getStateTimestamp() ||
+            if (bifTransactionGetInfoResponse.getResult().getTransactions()[0].getConfirmTime() / 1000 != currState.getStateTimestamp() ||
                     bifTransactionGetInfoResponse.getResult().getTransactions()[0].getConfirmTime() / 1000 != message.getProvableData().getTimestamp()) {
                 verifyResultBuilder.success(false);
                 verifyResultBuilder.errorMsg("cross chain message timestamp is not equal");
