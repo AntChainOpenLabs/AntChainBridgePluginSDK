@@ -63,7 +63,7 @@ public class ChainmakerSDK {
     static String PLUGIN_CONFIG = "src/main/resources/plugin_config.yml";
 
     public static ChainClient chainClient;
-    public PluginConfig pluginConfig;
+    public static PluginConfig pluginConfig;
     static ChainManager chainManager;
     static User user;
 
@@ -131,7 +131,7 @@ public class ChainmakerSDK {
         Path path = Paths.get(PLUGIN_CONFIG);
         InputStream in = Files.newInputStream(path);
 
-        pluginConfig = yaml.loadAs(in, pluginConfig.class);
+        pluginConfig = yaml.loadAs(in, PluginConfig.class);
         assert in != null;
         in.close();
 
