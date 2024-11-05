@@ -1,7 +1,17 @@
 package com.alipay.antchain.bridge.plugins.bifchain;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.List;
+
+import cn.ac.caict.bid.model.BIDDocumentOperation;
+import cn.ac.caict.bid.model.BIDpublicKeyOperation;
 import cn.bif.api.BIFSDK;
+import cn.bif.common.JsonUtils;
 import cn.bif.common.ToBaseUnit;
+import cn.bif.model.crypto.KeyPairEntity;
 import cn.bif.model.request.BIFContractCreateRequest;
 import cn.bif.model.request.BIFContractGetAddressRequest;
 import cn.bif.model.request.BIFContractInvokeRequest;
@@ -10,43 +20,58 @@ import cn.bif.model.response.BIFContractCreateResponse;
 import cn.bif.model.response.BIFContractGetAddressResponse;
 import cn.bif.model.response.BIFContractInvokeResponse;
 import cn.bif.model.response.BIFTransactionGetInfoResponse;
+import cn.bif.module.encryption.key.PrivateKeyManager;
+import cn.bif.module.encryption.model.KeyType;
 import cn.bif.utils.base.Base58;
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.crypto.digest.SM3;
 import com.alipay.antchain.bridge.commons.bbc.AbstractBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.DefaultBBCContext;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.AuthMessageContract;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.ContractStatusEnum;
 import com.alipay.antchain.bridge.commons.bbc.syscontract.SDPContract;
+import com.alipay.antchain.bridge.commons.bcdns.*;
 import com.alipay.antchain.bridge.commons.core.am.AuthMessageFactory;
 import com.alipay.antchain.bridge.commons.core.am.IAuthMessage;
-import com.alipay.antchain.bridge.commons.core.base.CrossChainMessage;
-import com.alipay.antchain.bridge.commons.core.base.CrossChainMessageReceipt;
+import com.alipay.antchain.bridge.commons.core.base.*;
+import com.alipay.antchain.bridge.commons.core.ptc.PTCTrustRoot;
+import com.alipay.antchain.bridge.commons.core.ptc.PTCTypeEnum;
+import com.alipay.antchain.bridge.commons.core.ptc.PTCVerifyAnchor;
 import com.alipay.antchain.bridge.commons.core.sdp.ISDPMessage;
 import com.alipay.antchain.bridge.commons.core.sdp.SDPMessageFactory;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVTypeEnum;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.TLVUtils;
 import com.alipay.antchain.bridge.commons.utils.codec.tlv.annotation.TLVField;
+import com.alipay.antchain.bridge.commons.utils.crypto.HashAlgoEnum;
+import com.alipay.antchain.bridge.commons.utils.crypto.SignAlgoEnum;
 import lombok.Getter;
 import lombok.Setter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
-
 public class BifchainBBCServiceTest {
 
+    //private static final String VALID_URL = "http://172.17.6.84:10086";
     private static final String VALID_URL = "http://test.bifcore.bitfactory.cn";
 
-    private static final String PRIVATE_KEY = "priSPKdqBmbMtBCD4MD2KexdxRnGyxEPiRMdcSxrr3UNBxTywG";
+    private static final String PRIVATE_KEY = "priSPKgxGjV3kCJbSDCYAjY7iETF7UtJcba8XpMKZNsxTQBRkU";
 
-    private static final String ADDDRESS = "did:bid:ef23GGhkK82hqBxM9dkUL3ry4QGCZSY4K";
+    private static final String ADDDRESS = "did:bid:efexmw5GLPUU92ECpZMxpBPyCeZJhCDW";
+
+    private static final String ISSUER = "priSPKgXX97ti8p7FebfEWPxLUx1UNAJAK93i8zCTFW1Pa6fnm";
+
+    private static final String SUPER = "priSPKeThUrwmBvigbe153GWQXRDuMUWwpM8fRBs4eQ82sQSgQ";
+
+    private static final String PTC = "priSPKncqxV7SR5bJgTWxBpLDAotDbBsrGNAVky34VKzLXHppi";
+
+    private static final String PTCID = "did:bid:efiPHJD4V1PxjNiWUfNUTNhfoqFjTggu";
 
     private static BifchainBBCService bifchainBBCService;
 
@@ -149,6 +174,20 @@ public class BifchainBBCServiceTest {
         // get context
         AbstractBBCContext ctx = bifchainBBCService.getContext();
         Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getSdpContract().getStatus());
+    }
+
+    @Test
+    public void testSetupPtcHubContract(){
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidPTCCtx();
+        bifchainBBCService.startup(mockValidCtx);
+
+        // set up ptc
+        bifchainBBCService.setupPTCContract();
+
+        // get context
+        AbstractBBCContext ctx = bifchainBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getPtcContract().getStatus());
     }
 
     @Test
@@ -320,6 +359,158 @@ public class BifchainBBCServiceTest {
         CrossChainMessageReceipt crossChainMessageReceipt1 = bifchainBBCService.readCrossChainMessageReceipt(crossChainMessageReceipt.getTxhash());
         Assert.assertTrue(crossChainMessageReceipt1.isConfirmed());
         Assert.assertEquals(crossChainMessageReceipt.isSuccessful(), crossChainMessageReceipt1.isSuccessful());
+    }
+
+    @Test
+    public void testUpdatePTCTrustRoot() throws Exception {
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidPTCCtx();
+        bifchainBBCService.startup(mockValidCtx);
+
+        // set up ptc
+        bifchainBBCService.setupPTCContract();
+
+        // get context
+        AbstractBBCContext ctx = bifchainBBCService.getContext();
+        Assert.assertEquals(ContractStatusEnum.CONTRACT_DEPLOYED, ctx.getPtcContract().getStatus());
+
+        byte[] PTC_CERT = createPTCCert();
+
+        PTCTrustRoot ptcTrustRoot = PTCTrustRoot.builder()
+                .ptcCrossChainCert(CrossChainCertificateFactory.createCrossChainCertificate(PTC_CERT))
+                .networkInfo("{}".getBytes())
+                .issuerBcdnsDomainSpace(new CrossChainDomain(".com"))
+                .sigAlgo(SignAlgoEnum.ED25519)
+                .verifyAnchorMap(MapUtil.builder(
+                        BigInteger.ZERO,
+                        new PTCVerifyAnchor(
+                                BigInteger.ZERO,
+                                "{}".getBytes()
+                        )
+                ).build())
+                .build();
+
+        // sign it with ptc private key which applied PTC certificate
+        PrivateKeyManager privateKeyManager = new PrivateKeyManager(PTC);
+        byte[] sign = privateKeyManager.sign(ptcTrustRoot.getEncodedToSign());
+        ptcTrustRoot.setSig(sign);
+
+        bifchainBBCService.updatePTCTrustRoot(ptcTrustRoot);
+
+        PrivateKeyManager ptcPrivateKeyManager = new PrivateKeyManager(PTC);
+        PTCTrustRoot ptcTrustRoot1 = bifchainBBCService.getPTCTrustRoot(new ObjectIdentity(ObjectIdentityType.BID, privateKeyManager.getEncAddress().getBytes()));
+
+        Assert.assertEquals(ptcTrustRoot.getPtcCrossChainCert().getId(), ptcTrustRoot1.getPtcCrossChainCert().getId());
+
+        PTCVerifyAnchor ptcVerifyAnchor = bifchainBBCService.getPTCVerifyAnchor(new ObjectIdentity(ObjectIdentityType.BID, privateKeyManager.getEncAddress().getBytes()), BigInteger.ZERO);
+
+        Assert.assertEquals(ptcVerifyAnchor.getVersion(), BigInteger.ZERO);
+    }
+
+    @Test
+    public void testReadConsensusState() throws Exception {
+
+        // start up
+        AbstractBBCContext mockValidCtx = mockValidCtx();
+        bifchainBBCService.startup(mockValidCtx);
+
+        BigInteger bigInteger = new BigInteger("4189941");
+        ConsensusState consensusState = bifchainBBCService.readConsensusState(bigInteger);
+        Assert.assertEquals(consensusState.getHeight(), bigInteger);
+
+
+    }
+
+    private byte[] createBcdnsRootCert() {
+        PrivateKeyManager issuerPrivateKeyManager = new PrivateKeyManager(ISSUER);
+        PrivateKeyManager superPrivateKeyManager = new PrivateKeyManager(SUPER);
+        BIDpublicKeyOperation[] biDpublicKeyOperation = new BIDpublicKeyOperation[1];
+        biDpublicKeyOperation[0] = new BIDpublicKeyOperation();
+        biDpublicKeyOperation[0].setType(issuerPrivateKeyManager.getKeyType());
+        biDpublicKeyOperation[0].setPublicKeyHex(issuerPrivateKeyManager.getEncPublicKey());
+        BIDDocumentOperation bidDocumentOperation = new BIDDocumentOperation();
+        bidDocumentOperation.setPublicKey(biDpublicKeyOperation);
+
+        AbstractCrossChainCertificate certificate = CrossChainCertificateFactory.createCrossChainCertificate(
+                CrossChainCertificateV1.MY_VERSION,
+                KeyPairEntity.getBidAndKeyPair().getEncAddress(),
+                new ObjectIdentity(ObjectIdentityType.BID, superPrivateKeyManager.getEncAddress().getBytes()),
+                DateUtil.currentSeconds(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
+                new BCDNSTrustRootCredentialSubject(
+                        "root",
+                        new ObjectIdentity(ObjectIdentityType.BID, issuerPrivateKeyManager.getEncAddress().getBytes()),
+                        JsonUtils.toJSONString(bidDocumentOperation).getBytes()
+                )
+        );
+
+        byte[] msg = certificate.getEncodedToSign();
+        byte[] sign = superPrivateKeyManager.sign(msg);
+        String signAlg = "";
+        KeyType keyType = superPrivateKeyManager.getKeyType();
+        if (keyType.equals(KeyType.SM2)) {
+            signAlg = "SM2";
+        } else if (keyType.equals(KeyType.ED25519)){
+            signAlg = "Ed25519";
+        }
+        certificate.setProof(
+                new AbstractCrossChainCertificate.IssueProof(
+                        HashAlgoEnum.SM3,
+                        SM3.create().digest(certificate.getEncodedToSign()),
+                        SignAlgoEnum.getByName(signAlg),
+                        sign
+                )
+        );
+
+        return certificate.encode();
+    }
+
+    private byte[] createPTCCert() {
+        PrivateKeyManager issuerPrivateKeyManager = new PrivateKeyManager(ISSUER);
+        PrivateKeyManager ptcPrivateKeyManager = new PrivateKeyManager(PTC);
+
+        BIDpublicKeyOperation[] biDpublicKeyOperation = new BIDpublicKeyOperation[1];
+        biDpublicKeyOperation[0] = new BIDpublicKeyOperation();
+        biDpublicKeyOperation[0].setType(ptcPrivateKeyManager.getKeyType());
+        biDpublicKeyOperation[0].setPublicKeyHex(ptcPrivateKeyManager.getEncPublicKey());
+        BIDDocumentOperation bidDocumentOperation = new BIDDocumentOperation();
+        bidDocumentOperation.setPublicKey(biDpublicKeyOperation);
+
+
+        AbstractCrossChainCertificate certificate = CrossChainCertificateFactory.createCrossChainCertificate(
+                CrossChainCertificateV1.MY_VERSION,
+                PTCID,
+                new ObjectIdentity(ObjectIdentityType.BID, issuerPrivateKeyManager.getEncAddress().getBytes()),
+                DateUtil.currentSeconds(),
+                DateUtil.offsetDay(new Date(), 365).getTime() / 1000,
+                new PTCCredentialSubject(
+                        "1.0",
+                        "test",
+                        PTCTypeEnum.COMMITTEE,
+                        new ObjectIdentity(ObjectIdentityType.BID, ptcPrivateKeyManager.getEncAddress().getBytes()),
+                        JsonUtils.toJSONString(bidDocumentOperation).getBytes()
+                )
+        );
+
+        byte[] msg = certificate.getEncodedToSign();
+        byte[] sign = issuerPrivateKeyManager.sign(msg);
+        String signAlg = "";
+        KeyType keyType = issuerPrivateKeyManager.getKeyType();
+        if (keyType.equals(KeyType.SM2)) {
+            signAlg = "SM2";
+        } else if (keyType.equals(KeyType.ED25519)){
+            signAlg = "Ed25519";
+        }
+        certificate.setProof(
+                new AbstractCrossChainCertificate.IssueProof(
+                        HashAlgoEnum.SM3,
+                        SM3.create().digest(certificate.getEncodedToSign()),
+                        SignAlgoEnum.getByName(signAlg),
+                        sign
+                )
+        );
+
+        return certificate.encode();
     }
 
     @Test
@@ -584,6 +775,17 @@ public class BifchainBBCServiceTest {
         AbstractBBCContext ctxCheck = bifchainBBCService.getContext();
         Assert.assertEquals(ContractStatusEnum.CONTRACT_READY, ctxCheck.getAuthMessageContract().getStatus());
         Assert.assertEquals(ContractStatusEnum.CONTRACT_READY, ctxCheck.getSdpContract().getStatus());
+    }
+
+    private AbstractBBCContext mockValidPTCCtx(){
+        BifchainConfig mockConf = new BifchainConfig();
+        mockConf.setUrl(VALID_URL);
+        mockConf.setPrivateKey(PRIVATE_KEY);
+        mockConf.setAddress(ADDDRESS);
+        mockConf.setPtcContractInitInput(HexUtil.encodeHexStr(createBcdnsRootCert()));
+        AbstractBBCContext mockCtx = new DefaultBBCContext();
+        mockCtx.setConfForBlockchainClient(mockConf.toJsonString().getBytes());
+        return mockCtx;
     }
 
     private AbstractBBCContext mockValidCtx(){
