@@ -56,6 +56,7 @@ import java.util.UUID;
 
 public class ChainMakerBBCServiceTest {
 
+    // 该路径为当前子项目资源文件目录（AntChainBridgePluginSDK/pluginset/chainmaker/offchain-plugin/src/main/resources）的相对路径
     private static final String SDK_CONFIG_JSON = "chainmaker.json";
     private static final long rpcCallTimeout = 10000;
     private static final long syncResultTimeout = 10000;
@@ -91,6 +92,7 @@ public class ChainMakerBBCServiceTest {
 
     @After
     public void clear() {
+        chainMakerBBCService.shutdown();
     }
 
     @Test
@@ -103,6 +105,8 @@ public class ChainMakerBBCServiceTest {
     @Test
     public void testQueryLatestHeight() {
         Assert.assertNotEquals(Optional.of(0L), chainMakerBBCService.queryLatestHeight());
+
+        System.out.println("============> latest height:" + chainMakerBBCService.queryLatestHeight());
     }
 
     @Test
@@ -161,6 +165,11 @@ public class ChainMakerBBCServiceTest {
     @Test
     public void testQuerySDPMessageSeq(){
         prepare();
+
+        AbstractBBCContext ctx = chainMakerBBCService.getContext();
+        System.out.println("============> am address:" + ctx.getAuthMessageContract().getContractAddress());
+        System.out.println("============> sdp address:" + ctx.getSdpContract().getContractAddress());
+        System.out.println("============> latest height:" + chainMakerBBCService.queryLatestHeight());
 
         long seq = chainMakerBBCService.querySDPMessageSeq(
                 senderDomain,

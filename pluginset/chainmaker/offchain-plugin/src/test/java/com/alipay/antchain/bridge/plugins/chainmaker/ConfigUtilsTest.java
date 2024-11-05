@@ -30,19 +30,19 @@ public class ConfigUtilsTest {
 
     static String SDK_CONFIG = "sdk_config.yml";
 
-    private static final String ADMIN1_TLS_KEY_PATH = "src/main/resources/crypto-config/wx-org1.chainmaker.org/user/admin1/admin1.tls.key";
-    private static final String ADMIN1_TLS_CERT_PATH = "src/main/resources/crypto-config/wx-org1.chainmaker.org/user/admin1/admin1.tls.crt";
-    private static final String ADMIN2_TLS_KEY_PATH = "src/main/resources/crypto-config/wx-org2.chainmaker.org/user/admin1/admin1.tls.key";
-    private static final String ADMIN2_TLS_CERT_PATH = "src/main/resources/crypto-config/wx-org2.chainmaker.org/user/admin1/admin1.tls.crt";
-    private static final String ADMIN3_TLS_KEY_PATH = "src/main/resources/crypto-config/wx-org3.chainmaker.org/user/admin1/admin1.tls.key";
-    private static final String ADMIN3_TLS_CERT_PATH = "src/main/resources/crypto-config/wx-org3.chainmaker.org/user/admin1/admin1.tls.crt";
+    private static final String ADMIN1_TLS_KEY_PATH = "src/test/resources/crypto-config/wx-org1.chainmaker.org/user/admin1/admin1.tls.key";
+    private static final String ADMIN1_TLS_CERT_PATH = "src/test/resources/crypto-config/wx-org1.chainmaker.org/user/admin1/admin1.tls.crt";
+    private static final String ADMIN2_TLS_KEY_PATH = "src/test/resources/crypto-config/wx-org2.chainmaker.org/user/admin1/admin1.tls.key";
+    private static final String ADMIN2_TLS_CERT_PATH = "src/test/resources/crypto-config/wx-org2.chainmaker.org/user/admin1/admin1.tls.crt";
+    private static final String ADMIN3_TLS_KEY_PATH = "src/test/resources/crypto-config/wx-org3.chainmaker.org/user/admin1/admin1.tls.key";
+    private static final String ADMIN3_TLS_CERT_PATH = "src/test/resources/crypto-config/wx-org3.chainmaker.org/user/admin1/admin1.tls.crt";
 
-    private static final String ADMIN1_KEY_PATH = "src/main/resources/crypto-config/wx-org1.chainmaker.org/user/admin1/admin1.sign.key";
-    private static final String ADMIN1_CERT_PATH = "src/main/resources/crypto-config/wx-org1.chainmaker.org/user/admin1/admin1.sign.crt";
-    private static final String ADMIN2_KEY_PATH = "src/main/resources/crypto-config/wx-org2.chainmaker.org/user/admin1/admin1.sign.key";
-    private static final String ADMIN2_CERT_PATH = "src/main/resources/crypto-config/wx-org2.chainmaker.org/user/admin1/admin1.sign.crt";
-    private static final String ADMIN3_KEY_PATH = "src/main/resources/crypto-config/wx-org3.chainmaker.org/user/admin1/admin1.sign.key";
-    private static final String ADMIN3_CERT_PATH = "src/main/resources/crypto-config/wx-org3.chainmaker.org/user/admin1/admin1.sign.crt";
+    private static final String ADMIN1_KEY_PATH = "src/test/resources/crypto-config/wx-org1.chainmaker.org/user/admin1/admin1.sign.key";
+    private static final String ADMIN1_CERT_PATH = "src/test/resources/crypto-config/wx-org1.chainmaker.org/user/admin1/admin1.sign.crt";
+    private static final String ADMIN2_KEY_PATH = "src/test/resources/crypto-config/wx-org2.chainmaker.org/user/admin1/admin1.sign.key";
+    private static final String ADMIN2_CERT_PATH = "src/test/resources/crypto-config/wx-org2.chainmaker.org/user/admin1/admin1.sign.crt";
+    private static final String ADMIN3_KEY_PATH = "src/test/resources/crypto-config/wx-org3.chainmaker.org/user/admin1/admin1.sign.key";
+    private static final String ADMIN3_CERT_PATH = "src/test/resources/crypto-config/wx-org3.chainmaker.org/user/admin1/admin1.sign.crt";
 
     private static final String ORG_ID1 = "wx-org1.chainmaker.org";
     private static final String ORG_ID2 = "wx-org2.chainmaker.org";
