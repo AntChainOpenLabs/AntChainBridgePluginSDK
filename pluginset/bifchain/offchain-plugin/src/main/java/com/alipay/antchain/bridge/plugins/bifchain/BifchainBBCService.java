@@ -155,21 +155,28 @@ public class BifchainBBCService extends AbstractBBCService {
     }
 
     private Boolean queryTxResult(String txHash) {
-        BIFTransactionGetInfoRequest bifTransactionGetInfoRequest =new BIFTransactionGetInfoRequest();
+        BIFTransactionGetInfoRequest bifTransactionGetInfoRequest = new BIFTransactionGetInfoRequest();
         bifTransactionGetInfoRequest.setHash(txHash);
-        BIFTransactionGetInfoResponse bifTransactionGetInfoResponse;
-        while (true) {
+        int maxRetries = 10; // 设置最大重试次数
+        int retryCount = 0;
+
+        while (retryCount < maxRetries) {
             try {
-                bifTransactionGetInfoResponse = sdk.getBIFTransactionService().getTransactionInfo(bifTransactionGetInfoRequest);
+                BIFTransactionGetInfoResponse bifTransactionGetInfoResponse = sdk.getBIFTransactionService().getTransactionInfo(bifTransactionGetInfoRequest);
+
                 if (ObjectUtil.isNotNull(bifTransactionGetInfoResponse.getResult()) && bifTransactionGetInfoResponse.getResult().getTransactions().length > 0) {
-                    break;
+                    return bifTransactionGetInfoResponse.getResult().getTransactions()[0].getErrorCode() == 0;
                 }
-                Thread.sleep(1000L);
+
+                Thread.sleep(400L); // 等待400毫秒后再尝试
+                retryCount++;
+                getBBCLogger().info("Failed to query tx, retrying... (" + retryCount + "/" + maxRetries + ")");
+
             } catch (Throwable e) {
-                throw new RuntimeException("failed to query tx", e);
+                throw new RuntimeException("Failed to query tx", e);
             }
         }
-        return bifTransactionGetInfoResponse.getResult().getTransactions()[0].getErrorCode() == 0;
+        return false;
     }
 
     private BIFContractCreateRequest createBIFContractCreateRequest(String contractByteCode) {
@@ -781,7 +788,7 @@ public class BifchainBBCService extends AbstractBBCService {
                     crossChainMessageReceipt.setErrorMsg(response.getErrorDesc());
                 }
             } else {
-                throw new RuntimeException("failed to relay auth message, transaction sending failed");
+                throw new RuntimeException(response.getErrorDesc());
             }
 
             crossChainMessageReceipt.setTxhash(response.getResult().getHash());

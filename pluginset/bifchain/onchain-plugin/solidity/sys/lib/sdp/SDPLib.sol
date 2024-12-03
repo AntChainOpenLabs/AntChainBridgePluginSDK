@@ -79,6 +79,12 @@ library SDPLib {
 
     uint8 constant SDP_V3_ATOMIC_FLAG_ACK_UNKNOWN_EXCEPTION = 6;
 
+    uint8 constant SDP_V3_TIMEOUT_MEASUREMENT_NO_TIMEOUT = 0;
+    uint8 constant SDP_V3_TIMEOUT_MEASUREMENT_SENDER_HEIGHT = 1;
+    uint8 constant SDP_V3_TIMEOUT_MEASUREMENT_RECEIVER_HEIGHT = 2;
+    uint8 constant SDP_V3_TIMEOUT_MEASUREMENT_SENDER_TIMESTAMP = 3;
+    uint8 constant SDP_V3_TIMEOUT_MEASUREMENT_RECEIVER_TIMESTAMP = 4;
+
     uint32 constant UNORDERED_SEQUENCE = 0xffffffff;
 
     // @notice only for orderred msg

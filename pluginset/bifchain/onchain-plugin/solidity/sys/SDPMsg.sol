@@ -159,6 +159,9 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
     function sendMessageV3(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message,
         uint8 _timeoutMeasure, uint256 _timeout) public returns (bytes32) {
 
+        require(_timeoutMeasure >= SDPLib.SDP_V3_TIMEOUT_MEASUREMENT_NO_TIMEOUT && _timeoutMeasure <= SDPLib.SDP_V3_TIMEOUT_MEASUREMENT_RECEIVER_TIMESTAMP,
+            "SDP: invalid timeout measure");
+
         _beforeSendUnordered(receiverDomain, receiverID, message);
 
         bytes32 receiver = bytes32(receiverID);
@@ -192,6 +195,9 @@ contract SDPMsg is ISDPMessage, Ownable, Initializable {
     // 发送无序消息 SDPv3
     function sendUnorderedMessageV3(string calldata receiverDomain, bytes32 receiverID, bool atomic, bytes calldata message,
         uint8 _timeoutMeasure, uint256 _timeout) public returns (bytes32) {
+
+        require(_timeoutMeasure >= SDPLib.SDP_V3_TIMEOUT_MEASUREMENT_NO_TIMEOUT && _timeoutMeasure <= SDPLib.SDP_V3_TIMEOUT_MEASUREMENT_RECEIVER_TIMESTAMP,
+            "SDP: invalid timeout measure");
 
         _beforeSendUnordered(receiverDomain, receiverID, message);
 
