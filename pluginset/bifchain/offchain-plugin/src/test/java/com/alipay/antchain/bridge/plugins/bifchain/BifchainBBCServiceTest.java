@@ -57,8 +57,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class BifchainBBCServiceTest {
-
-    //private static final String VALID_URL = "http://172.17.6.84:10086";
     private static final String VALID_URL = "http://test.bifcore.bitfactory.cn";
 
     private static final String PRIVATE_KEY = "priSPKgxGjV3kCJbSDCYAjY7iETF7UtJcba8XpMKZNsxTQBRkU";
