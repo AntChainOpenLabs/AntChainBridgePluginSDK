@@ -14,6 +14,7 @@ import cn.bif.model.request.*;
 import cn.bif.model.response.*;
 import cn.bif.model.response.result.data.BIFLogInfo;
 import cn.bif.model.response.result.data.BIFOperation;
+import cn.bif.model.response.result.data.BIFTransactionHistory;
 import cn.bif.module.encryption.key.PrivateKeyManager;
 import cn.bif.utils.generator.response.Log;
 import cn.hutool.core.collection.CollectionUtil;
@@ -165,7 +166,13 @@ public class BifchainBBCService extends AbstractBBCService {
                 BIFTransactionGetInfoResponse bifTransactionGetInfoResponse = sdk.getBIFTransactionService().getTransactionInfo(bifTransactionGetInfoRequest);
 
                 if (ObjectUtil.isNotNull(bifTransactionGetInfoResponse.getResult()) && bifTransactionGetInfoResponse.getResult().getTransactions().length > 0) {
-                    return bifTransactionGetInfoResponse.getResult().getTransactions()[0].getErrorCode() == 0;
+                    BIFTransactionHistory history = bifTransactionGetInfoResponse.getResult().getTransactions()[0];
+                    boolean res = history.getErrorCode() == 0;
+                    if (!res) {
+                        getBBCLogger().error("tx failed: (txHash: {}, errorCode: {}, desc: {})",
+                                txHash, history.getErrorCode(), history.getErrorDesc());
+                    }
+                    return res;
                 }
 
                 Thread.sleep(400L); // 等待400毫秒后再尝试
@@ -1413,6 +1420,9 @@ public class BifchainBBCService extends AbstractBBCService {
                 crossChainMessageReceipt.setTxhash(response.getResult().getHash());
                 crossChainMessageReceipt.setConfirmed(true);
                 crossChainMessageReceipt.setSuccessful(queryTxResult(response.getResult().getHash()));
+                if (!crossChainMessageReceipt.isSuccessful()) {
+                    crossChainMessageReceipt.setErrorMsg("TX FAILED");
+                }
                 return crossChainMessageReceipt;
             } else {
                 throw new RuntimeException("failed to recv off-chain exception, transaction sending failed: " + response.getErrorDesc());
