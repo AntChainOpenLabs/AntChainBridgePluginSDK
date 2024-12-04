@@ -176,7 +176,7 @@ public class BifchainBBCService extends AbstractBBCService {
                 throw new RuntimeException("Failed to query tx", e);
             }
         }
-        return false;
+        throw new RuntimeException(StrUtil.format("query tx {} result out of retry", txHash));
     }
 
     private BIFContractCreateRequest createBIFContractCreateRequest(String contractByteCode) {
@@ -1410,16 +1410,12 @@ public class BifchainBBCService extends AbstractBBCService {
             BIFContractInvokeRequest request = createBIFContractInvokeRequest(contractAddress, invokeInput);
             BIFContractInvokeResponse response = sdk.getBIFContractService().contractInvoke(request);
             if (response.getErrorCode() == 0) {
-                if (queryTxResult(response.getResult().getHash())) {
-                    crossChainMessageReceipt.setTxhash(response.getResult().getHash());
-                    crossChainMessageReceipt.setConfirmed(true);
-                    crossChainMessageReceipt.setSuccessful(true);
-                    return crossChainMessageReceipt;
-                } else {
-                    throw new RuntimeException("failed to recv off-chain exception, transaction executing failed");
-                }
+                crossChainMessageReceipt.setTxhash(response.getResult().getHash());
+                crossChainMessageReceipt.setConfirmed(true);
+                crossChainMessageReceipt.setSuccessful(queryTxResult(response.getResult().getHash()));
+                return crossChainMessageReceipt;
             } else {
-                throw new RuntimeException("failed to recv off-chain exception, transaction sending failed");
+                throw new RuntimeException("failed to recv off-chain exception, transaction sending failed: " + response.getErrorDesc());
             }
         } catch (Exception e) {
             throw new RuntimeException(
