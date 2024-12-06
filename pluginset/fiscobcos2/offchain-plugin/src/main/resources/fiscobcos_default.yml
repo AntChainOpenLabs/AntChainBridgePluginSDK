@@ -1,0 +1,18 @@
+messageTimeout: "10000"
+defaultGroup: "16"
+connectPeer: "fisco1.node1.hi.cegn.cn:20200"
+keyStoreDir: "account"
+accountFileFormat: "pem"
+certPath: "/bsn/conf"
+caCert: "/bsn/conf/gmca.crt"
+sslCert: "/bsn/conf/gmsdk.crt"
+sslKey: "/bsn/conf/gmsdk.key"
+enSslCert: "/bsn/conf/gmensdk.crt"
+enSslKey: "/bsn/conf/gmensdk.key"
+sslCryptoType: "1"
+amContractAddressDeployed: "0x7ba07500c98055c1169ff07f4f316877877a6eff"
+sdpContractAddressDeployed: "0x06c7fc38b422dcd71559f6fbfef84edea8498200"
+appContractAddressDeployed: "0xa297b33df32c39d5831f6ed26fbc8d8f71ed1209"
+groupID: "16"
+
+
