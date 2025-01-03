@@ -1,0 +1,23 @@
+chain_client:
+  chain_id: "chain_id"
+  org_id: "org_id"
+  user_key_file_path: "certs/user/user1/user1.tls.key"
+  user_crt_file_path: "certs/user/user1/user1.tls.crt"
+  user_sign_key_file_path: "certs/user/user1/user1.sign.key"
+  user_sign_crt_file_path: "certs/user/user1/user1.sign.crt"
+  retry_limit: 10
+  retry_interval: 500
+
+  nodes:
+    - node_addr: 0.0.0.0:8888
+      conn_cnt: 10
+      enable_tls: true
+      trust_root_paths:
+        - "src/main/resources/certs/ca"
+      tls_host_name: "chainmaker.org"
+
+  rpc_client:
+    max_receive_message_size: 16
+
+  pkcs11:
+    enabled: false
