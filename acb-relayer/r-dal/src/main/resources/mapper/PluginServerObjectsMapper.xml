@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.antchain.bridge.relayer.dal.mapper.PluginServerObjectsMapper">
+    <sql id="table_name">
+        plugin_server_objects
+    </sql>
+
+    <sql id="all_columns">
+        id,
+        ps_id,
+        address,
+        state,
+        products_supported,
+        domains_serving,
+        properties,
+        gmt_create,
+        gmt_modified
+    </sql>
+
+    <insert id="insertPluginServer">
+        INSERT INTO
+        <include refid="table_name"/>
+        (ps_id, address, state, products_supported, domains_serving, properties)
+        VALUES
+        (#{pluginServerObject.psId}, #{pluginServerObject.address}, #{pluginServerObject.state.code},
+            #{pluginServerObject.products}, #{pluginServerObject.domains}, #{pluginServerObject.properties});
+    </insert>
+</mapper>

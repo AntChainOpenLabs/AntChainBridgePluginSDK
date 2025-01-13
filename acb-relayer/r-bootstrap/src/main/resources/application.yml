@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: antchain-bridge-relayer
+  profiles:
+    active: env
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/relayer?serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true
+    password: Mychain123!@#
+    username: root
+  redis:
+    host: localhost
+    port: 6379
+#    password: Mychain123!@#
+
+logging:
+  file:
+    path: ./logs
+
+relayer:
+  network:
+    node:
+      sig_algo: ED25519
+      server:
+        mode: https
+      tls:
+        private_key_path: file:tls_certs/relayer.key
+        trust_ca_path: file:tls_certs/relayer.crt
+      crosschain_cert_path: file:cc_certs/relayer.crt
+      private_key_path: file:cc_certs/private_key.pem
+  plugin_server_manager:
+    grpc_auth:
+      tls_client:
+        ca_path: file:tls_certs/relayer.crt
+        key_path: file:tls_certs/relayer.key

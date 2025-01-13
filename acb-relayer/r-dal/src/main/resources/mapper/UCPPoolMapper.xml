@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  ~ Copyright 2023 Ant Group
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.antchain.bridge.relayer.dal.mapper.UCPPoolMapper">
+    <sql id="table_name">
+        ucp_pool
+    </sql>
+
+    <sql id="all_columns">
+        id,
+        ucp_id,
+        blockchain_product,
+        blockchain_id,
+        version,
+        src_domain,
+        tpbta_lane_key,
+        tpbta_version,
+        blockhash,
+        txhash,
+        ledger_time,
+        udag_path,
+        protocol_type,
+        raw_message,
+        ptc_oid,
+        tp_proof,
+        from_network,
+        relayer_id,
+        process_state,
+        gmt_create,
+        gmt_modified
+    </sql>
+
+    <insert id="saveUCPMessages">
+        INSERT INTO
+        <include refid="table_name"/>
+        (
+        ucp_id,
+        blockchain_product,
+        blockchain_id,
+        version,
+        src_domain,
+        tpbta_lane_key,
+        tpbta_version,
+        blockhash,
+        txhash,
+        ledger_time,
+        udag_path,
+        protocol_type,
+        raw_message,
+        ptc_oid,
+        tp_proof,
+        from_network,
+        relayer_id,
+        process_state
+        )
+        VALUES
+        <foreach collection="list" item="ucp" index="index" separator=",">
+            (
+            #{ucp.ucpId},
+            #{ucp.product},
+            #{ucp.blockchainId},
+            #{ucp.version},
+            #{ucp.srcDomain},
+            #{ucp.tpbtaLaneKey},
+            #{ucp.tpbtaVersion},
+            #{ucp.blockHash},
+            #{ucp.txHash},
+            #{ucp.ledgerTime},
+            #{ucp.udagPath},
+            #{ucp.protocolType},
+            #{ucp.srcMessage},
+            #{ucp.ptcOid},
+            #{ucp.rawTpProof},
+            #{ucp.fromNetwork},
+            #{ucp.relayerId},
+            #{ucp.processState}
+            )
+        </foreach>
+        ;
+    </insert>
+
+    <select id="lastInsertId" resultType="long">
+        SELECT LAST_INSERT_ID();
+    </select>
+</mapper>

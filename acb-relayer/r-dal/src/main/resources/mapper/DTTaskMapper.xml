@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.antchain.bridge.relayer.dal.mapper.BlockchainDTTaskMapper">
+    <sql id="table_name">
+        blockchain_dt_task
+    </sql>
+
+    <sql id="all_columns">
+        id,
+        node_id,
+        task_type,
+        blockchain_product,
+        blockchain_id,
+        ext,
+        timeslice,
+        gmt_create,
+        gmt_modified
+    </sql>
+
+    <insert id="saveDTTasks">
+        INSERT INTO
+        <include refid="table_name"/>
+        (
+        node_id,
+        task_type,
+        blockchain_product,
+        blockchain_id,
+        ext,
+        timeslice
+        )
+        VALUES
+        <foreach collection="list" item="task" index="index" separator=",">
+            (
+            #{task.nodeId},
+            #{task.taskType.code},
+            #{task.blockchainProduct},
+            #{task.blockchainId},
+            #{task.ext},
+            #{task.timeSlice}
+            )
+        </foreach>
+        ;
+    </insert>
+</mapper>

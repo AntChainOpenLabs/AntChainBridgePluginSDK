@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.antchain.bridge.relayer.dal.mapper.BlockchainMapper">
+    <sql id="table_name">
+        blockchain
+    </sql>
+
+    <sql id="domain_cert_table_name">
+        domain_cert
+    </sql>
+
+    <sql id="all_columns">
+        id,
+        product,
+        blockchain_id,
+        alias,
+        description,
+        properties,
+        gmt_create,
+        gmt_modified
+    </sql>
+
+    <insert id="insertBlockchain">
+        insert into
+        <include refid="table_name"/>
+        (product, blockchain_id, alias, description, properties)
+        values
+        (#{product}, #{blockchainId}, #{alias}, #{description}, #{properties});
+    </insert>
+
+    <select id="queryBlockchainByDomain" resultType="com.alipay.antchain.bridge.relayer.dal.entities.BlockchainEntity">
+        SELECT * FROM
+        <include refid="table_name"/>
+        WHERE blockchain_id IN (
+        SELECT instance FROM
+        <include refid="domain_cert_table_name"/>
+        WHERE domain = #{domain}
+        )
+    </select>
+</mapper>

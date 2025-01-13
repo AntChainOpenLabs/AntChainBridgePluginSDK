@@ -1,0 +1,7 @@
+{
+  "tls_client_cert": "",
+  "tls_client_key": "",
+  "tls_trust_cert_chain": "",
+  "cross_chain_cert": "",
+  "cross_chain_key": ""
+}

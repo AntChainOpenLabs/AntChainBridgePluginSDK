@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  ~ Copyright 2023 Ant Group
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.antchain.bridge.relayer.dal.mapper.SDPMsgPoolMapper">
+    <sql id="table_name">
+        sdp_msg_pool
+    </sql>
+
+    <sql id="archive_table_name">
+        sdp_msg_archive
+    </sql>
+
+    <sql id="all_columns">
+        id,
+        auth_msg_id,
+        version,
+        message_id,
+        atomic_flag,
+        sender_blockchain_product,
+        sender_instance,
+        sender_domain_name,
+        sender_identity,
+        sender_amclient_contract,
+        receiver_blockchain_product,
+        receiver_instance,
+        receiver_domain_name,
+        receiver_identity,
+        receiver_amclient_contract,
+        msg_sequence,
+        nonce,
+        timeout_measure,
+        timeout,
+        process_state,
+        tx_hash,
+        tx_success,
+        tx_fail_reason,
+        gmt_create,
+        gmt_modified
+    </sql>
+
+    <insert id="saveSDPMessages">
+        INSERT INTO
+        <include refid="table_name"/>
+        (
+        auth_msg_id,
+        version,
+        message_id,
+        atomic_flag,
+        sender_blockchain_product,
+        sender_instance,
+        sender_domain_name,
+        sender_identity,
+        sender_amclient_contract,
+        receiver_blockchain_product,
+        receiver_instance,
+        receiver_domain_name,
+        receiver_identity,
+        receiver_amclient_contract,
+        msg_sequence,
+        nonce,
+        process_state,
+        tx_hash,
+        tx_success,
+        tx_fail_reason,
+        timeout_measure,
+        timeout
+        )
+        VALUES
+        <foreach collection="list" item="sdp" index="index" separator=",">
+            (
+            #{sdp.authMsgWrapper.authMsgId},
+            #{sdp.version},
+            #{sdp.messageId},
+            #{sdp.atomicFlag},
+            #{sdp.senderBlockchainProduct},
+            #{sdp.senderBlockchainId},
+            #{sdp.senderBlockchainDomain},
+            #{sdp.msgSender},
+            #{sdp.senderAMClientContract},
+            #{sdp.receiverBlockchainProduct},
+            #{sdp.receiverBlockchainId},
+            #{sdp.receiverBlockchainDomain},
+            #{sdp.msgReceiver},
+            #{sdp.receiverAMClientContract},
+            #{sdp.msgSequence},
+            #{sdp.nonce},
+            #{sdp.processState.code},
+            #{sdp.txHash},
+            #{sdp.txSuccess},
+            #{sdp.txFailReason},
+            #{sdp.timeoutMeasure},
+            #{sdp.timeout}
+            )
+        </foreach>
+        ;
+    </insert>
+
+    <insert id="archiveSDPMessages">
+        INSERT INTO
+        <include refid="archive_table_name"/>
+        (
+        id,
+        auth_msg_id,
+        version,
+        message_id,
+        atomic_flag,
+        sender_blockchain_product,
+        sender_instance,
+        sender_domain_name,
+        sender_identity,
+        sender_amclient_contract,
+        receiver_blockchain_product,
+        receiver_instance,
+        receiver_domain_name,
+        receiver_identity,
+        receiver_amclient_contract,
+        msg_sequence,
+        nonce,
+        process_state,
+        tx_hash,
+        tx_success,
+        tx_fail_reason,
+        timeout_measure,
+        timeout,
+        gmt_create
+        )
+        SELECT
+        p.id,
+        p.auth_msg_id,
+        p.version,
+        p.message_id,
+        p.atomic_flag,
+        p.sender_blockchain_product,
+        p.sender_instance,
+        p.sender_domain_name,
+        p.sender_identity,
+        p.sender_amclient_contract,
+        p.receiver_blockchain_product,
+        p.receiver_instance,
+        p.receiver_domain_name,
+        p.receiver_identity,
+        p.receiver_amclient_contract,
+        p.msg_sequence,
+        p.nonce,
+        p.process_state,
+        p.tx_hash,
+        p.tx_success,
+        p.tx_fail_reason,
+        p.timeout_measure,
+        p.timeout,
+        p.gmt_create
+        FROM
+        <include refid="table_name"/>
+        p
+        LEFT JOIN
+        <include refid="archive_table_name"/>
+        a
+        ON p.id = a.id
+        WHERE
+        a.id IS NULL
+        AND
+        p.id IN
+        <foreach collection="idList" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>;
+    </insert>
+</mapper>

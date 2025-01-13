@@ -1,0 +1,9 @@
+{
+  "committee_id": "committee1",
+  "private_key": "src/test/resources/certs/private_key.pem",
+  "public_key": "src/test/resources/certs/public_key.pem",
+  "ptc_certificate": "src/test/resources/certs/ptcCertificate.pem",
+  "sign_algo": "Keccak256WithSecp256k1",
+  "bcdns_config": {
+  }
+}

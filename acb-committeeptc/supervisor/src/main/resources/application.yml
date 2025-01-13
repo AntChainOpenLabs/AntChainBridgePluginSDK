@@ -1,0 +1,10 @@
+spring:
+  shell:
+    interactive:
+      enabled: true
+logging:
+  level:
+    root: error
+supervisor:
+  cli:
+    config-file-path: file:./conf/config.json

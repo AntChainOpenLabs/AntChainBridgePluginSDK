@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.antchain.bridge.relayer.dal.mapper.ReliableCrossChainMsgMapper">
+    <sql id="table_name">
+        reliable_crosschain_msg_pool
+    </sql>
+
+    <sql id="all_columns">
+        id,
+        sender_domain_name,
+        sender_identity,
+        receiver_domain_name,
+        receiver_identity,
+        nonce,
+        tx_timestamp,
+        raw_tx,
+        status,
+        original_hash,
+        current_hash,
+        error_msg,
+        retry_time,
+        gmt_create,
+        gmt_modified
+    </sql>
+
+    <insert id="saveRCCMessages">
+        INSERT INTO
+        <include refid="table_name"/>
+        (
+        sender_domain_name,
+        sender_identity,
+        receiver_domain_name,
+        receiver_identity,
+        nonce,
+        tx_timestamp,
+        raw_tx,
+        status,
+        original_hash,
+        current_hash,
+        error_msg,
+        retry_time
+        )
+        VALUES
+        <foreach collection="list" item="rcc" index="index" separator=",">
+            (
+            #{rcc.idempotentInfo.senderDomain},
+            <bind name="senderIdHex" value="@cn.hutool.core.util.HexUtil@encodeHexStr(rcc.idempotentInfo.senderIdentity)"/>
+            #{senderIdHex},
+            #{rcc.idempotentInfo.receiverDomain},
+            <bind name="receiverIdHex" value="@cn.hutool.core.util.HexUtil@encodeHexStr(rcc.idempotentInfo.receiverIdentity)"/>
+            #{receiverIdHex},
+            #{rcc.idempotentInfo.nonce},
+            #{rcc.txTimestamp},
+            #{rcc.rawTx},
+            #{rcc.status.code},
+            #{rcc.originalHash},
+            #{rcc.currentHash},
+            #{rcc.errorMsg},
+            #{rcc.retryTime}
+            )
+        </foreach>
+        ;
+    </insert>
+
+    <delete id="deleteExpiredMessages"  parameterType="java.lang.Integer">
+        delete from
+        <include refid="table_name"/>
+        where status = 'success' and ((now() - INTERVAL '${validPeriod}' DAY) >= gmt_modified)
+    </delete>
+
+</mapper>

@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package com.alipay.antchain.bridge.ptc.impl.committee.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.alipay.antchain.bridge.ptc.committee.grpc";
+option java_outer_classname = "CommitteeNodeServer";
+
+service CommitteeNodeService {
+
+  rpc heartbeat(HeartbeatRequest) returns (Response) {}
+
+  rpc queryTpBta(QueryTpBtaRequest) returns (Response) {}
+
+  rpc verifyBta(VerifyBtaRequest) returns (Response) {}
+
+  rpc commitAnchorState(CommitAnchorStateRequest) returns (Response) {}
+
+  rpc commitConsensusState(CommitConsensusStateRequest) returns (Response) {}
+
+  rpc verifyCrossChainMessage(VerifyCrossChainMessageRequest) returns (Response) {}
+
+  rpc querySupportedBlockchainProducts(QuerySupportedBlockchainProductsRequest) returns (Response) {}
+
+  rpc queryBlockState(QueryBlockStateRequest) returns (Response) {}
+
+  rpc endorseBlockState(EndorseBlockStateRequest) returns (Response) {}
+}
+
+message Response {
+  uint32 code = 1;
+  string errorMsg = 2;
+  oneof response {
+    HeartbeatResponse heartbeatResp = 3;
+    QueryTpBtaResponse queryTpBtaResp = 4;
+    VerifyBtaResponse verifyBtaResp = 5;
+    CommitAnchorStateResponse commitAnchorStateResp = 6;
+    CommitConsensusStateResponse commitConsensusStateResp = 7;
+    VerifyCrossChainMessageResponse verifyCrossChainMessageResp = 8;
+    QuerySupportedBlockchainProductsResponse querySupportedBlockchainProductsResp = 9;
+    QueryBlockStateResponse queryBlockStateResp = 10;
+    EndorseBlockStateResponse endorseBlockStateResp = 11;
+  }
+}
+
+message HeartbeatRequest {
+}
+
+message HeartbeatResponse {
+  string committeeId = 1;
+  string nodeId = 2;
+  repeated string products = 3;
+}
+
+message QueryTpBtaRequest {
+  string senderDomain = 1;
+  string senderId = 2;
+  string receiverDomain = 3;
+  string receiverId = 4;
+}
+
+message QueryTpBtaResponse {
+  bytes rawTpBta = 1;
+}
+
+message VerifyBtaRequest {
+  bytes rawDomainCert = 1;
+  bytes rawBta = 2;
+}
+
+message VerifyBtaResponse {
+  bytes rawTpBta = 1;
+}
+
+message CommitAnchorStateRequest {
+  bytes crossChainLane = 1;
+  bytes rawAnchorState = 2;
+}
+
+message CommitAnchorStateResponse {
+  bytes rawValidatedConsensusState = 1;
+}
+
+message CommitConsensusStateRequest {
+  bytes crossChainLane = 1;
+  bytes rawConsensusState = 2;
+}
+
+message CommitConsensusStateResponse {
+  bytes rawValidatedConsensusState = 1;
+}
+
+message VerifyCrossChainMessageRequest {
+  bytes crossChainLane = 1;
+  bytes rawUcp = 2;
+}
+
+message VerifyCrossChainMessageResponse {
+  bytes rawNodeProof = 1;
+}
+
+message QuerySupportedBlockchainProductsRequest {
+}
+
+message QuerySupportedBlockchainProductsResponse {
+  repeated string products = 1;
+}
+
+message QueryBlockStateRequest {
+  string domain = 1;
+}
+
+message QueryBlockStateResponse {
+  bytes rawValidatedBlockState = 1;
+}
+
+message EndorseBlockStateRequest {
+  bytes crossChainLane = 1;
+  string receiverDomain = 2;
+  string height = 3;
+}
+
+message EndorseBlockStateResponse {
+  bytes blockStateAuthMsg = 1;
+  bytes committeeNodeProof = 2;
+}

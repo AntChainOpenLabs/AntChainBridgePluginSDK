@@ -1,0 +1,11 @@
+{
+  "certPath": "/path/to/sdk/gm",
+  "caCert": "/path/to/sdk/gm/gmca.crt",
+  "sslCert": "/path/to/sdk/gm/gmsdk.crt",
+  "sslKey": "/path/to/sdk/gm/gmsdk.key",
+  "enSslCert": "/path/to/sdk/gm/gmensdk.crt",
+  "enSslKey": "/path/to/sdk/gm/gmensdk.key",
+  "connectPeer": "127.0.0.1:20200",
+  "groupID": "1",
+  "useSMCrypto": "true"
+}

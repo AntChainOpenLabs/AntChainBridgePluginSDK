@@ -1,0 +1,14 @@
+{
+  "address":"0xa6b016c59ef200000000000008e53a695bc5ef57",
+  "app_id":"20230600000000AkEd37",
+  "app_secret":"53f000000000000000000000008258",
+  "chain_code":"chain-xx",
+  "crypto_suite":"sm",
+  "gateway_host":"domain or ip:18998",
+  "node_host":"domain or ip",
+  "private_key":"0x2e5dfb63a4ff1c00000000000000000000000000000000000000f9fec02696",
+  "query_port":18987,
+  "seconds_before_token_expired":300,
+  "sys_contract_version":"v0.1",
+  "tx_port":18987
+}

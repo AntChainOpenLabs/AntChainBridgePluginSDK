@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.antchain.bridge.relayer.dal.mapper.RelayerNetworkMapper">
+    <sql id="table_name">
+        relayer_network
+    </sql>
+
+    <sql id="all_columns">
+        id,
+        network_id,
+        domain,
+        node_id,
+        sync_state,
+        gmt_create,
+        gmt_modified
+    </sql>
+
+    <insert id="addNetworkItems">
+        INSERT INTO
+        <include refid="table_name"/>
+        (
+        network_id,
+        domain,
+        node_id,
+        sync_state
+        )
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.networkId},
+            #{item.domain},
+            #{item.nodeId},
+            #{item.syncState.code}
+            )
+        </foreach>
+        ;
+    </insert>
+</mapper>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.antchain.bridge.relayer.dal.mapper.AuthMsgPoolMapper">
+    <sql id="table_name">
+        auth_msg_pool
+    </sql>
+
+    <sql id="archive_table_name">
+        auth_msg_archive
+    </sql>
+
+    <sql id="all_columns">
+        id,
+        ucp_id,
+        blockchain_product,
+        blockchain_id,
+        domain_name,
+        amclient_contract_address,
+        version,
+        msg_sender,
+        protocol_type,
+        trust_level,
+        payload,
+        process_state,
+        ext,
+        gmt_create,
+        gmt_modified
+    </sql>
+
+    <insert id="saveAuthMessages">
+        INSERT INTO
+        <include refid="table_name"/>
+        (
+        ucp_id,
+        blockchain_product,
+        blockchain_id,
+        domain_name,
+        amclient_contract_address,
+        version,
+        msg_sender,
+        protocol_type,
+        trust_level,
+        payload,
+        process_state,
+        ext
+        )
+        VALUES
+        <foreach collection="list" item="am" index="index" separator=",">
+            (#{am.ucpId}, #{am.product}, #{am.blockchainId}, #{am.domain}, #{am.amClientContractAddress},
+            #{am.version}, #{am.msgSender}, #{am.protocolType.code}, #{am.trustLevel.code},
+            #{am.payload}, #{am.processState.code}, #{am.rawLedgerInfo})
+        </foreach>
+        ;
+    </insert>
+
+    <insert id="archiveAuthMessages">
+        INSERT INTO
+        <include refid="archive_table_name"/>
+        (
+        id,
+        ucp_id,
+        blockchain_product,
+        blockchain_id,
+        domain_name,
+        amclient_contract_address,
+        version,
+        msg_sender,
+        protocol_type,
+        trust_level,
+        payload,
+        process_state,
+        ext,
+        gmt_create
+        )
+        SELECT
+        id,
+        ucp_id,
+        blockchain_product,
+        blockchain_id,
+        domain_name,
+        amclient_contract_address,
+        version,
+        msg_sender,
+        protocol_type,
+        trust_level,
+        payload,
+        process_state,
+        ext,
+        gmt_create
+        FROM
+        <include refid="table_name"/>
+        WHERE id IN
+        <foreach collection="idList" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>;
+    </insert>
+
+    <select id="lastInsertId" resultType="long">
+        SELECT LAST_INSERT_ID();
+    </select>
+</mapper>

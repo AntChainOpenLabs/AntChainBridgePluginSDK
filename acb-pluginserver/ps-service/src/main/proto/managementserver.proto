@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package com.alipay.antchain.bridge.pluginserver.managementservice;
+
+option java_multiple_files = true;
+option java_package = "com.alipay.antchain.bridge.pluginserver.managementservice";
+option java_outer_classname = "ManagementRpcServer";
+
+message PluginManageRequest{
+  enum Type{
+    // load all plugins in the default path
+    LOAD_PLUGINS = 0;
+    // start all plugins in the default path
+    START_PLUGINS = 1;
+    // load the specified plugin in the specified path
+    LOAD_PLUGIN = 2;
+    // start the specified plugin in the specified path
+    START_PLUGIN = 3;
+    // stop the specified plugin in the specified path
+    STOP_PLUGIN = 4;
+    // start the stopped plugin in the specified path
+    START_PLUGIN_FROM_STOP = 5;
+    // reload the specified plugin (plugin not started)
+    RELOAD_PLUGIN = 6;
+    // reload the specified plugin from the new path (plugin not started)
+    RELOAD_PLUGIN_IN_NEW_PATH = 7;
+  }
+
+  Type type = 1;
+  string path = 2;
+  string product = 3;
+}
+
+message HasPluginsRequest{
+  repeated string products = 1;
+}
+
+message AllPluginsRequest{
+}
+
+message HasDomainsRequest{
+  repeated string domains = 1;
+}
+
+message AllDomainsRequest{
+}
+
+message RestartBBCRequest {
+  string product = 1;
+  string domain = 2;
+}
+
+message ManageResponse {
+  uint32 code = 1;
+  string errorMsg = 2;
+  oneof manageResp {
+    PluginManageResp pluginManageResp = 3;
+    HasPluginsResp hasPluginsResp = 4;
+    AllPluginsResp allPluginsResp = 5;
+    HasDomainsResp hasDomainsResp = 6;
+    AllDomainsResp allDomainsResp = 7;
+    RestartBBCResp restartBBCResp = 8;
+  }
+}
+
+message PluginManageResp{
+  // stay empty body for now, maybe fill some stuff in future
+}
+
+message HasPluginsResp{
+  // key : which product
+  // value : support or not
+  map<string, bool> results = 1;
+}
+
+message AllPluginsResp {
+  repeated string products = 1;
+}
+
+message HasDomainsResp {
+  // key : which chain
+  // value : running or not
+  map<string, bool> results = 1;
+}
+
+message AllDomainsResp {
+  repeated string domains = 1;
+}
+
+message RestartBBCResp {
+}
+
+service ManagementService {
+
+  // maintenance personnel may invoke this interface to load, unload, start, and stop plugins
+  rpc managePlugin(PluginManageRequest) returns (ManageResponse) {}
+
+  // return whether the plugins of the products are supported
+  rpc hasPlugins(HasPluginsRequest) returns (ManageResponse) {}
+
+  // return all supported plugin products
+  rpc allPlugins(AllPluginsRequest) returns (ManageResponse) {}
+
+  // return whether the chains of the domains are running
+  rpc hasDomains(HasDomainsRequest) returns (ManageResponse) {}
+
+  // return domains of all running chains
+  rpc allDomains(AllDomainsRequest) returns (ManageResponse) {}
+
+  // restart the bbc service object from the current plugin files
+  rpc restartBBC(RestartBBCRequest) returns (ManageResponse) {}
+}

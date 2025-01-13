@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: supervisor-cli
+  shell:
+    interactive:
+      enabled: false
+logging:
+  level:
+    root: error
+supervisor:
+  cli:
+    config-file-path: ./config.json

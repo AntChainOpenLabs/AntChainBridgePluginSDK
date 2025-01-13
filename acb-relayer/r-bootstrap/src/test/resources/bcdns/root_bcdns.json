@@ -1,0 +1,20 @@
+{
+  "certificationServiceConfig": {
+    "authorizedKeyPem": "-----BEGIN PRIVATE KEY-----\nMFECAQEwBQYDK2VwBCIEIDK9FiOaAcuYiaB04uIzmsFav6+uUFWB+29bLujWBkaq\ngSEAr2Ze5VBjXpg3XHs4h2oswx46nYGJV+RqJKDyWnSkTM4=\n-----END PRIVATE KEY-----\n",
+    "authorizedPublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAr2Ze5VBjXpg3XHs4h2oswx46nYGJV+RqJKDyWnSkTM4=\n-----END PUBLIC KEY-----\n",
+    "authorizedSigAlgo": "Ed25519",
+    "clientCrossChainCertPem": "-----BEGIN RELAYER CERTIFICATE-----\nAAD7AQAAAAABAAAAMQEAEAAAAGFudGNoYWluLXJlbGF5ZXICAAEAAAADAwA7AAAA\nAAA1AAAAAAABAAAAAQEAKAAAAGRpZDpiaWQ6ZWZiVGh5NXNiRzdQM21GVXAyRVdO\nNW9RR1g2TFVHd2cEAAgAAACiN2RlAAAAAAUACAAAACJrRWcAAAAABgDmAAAAAADg\nAAAAAAADAAAAMS4wAQAQAAAAYW50Y2hhaW4tcmVsYXllcgMAOwAAAAAANQAAAAAA\nAQAAAAEBACgAAABkaWQ6YmlkOmVmYlRoeTVzYkc3UDNtRlVwMkVXTjVvUUdYNkxV\nR3dnBAB6AAAAeyJwdWJsaWNLZXkiOlt7InR5cGUiOiJFRDI1NTE5IiwicHVibGlj\nS2V5SGV4IjoiYjA2NTY2YWY2NjVlZTU1MDYzNWU5ODM3NWM3YjM4ODc2YTJjYzMx\nZTNhOWQ4MTg5NTdlNDZhMjRhMGYyNWE3NGE0NGNjZSJ9XX0HAIgAAAAAAIIAAAAA\nAAMAAABTTTMBACAAAAAtlIZVqagiDAs3w16jV3kN+8iL46l8oFnFSG24BH6dJgIA\nBwAAAEVkMjU1MTkDAEAAAACTFPfALDJx8NQ3zRV55J+t7umT3qPhq805zDOMP7UH\nHvCKAeiXthTuajOvODZvRUdN0gVQBCMnWlKq2dOx0ocO\n-----END RELAYER CERTIFICATE-----\n",
+    "clientPrivateKeyPem": "-----BEGIN PRIVATE KEY-----\nMFECAQEwBQYDK2VwBCIEIDK9FiOaAcuYiaB04uIzmsFav6+uUFWB+29bLujWBkaq\ngSEAr2Ze5VBjXpg3XHs4h2oswx46nYGJV+RqJKDyWnSkTM4=\n-----END PRIVATE KEY-----\n",
+    "sigAlgo": "Ed25519",
+    "url": "http://0.0.0.0:8112"
+  },
+  "chainConfig": {
+    "bifAddress": "did:bid:efNc8GGh3Yh2GkNJwBwHmKsqWPEayBtM",
+    "bifChainRpcUrl": "",
+    "bifPrivateKey": "priSPKq5XtWDeVp4nCiQZP39xkK9dUaT4mkRxBxTvVjKE7Fib4",
+    "certificatesGovernContract": "",
+    "domainGovernContract": "",
+    "ptcGovernContract": "",
+    "relayerGovernContract": ""
+  }
+}

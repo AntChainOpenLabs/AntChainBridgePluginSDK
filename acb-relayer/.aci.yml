@@ -1,0 +1,49 @@
+version: "2.0"
+stages:
+  - 代码检测
+  - 安全扫描
+  - 单元测试
+jobs:
+  PMD:
+    stage: 代码检测
+    component: pmd
+    config:
+      execute:
+        timeout: 600 # 选填项，任务超时时间
+      afterExecute:
+        checkRule:  # 选填项，卡点策略
+          - ${{outputs.critical}} <= 10
+#  stc:
+#    stage: 安全扫描
+#    component: stc
+#    inputs:
+#      isAutoSkip: true
+#      allowFailure: true
+  测试阶段:
+    stage: 单元测试
+    component: linkq-ut
+    inputs:
+      accurate: false #是否启用精准测试
+      #customBaselineBranch: xxx 自定义基线分支,必须和自定义基线commitId配合使用,与精准测试和变更覆盖率有关
+      #customBaselineCommitId: xxx 自定义基线commitId,必须和自定义基线分支配合使用,与精准测试和变更覆盖率有关
+      #gitSubmodule: "false" 是否使用gitSubmodule特性
+      #ciConfig的所有值都是字符串
+      ciConfig:
+        jdkVersion: "1.8" #jdk版本 1.6 1.7 1.8 11
+        mvnVersion: "3.2.5" #maven版本  2.2.1 3.0.3 3.2.5 3.5.4 3.5.4 3.6.1
+        encoding: "UTF-8" #文件编码 UTF-8 GBK
+        mvnArgs: "" #mvn参数 -D形式
+        parallelCount: "1" #分组数，将所有测试类分到N台机器运行
+        hostsMap: | #host映射定义，要换行
+          127.0.0.1 localhost
+          127.0.0.1 localhost2
+        coverageExclusions: "**/test/**,**/entities/**,**/mapper/**,**/dal/service/**,**/dal/utils/**,**/enums/**,**/constant/**,**/exception/**,**/cli/**" #覆盖率排除路径，未指定则会使用覆盖率平台默认的排除路径
+        autoPom: "true" #是否自动修改pom true false
+    config:
+      afterExecute:
+        checkRule: # 质量规则校验策略，outputs的数值在0-100之间
+          - ${{outputs.casePassRate}} >= 100 #通过率
+#          - ${{outputs.lineCoverage}} >= 100 #全量行覆盖率
+#          - ${{outputs.changeLineCoverage}} >= 100 #变更行覆盖率
+#          - ${{outputs.branchCoverage}} >= 100 #分支覆盖率
+#          - ${{outputs.changeBranchCoverage}} >= 100 #变更分支覆盖率

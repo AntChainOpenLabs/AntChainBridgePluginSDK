@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:relayer;DB_CLOSE_DELAY=-1;MODE=MySQL;IGNORECASE=TRUE
+    password: 123
+    username: root
+  sql:
+    init:
+      data-locations: classpath:data/ddl.sql
+  redis:
+    host: localhost
+    port: 6379
+
+logging:
+  file:
+    path: ./logs
+  level:
+    app: INFO
+relayer:
+  admin_server:
+    port: ${random.int(8088,18088)}
+  network:
+    node:
+      sig_algo: KECCAK256_WITH_SECP256K1
+      server:
+        port: ${random.int(28082,38082)}
+        mode: https
+      tls:
+        private_key_path: classpath:node_keys/relayer/node_tls.key
+        trust_ca_path: classpath:node_keys/relayer/node_tls.crt
+      crosschain_cert_path: classpath:cc_certs/relayer.crt
+      private_key_path: classpath:cc_certs/private_key.pem
+      local_endpoints: https://localhost:${relayer.network.node.server.port}
+  plugin_server_manager:
+    grpc_auth:
+      tls_client:
+        ca_path: classpath:node_keys/ps/relayer.crt
+        key_path: classpath:node_keys/ps/relayer.key
+  engine:
+    schedule:
+      duty:
+        period: 3000

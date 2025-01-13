@@ -1,0 +1,9 @@
+{
+  "committee_id": "",
+  "private_key": "",
+  "public_key": "",
+  "ptc_certificate": "",
+  "sign_algo": "Keccak256WithSecp256k1",
+  "bcdns_config": {
+  }
+}

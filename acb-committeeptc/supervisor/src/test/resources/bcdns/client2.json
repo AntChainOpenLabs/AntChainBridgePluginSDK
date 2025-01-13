@@ -1,0 +1,19 @@
+{
+  "certificationServiceConfig":{
+    "authorizedKeyPem":"-----BEGIN PRIVATE KEY-----\nMFECAQEwB...WnSkTM4=\n-----END PRIVATE KEY-----\n",
+    "authorizedPublicKeyPem":"-----BEGIN PUBLIC KEY-----\nMCowBQYDK2Vw...KDyWnSkTM4=\n-----END PUBLIC KEY-----\n",
+    "authorizedSigAlgo":"Keccak256WithSecp256k1",
+    "clientCrossChainCertPem":"-----BEGIN RELAYER CERTIFICATE-----\nAAAIA...DyLBh2ITiTQ4IVYlXkYjSBw==\n-----END RELAYER CERTIFICATE-----\n",
+    "clientPrivateKeyPem":"-----BEGIN PRIVATE KEY-----\nMFECAQE...V+RqJKDyWnSkTM4=\n-----END PRIVATE KEY-----\n",
+    "sigAlgo":"Keccak256WithSecp256k1",
+    "url":"http://localhost:8112"
+  },
+  "chainConfig":{
+    "bifAddress":"did:bid:efbThy5sb...5oQGX6LUGwg",
+    "bifChainRpcUrl":"http://test.bifcore.bitfactory.cn",
+    "bifPrivateKey":"priSPKgnr1a...JNaackZJUo",
+    "domainGovernContract":"did:bid:efjQKy4HEshTueHGKzrJPATKoFeNgHKo",
+    "ptcGovernContract":"did:bid:efgTq9DtP2zHAhmKp7M4BhN6AVYMVWV2",
+    "relayerGovernContract":"did:bid:efSnvCFJSnpWiQiVhnh8Eimgyi4RoNpA"
+  }
+}

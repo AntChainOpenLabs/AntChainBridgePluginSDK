@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.alipay.antchain.bridge.relayer.core.grpc.admin";
+option java_outer_classname = "AdminGrpcServerOuter";
+option objc_class_prefix = "AdminGrpcServer";
+
+package acb.relayer.admin;
+
+/**
+* 管控接口对象
+*/
+// 管控请求
+message AdminRequest {
+    // commandNamespace
+    string commandNamespace = 1;
+    // 管理命令
+    string command = 2;
+    // 参数
+    repeated string args = 3;
+}
+
+// 管控结果
+message AdminResponse {
+    // 是否执行
+    bool success = 1;
+    // 执行结果
+    string result = 2;
+    // error msg
+    string errorMsg = 3;
+}
+
+// The greeting service definition.
+service AdministratorService {
+
+    // 管控请求
+    rpc adminRequest (AdminRequest) returns (AdminResponse) {
+    };
+
+}
