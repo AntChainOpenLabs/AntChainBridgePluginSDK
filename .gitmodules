@@ -1,0 +1,3 @@
+[submodule "bif-bcdns"]
+	path = bif-bcdns
+	url = git@github.com:caict-4iot-dev/BCDNS.git
