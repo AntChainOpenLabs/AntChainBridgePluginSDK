@@ -33,7 +33,6 @@ public class DefaultDistributedTaskChecker extends LocalDistributedTaskChecker {
                     // For example, over the TTL and watchdog not work as usual.
                     log.error("local task {} is not locked by current node but this node run the task somehow 😨!", taskId);
                 }
-                getLocalRunningTasks().remove(taskId);
             } catch (Throwable t) {
                 log.error("failed to unlock task : {}", taskId, t);
             }
